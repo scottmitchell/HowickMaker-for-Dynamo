@@ -17,18 +17,24 @@ namespace HowickMaker
     public enum Connection
     {
         FTF = 0,
-        BR
+        BR,
+        PT
     }
 
 
     public class hConnection
     {
-        public List<int> members;
+        public List<int> members = new List<int>();
         public Connection type;
 
         public hConnection(Connection type)
         {
             this.type = type;
+        }
+
+        public void addMember(int member)
+        {
+            this.members.Add(member);
         }
     }
 }

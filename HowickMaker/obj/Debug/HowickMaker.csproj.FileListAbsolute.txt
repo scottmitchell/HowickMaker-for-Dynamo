@@ -6,3 +6,4 @@
 \\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\ProtoGeometry.dll
 \\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMaker\obj\Debug\HowickMaker.dll
 \\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMaker\obj\Debug\HowickMaker.pdb
+\\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMaker\obj\Debug\HowickMaker.csprojResolveAssemblyReference.cache

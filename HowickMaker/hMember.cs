@@ -39,7 +39,14 @@ namespace HowickMaker
             this.name = name;
         }
 
-        
+        public hMember(Geo.Line webAxis, int name = 0)
+        {
+            this.webAxis = webAxis;
+            this.webNormal = null;
+            this.name = name;
+        }
+
+
 
         internal void addOperation(hOperation operation)
         {

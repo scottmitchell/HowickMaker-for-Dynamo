@@ -12,28 +12,60 @@ namespace HowickMaker
         public List<hMember> members = new List<hMember>();
         public List<hConnection> connections = new List<hConnection>();
         internal Graph g;
+        internal double tolerance = 0.001;
 
         public hStructure()
         {
 
         }
-        
 
 
+        //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
+        //  ██╔══██╗██║   ██║██╔══██╗    ██╔════╝████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
+        //  ██████╔╝██║   ██║██████╔╝    ██║     ██╔██╗ ██║███████╗   ██║   ██████╔╝
+        //  ██╔═══╝ ██║   ██║██╔══██╗    ██║     ██║╚██╗██║╚════██║   ██║   ██╔══██╗
+        //  ██║     ╚██████╔╝██████╔╝    ╚██████╗██║ ╚████║███████║   ██║   ██║  ██║
+        //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
+        //                                                                          
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <returns></returns>
         public static List<hMember> FromLines(List<Geo.Line> lines)
         {
             hStructure structure = StructureFromLines(lines);
-            return null;
+            return structure.members;
         }
 
+
+
+        //  ████████╗███████╗███████╗████████╗
+        //  ╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝
+        //     ██║   █████╗  ███████╗   ██║   
+        //     ██║   ██╔══╝  ╚════██║   ██║   
+        //     ██║   ███████╗███████║   ██║   
+        //     ╚═╝   ╚══════╝╚══════╝   ╚═╝   
+        //                                    
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <returns></returns>
         public static int Test(List<Geo.Line> lines)
         {
-            //hStructure structure = StructureFromLines(lines);
+            hStructure structure = StructureFromLines(lines);
 
             Graph g = graphFromLines(lines);
 
             return g.vertices.Count;
         }
+
+
 
         public static List<string> Test2(List<Geo.Line> lines)
         {
@@ -52,18 +84,9 @@ namespace HowickMaker
             return cons;
         }
 
-        public static hStructure StructureFromLines(List<Geo.Line> lines)
-        {
-            hStructure structure = new hStructure();
-            structure.g = graphFromLines(lines);
-            //structure.buildMembersAndConnectionsFromGraph();
+        
 
-
-            return structure;
-
-        }
-
-
+        #region Triangulation Strategy 01
         //  ████████╗██████╗ ██╗     ██████╗  ██╗
         //  ╚══██╔══╝██╔══██╗██║    ██╔═████╗███║
         //     ██║   ██████╔╝██║    ██║██╔██║╚██║
@@ -165,6 +188,8 @@ namespace HowickMaker
         }
 
 
+        #endregion
+
 
 
         //  ██████╗ ████████╗███████╗
@@ -175,6 +200,20 @@ namespace HowickMaker
         //  ╚═════╝    ╚═╝   ╚══════╝
         //                                                 
 
+            
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <returns></returns>
+        internal static hStructure StructureFromLines(List<Geo.Line> lines)
+        {
+            hStructure structure = new hStructure();
+            structure.g = graphFromLines(lines);
+            structure.buildMembersAndConnectionsFromGraph(lines);
+
+            return structure;
+        }
 
         /// <summary>
         /// Creates a simple connectivity graph of a line network
@@ -185,7 +224,7 @@ namespace HowickMaker
         {
             // Create the connectivity graph
             Graph g = new Graph();
-
+            
             // Iterate through each line...
             foreach (Geo.Line line in lines)
             {
@@ -209,45 +248,128 @@ namespace HowickMaker
                 // Add the vertex to the graph
                 g.vertices.Add(v);
             }
-
+            
             return g;
         
         }
 
-        public void buildMembersAndConnectionsFromGraph()
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="lines"></param>
+        internal void buildMembersAndConnectionsFromGraph(List<Geo.Line> lines)
         {
             Vertex current = g.vertices[0];
-            Propogate(current);
+            
+            hMember currentMember = new hMember(lines[current.name], current.name);
+            Geo.Line currentLine = lines[0];
+            Geo.Line nextLine = lines[current.neighbors[0]];
+            Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
 
+            currentMember.webNormal = currentPlane.Normal;
+            members.Add(currentMember);
+
+            Propogate(current, lines);
         }
 
-        internal void Propogate(Vertex current)
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="current"></param>
+        /// <param name="lines"></param>
+        internal void Propogate(Vertex current, List<Geo.Line> lines)
         {
-            // Iterate through each neighbor
-            foreach(int i in current.neighbors)
+            if (current.neighbors.Count > 0)
             {
-                // If we have not been to this vertex yet
-                if (!g.vertices[i].visited)
+                // Iterate through each neighbor
+                foreach (int i in current.neighbors)
                 {
-                    ///////////////////////////////////////
-                    ///////////////////////////////////////
-                    // Create an hConnection
-                    hConnection con = new hConnection(Connection.FTF);
-                    con.members.Add(current.name);
-                    con.members.Add(i);
-                    ///////////////////////////////////////
-                    ///////////////////////////////////////
+                    // If we have not been to this vertex yet
+                    if (!g.vertices[i].visited)
+                    {
+                        ///////////////////////////////////////
+                        ///////////////////////////////////////
+                        // Create an hConnection
+                        hConnection con = new hConnection(Connection.FTF);
+                        con.addMember(i);
+                        con.addMember(current.name);
 
-                    connections.Add(con);
+                        if (con.type == Connection.FTF)
+                        {
+                            hMember nextMember = new hMember(lines[i], i);
+                            nextMember.webNormal = FlipVector(members[current.name].webNormal);
+                            members.Add(nextMember);
+                            
+                        }
 
-                    current.visited = true;
+                        
 
-                    Propogate(g.vertices[i]);
+                        ///////////////////////////////////////
+                        ///////////////////////////////////////
+
+                        connections.Add(con);
+
+                        current.visited = true;
+
+                        Propogate(g.vertices[i], lines);
+                    }
                 }
             }
         }
 
 
+
+        //  ██╗   ██╗████████╗██╗██╗     
+        //  ██║   ██║╚══██╔══╝██║██║     
+        //  ██║   ██║   ██║   ██║██║     
+        //  ██║   ██║   ██║   ██║██║     
+        //  ╚██████╔╝   ██║   ██║███████╗
+        //   ╚═════╝    ╚═╝   ╚═╝╚══════╝
+        //                               
+
+
+        /// <summary>
+        /// Find the plane that best fits 2 lines
+        /// </summary>
+        /// <param name="line1"></param>
+        /// <param name="line2"></param>
+        /// <returns>plane of best fit</returns>
+        internal Geo.Plane ByTwoLines(Geo.Line line1, Geo.Line line2)
+        {
+            List<Geo.Point> pts = new List<Geo.Point>{ line1.StartPoint, line1.EndPoint, line2.StartPoint, line2.EndPoint };
+            return Geo.Plane.ByBestFitThroughPoints(pts);
+        }
+
+
+        /// <summary>
+        /// Returns a new vector which is the input vector reversed
+        /// </summary>
+        /// <param name="vec"></param>
+        /// <returns>reversed vector</returns>
+        internal Geo.Vector FlipVector(Geo.Vector vec)
+        {
+            return Geo.Vector.ByCoordinates(vec.X * -1, vec.Y * -1, vec.Z * -1);
+        }
+
+        /// <summary>
+        /// Determines whether two planes are parallel
+        /// </summary>
+        /// <param name="plane1"></param>
+        /// <param name="plane2"></param>
+        /// <returns>true if planes are parallel; false if planes are not parallel</returns>
+        internal bool ParallelPlanes(Geo.Plane plane1, Geo.Plane plane2)
+        {
+            Geo.Vector vec1 = plane1.Normal;
+            Geo.Vector vec2 = plane2.Normal;
+
+            double similarity = vec1.Dot(vec2);
+
+            return (Math.Abs(similarity) > 1 - tolerance);
+        }
        
     }
 }
