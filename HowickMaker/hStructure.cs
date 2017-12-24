@@ -283,6 +283,8 @@ namespace HowickMaker
         /// <param name="lines"></param>
         internal void Propogate(Vertex current, List<Geo.Line> lines)
         {
+            hMember currentMember = members[current.name];
+
             if (current.neighbors.Count > 0)
             {
                 // Iterate through each neighbor
@@ -291,10 +293,23 @@ namespace HowickMaker
                     // If we have not been to this vertex yet
                     if (!g.vertices[i].visited)
                     {
+                        Geo.Plane jointPlane = ByTwoLines(lines[i], lines[current.name]);
+
                         ///////////////////////////////////////
                         ///////////////////////////////////////
                         // Create an hConnection
-                        hConnection con = new hConnection(Connection.FTF);
+                        hConnection con = null;
+
+                        if (ParallelPlaneNormals(currentMember.webNormal, jointPlane.Normal))
+                        {
+                            con = new hConnection(Connection.FTF);
+                        }
+
+                        else
+                        {
+                            con = new hConnection(Connection.BR);
+                        }
+                        
                         con.addMember(i);
                         con.addMember(current.name);
 
@@ -303,7 +318,14 @@ namespace HowickMaker
                             hMember nextMember = new hMember(lines[i], i);
                             nextMember.webNormal = FlipVector(members[current.name].webNormal);
                             members.Add(nextMember);
-                            
+                        }
+
+                        else if (con.type == Connection.BR)
+                        {
+                            hMember nextMember = new hMember(lines[i], i);
+                            Geo.Vector memberVector = Geo.Vector.ByTwoPoints(lines[i].StartPoint, lines[i].EndPoint);
+                            nextMember.webNormal = memberVector.Cross(jointPlane.Normal);
+                            members.Add(nextMember);
                         }
 
                         
@@ -370,6 +392,14 @@ namespace HowickMaker
 
             return (Math.Abs(similarity) > 1 - tolerance);
         }
-       
+
+
+        internal bool ParallelPlaneNormals(Geo.Vector vec1, Geo.Vector vec2)
+        {
+            double similarity = vec1.Dot(vec2);
+
+            return (Math.Abs(similarity) > 1 - tolerance);
+        }
+
     }
 }
