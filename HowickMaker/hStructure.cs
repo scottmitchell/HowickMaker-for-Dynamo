@@ -9,7 +9,7 @@ namespace HowickMaker
 {
     public class hStructure
     {
-        public List<hMember> members = new List<hMember>();
+        public hMember[] members;
         public List<hConnection> connections = new List<hConnection>();
         internal Graph g;
         internal double tolerance = 0.001;
@@ -17,6 +17,12 @@ namespace HowickMaker
         public hStructure()
         {
 
+        }
+
+        internal void InitArrays(int num)
+        {
+            hMember[] mems = new hMember[num];
+            this.members = mems;
         }
 
 
@@ -37,7 +43,7 @@ namespace HowickMaker
         public static List<hMember> FromLines(List<Geo.Line> lines)
         {
             hStructure structure = StructureFromLines(lines);
-            return structure.members;
+            return structure.members.ToList();
         }
 
 
@@ -72,10 +78,11 @@ namespace HowickMaker
             hStructure structure = StructureFromLines(lines);
 
             List<string> cons = new List<string>();
-            foreach (hConnection c in structure.connections)
+            Graph g = graphFromLines(lines);
+            foreach (Vertex v in g.vertices)
             {
-                string s = c.type + ": ";
-                foreach (int t in c.members)
+                string s = v.name + ": ";
+                foreach (int t in v.neighbors)
                 {
                     s += t.ToString() + ", ";
                 }
@@ -209,6 +216,8 @@ namespace HowickMaker
         internal static hStructure StructureFromLines(List<Geo.Line> lines)
         {
             hStructure structure = new hStructure();
+            structure.InitArrays(lines.Count);
+
             structure.g = graphFromLines(lines);
             structure.buildMembersAndConnectionsFromGraph(lines);
 
@@ -269,7 +278,7 @@ namespace HowickMaker
             Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
 
             currentMember.webNormal = currentPlane.Normal;
-            members.Add(currentMember);
+            this.members[0] = currentMember;
 
             Propogate(current, lines);
         }
@@ -294,9 +303,8 @@ namespace HowickMaker
                     if (!g.vertices[i].visited)
                     {
                         Geo.Plane jointPlane = ByTwoLines(lines[i], lines[current.name]);
+                        hMember nextMember = new hMember(lines[i], i);
 
-                        ///////////////////////////////////////
-                        ///////////////////////////////////////
                         // Create an hConnection
                         hConnection con = null;
 
@@ -315,32 +323,25 @@ namespace HowickMaker
 
                         if (con.type == Connection.FTF)
                         {
-                            hMember nextMember = new hMember(lines[i], i);
                             nextMember.webNormal = FlipVector(members[current.name].webNormal);
-                            members.Add(nextMember);
                         }
 
                         else if (con.type == Connection.BR)
                         {
-                            hMember nextMember = new hMember(lines[i], i);
                             Geo.Vector memberVector = Geo.Vector.ByTwoPoints(lines[i].StartPoint, lines[i].EndPoint);
                             nextMember.webNormal = memberVector.Cross(jointPlane.Normal);
-                            members.Add(nextMember);
                         }
 
-                        
-
-                        ///////////////////////////////////////
-                        ///////////////////////////////////////
+                        members[i] = nextMember;
 
                         connections.Add(con);
-
+                        
                         current.visited = true;
 
                         Propogate(g.vertices[i], lines);
                     }
                 }
-            }
+                }
         }
 
 
