@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Autodesk.DesignScript.Geometry;
+using Geo = Autodesk.DesignScript.Geometry;
 using Autodesk.DesignScript.Interfaces;
 using Autodesk.DesignScript.Runtime;
 
@@ -24,6 +24,7 @@ namespace HowickMaker
 
     public class hConnection
     {
+        public Geo.Point location;
         public List<int> members = new List<int>();
         public Connection type;
 
@@ -32,9 +33,34 @@ namespace HowickMaker
             this.type = type;
         }
 
-        public void addMember(int member)
+        public hConnection(Connection type, List<int> members)
+        {
+            this.type = type;
+            this.members = members;
+        }
+
+        public void AddMember(int member)
         {
             this.members.Add(member);
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        internal int GetOtherIndex(int index)
+        {
+            foreach (int i in members)
+            {
+                if (i != index)
+                {
+                    index = i;
+                }
+            }
+
+            return index;
         }
     }
 }

@@ -14,8 +14,8 @@ namespace HowickMaker
         internal Geo.Line webAxis;
         internal Geo.Vector webNormal;
         internal int name;
-        public List<hConnection> connections;
-        public List<hOperation> operations;
+        public List<hConnection> connections = new List<hConnection>();
+        public List<hOperation> operations = new List<hOperation>();
 
 
         //   ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██████╗ 
@@ -48,9 +48,14 @@ namespace HowickMaker
 
 
 
-        internal void addOperation(hOperation operation)
+        internal void AddOperation(hOperation operation)
         {
             this.operations.Add(operation);
+        }
+
+        internal void AddConnection(hConnection connection)
+        {
+            this.connections.Add(connection);
         }
 
 
@@ -64,7 +69,7 @@ namespace HowickMaker
         //                                   
         
 
-        public static void exportToFile(string filePath, List<hMember> hMembers)
+        public static void ExportToFile(string filePath, List<hMember> hMembers)
         {
             
         }
@@ -84,7 +89,7 @@ namespace HowickMaker
         //    ╚═══╝  ╚═╝╚══════╝
         //                      
 
-        public static Geo.Mesh draw(hMember member)
+        public static Geo.Mesh Draw(hMember member)
         {
             Geo.Point OP1 = member.webAxis.StartPoint;
             Geo.Point OP2 = member.webAxis.EndPoint;

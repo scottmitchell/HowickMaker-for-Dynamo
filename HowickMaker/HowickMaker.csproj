@@ -55,9 +55,11 @@
     <Compile Include="Graph.cs" />
     <Compile Include="hConnection.cs" />
     <Compile Include="hFace.cs" />
+    <Compile Include="hLines.cs" />
     <Compile Include="hMember.cs" />
     <Compile Include="hMesh.cs" />
     <Compile Include="hOperation.cs" />
+    <Compile Include="hQuadFace.cs" />
     <Compile Include="hStructure.cs" />
     <Compile Include="hVertex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

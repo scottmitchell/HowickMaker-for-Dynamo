@@ -8,11 +8,15 @@ namespace HowickMaker
 {
     class Graph
     {
-        internal List<Vertex> vertices;
+        internal Vertex[] vertices;
 
-        public Graph()
+        public Graph(int c)
         {
-            this.vertices = new List<Vertex>();
+            this.vertices = new Vertex[c];
+            for (int i = 0; i < c; i++)
+            {
+                vertices[i] = new Vertex(i);
+            }
         }
 
 

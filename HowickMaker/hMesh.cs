@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Geo = Autodesk.DesignScript.Geometry;
 
 namespace HowickMaker
 {
@@ -18,11 +19,8 @@ namespace HowickMaker
 
         public static hMesh hMeshFromOBJ(string filepath)
         {
-
-            int[] rotate = { 0, 1, 0, 2, 1, 0, 1, 1, 0, 2, 2, 0, 1, 1 };
             string[] lines = System.IO.File.ReadAllLines(filepath);
-
-
+            
             // Get Vertices
             List<hVertex> vertices = new List<hVertex>();
             foreach (string line in lines)
@@ -37,8 +35,7 @@ namespace HowickMaker
                     vertices.Add(v);
                 }
             }
-
-            int i = 0;
+            
             // Get Faces
             List<hFace> faces = new List<hFace>();
             foreach (string line in lines)
@@ -46,30 +43,51 @@ namespace HowickMaker
                 if (line.Length > 0 && line[0] == 'f')
                 {
                     string[] values = line.Split(' ');
-                    string[] values2 = { values[1], values[2], values[3]};
 
-                    int a = int.Parse(values2[(0+rotate[i])%3].Split('/')[0]);
-                    int b = int.Parse(values2[(1 + rotate[i]) % 3].Split('/')[0]);
-                    int c = int.Parse(values2[(2 + rotate[i]) % 3].Split('/')[0]);
                     List<hVertex> verts = new List<hVertex>();
-                    verts.Add(vertices[a-1]);
-                    verts.Add(vertices[b-1]);
-                    verts.Add(vertices[c-1]);
-
+                    for (int j = 1; j < values.Length; j++)
+                    {
+                        int index = int.Parse(values[j].Split('/')[0]);
+                        verts.Add(vertices[index-1]);
+                    }
+                    
                     hFace f = new hFace(verts);
                     faces.Add(f);
-                    i++;
                 }
             }
 
-
             return new hMesh(faces);
         }
+
+
+
+        internal int GetAdjacentFaceIndex(hFace currentFace, int edge)
+        {
+            hVertex edgeV1 = currentFace.vertices[edge];
+            hVertex edgeV2 = currentFace.vertices[(edge + 1) % currentFace.vertices.Count];
+
+            for (int i = 0; i < faces.Count; i++)
+            {
+                if (faces[i] != currentFace)
+                {
+                    if (faces[i].vertices.Contains(edgeV1) && faces[i].vertices.Contains(edgeV2))
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
+        }
+
+
 
         public static string view(hMesh m)
         {
             return m.ToString();
         }
+
+        
 
 
         public override string ToString()

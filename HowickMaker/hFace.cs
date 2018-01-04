@@ -9,6 +9,7 @@ namespace HowickMaker
     internal class hFace
     {
         internal List<hVertex> vertices = new List<hVertex>();
+        internal bool visited = false;
 
         internal hFace(List<hVertex> vertices)
         {

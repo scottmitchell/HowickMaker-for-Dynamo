@@ -19,9 +19,13 @@ namespace HowickMaker
 
         }
 
-        internal void InitArrays(int num)
+        internal void InitArrays(int num, List<Geo.Line> lines)
         {
             hMember[] mems = new hMember[num];
+            for (int i = 0; i < num; i++)
+            {
+                mems[i] = new hMember(lines[i], i);
+            }
             this.members = mems;
         }
 
@@ -62,13 +66,22 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        public static int Test(List<Geo.Line> lines)
+        public static List<string> Test(List<Geo.Line> lines)
         {
-            hStructure structure = StructureFromLines(lines);
+            //hStructure structure = StructureFromLines(lines);
 
             Graph g = graphFromLines(lines);
-
-            return g.vertices.Count;
+            List<string> s = new List<string>();
+            foreach (Vertex v in g.vertices)
+            {
+                string x = v.name.ToString() + ": ";
+                foreach (int i in v.neighbors)
+                {
+                    x += i.ToString() + ", ";
+                }
+                s.Add(x);
+            }
+            return s;
         }
 
 
@@ -78,20 +91,65 @@ namespace HowickMaker
             hStructure structure = StructureFromLines(lines);
 
             List<string> cons = new List<string>();
-            Graph g = graphFromLines(lines);
-            foreach (Vertex v in g.vertices)
+
+            foreach (hMember m in structure.members)
             {
-                string s = v.name + ": ";
-                foreach (int t in v.neighbors)
+                if (m != null)
                 {
-                    s += t.ToString() + ", ";
+                    string s = m.name + ": ";
+                    if (m.connections.Count > 0)
+                    {
+                        foreach (hConnection c in m.connections)
+                        {
+
+                            if (c.members.Count > 0)
+                            {
+                                foreach (int i in c.members)
+                                {
+                                    s += i.ToString() + ", ";
+                                }
+                            }
+                            else
+                            {
+                                s += "NONE";
+                            }
+
+                        }
+                    }
+                    cons.Add(s);
                 }
-                cons.Add(s);
+                else
+                {
+                    cons.Add("NULL");
+                }
             }
             return cons;
         }
 
-        
+
+
+        #region Quad Strategy 01
+
+        public static List<Geo.Line> QuadStrategy_01(hMesh mesh)
+        {
+
+            List<Geo.Line> lines = new List<Geo.Line>();
+            foreach (hFace f in mesh.faces)
+            {
+                Geo.Point p1 = Geo.Point.ByCoordinates(f.vertices[0].x, f.vertices[0].y, f.vertices[0].z);
+                Geo.Point p2 = Geo.Point.ByCoordinates(f.vertices[1].x, f.vertices[1].y, f.vertices[1].z);
+
+                lines.Add(Geo.Line.ByStartPointEndPoint(p1, p2));
+            }
+            return lines;
+        }
+
+
+
+
+        #endregion
+
+
 
         #region Triangulation Strategy 01
         //  ████████╗██████╗ ██╗     ██████╗  ██╗
@@ -216,7 +274,7 @@ namespace HowickMaker
         internal static hStructure StructureFromLines(List<Geo.Line> lines)
         {
             hStructure structure = new hStructure();
-            structure.InitArrays(lines.Count);
+            structure.InitArrays(lines.Count, lines);
 
             structure.g = graphFromLines(lines);
             structure.buildMembersAndConnectionsFromGraph(lines);
@@ -232,34 +290,28 @@ namespace HowickMaker
         internal static Graph graphFromLines(List<Geo.Line> lines)
         {
             // Create the connectivity graph
-            Graph g = new Graph();
+            Graph g = new Graph(lines.Count);
             
             // Iterate through each line...
-            foreach (Geo.Line line in lines)
+            for (int i = 0; i < lines.Count; i++)
             {
-                // Create a vertex for this line
-                Vertex v = new Vertex(g.vertices.Count);
-
                 // ...vs every other line
                 for (int j = 0; j < lines.Count; j++)
                 {
                     // Make sure we're not checking a line against itself
-                    if (line != lines[j])
+                    if (i != j)
                     {
                         // Check if the two lines intersect
-                        if (line.DoesIntersect(lines[j]))
+                        if (lines[i].DoesIntersect(lines[j]))
                         {
-                            // If so, add it as a neighbor
-                            v.addNeighbor(j);
+                            // If so, add j as a neighbor to i
+                            g.vertices[i].addNeighbor(j);
                         }
                     }
                 }
-                // Add the vertex to the graph
-                g.vertices.Add(v);
             }
             
             return g;
-        
         }
 
 
@@ -303,24 +355,27 @@ namespace HowickMaker
                     if (!g.vertices[i].visited)
                     {
                         Geo.Plane jointPlane = ByTwoLines(lines[i], lines[current.name]);
-                        hMember nextMember = new hMember(lines[i], i);
+                        hMember nextMember = members[i];
 
                         // Create an hConnection
                         hConnection con = null;
-
                         if (ParallelPlaneNormals(currentMember.webNormal, jointPlane.Normal))
                         {
-                            con = new hConnection(Connection.FTF);
+                            con = new hConnection(Connection.FTF, new List<int> { i, current.name });
                         }
 
                         else
                         {
-                            con = new hConnection(Connection.BR);
+                            con = new hConnection(Connection.BR, new List<int> { i, current.name });
                         }
                         
-                        con.addMember(i);
-                        con.addMember(current.name);
+                        connections.Add(con);
 
+                        members[i].connections.Add(con);
+                        members[current.name].connections.Add(con);
+
+                        /*
+                        // Build member based on connections
                         if (con.type == Connection.FTF)
                         {
                             nextMember.webNormal = FlipVector(members[current.name].webNormal);
@@ -329,15 +384,16 @@ namespace HowickMaker
                         else if (con.type == Connection.BR)
                         {
                             Geo.Vector memberVector = Geo.Vector.ByTwoPoints(lines[i].StartPoint, lines[i].EndPoint);
-                            nextMember.webNormal = memberVector.Cross(jointPlane.Normal);
+                            nextMember.webNormal = jointPlane.Normal.Cross(memberVector);
                         }
+                        */
 
-                        members[i] = nextMember;
+                        List<Geo.Vector> vectors = GetValidNormalsForMember(i);
 
-                        connections.Add(con);
+                        this.members[i].webNormal = vectors[0];
                         
-                        current.visited = true;
 
+                        current.visited = true;
                         Propogate(g.vertices[i], lines);
                     }
                 }
@@ -345,6 +401,72 @@ namespace HowickMaker
         }
 
 
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="memberIndex"></param>
+        /// <returns></returns>
+        internal List<Geo.Vector> GetValidNormalsForMemberForConnection(hConnection connection, int memberIndex)
+        {
+            int otherMemberIndex = connection.GetOtherIndex(memberIndex);
+            
+            if (connection.type == Connection.FTF)
+            {
+                Geo.Vector otherNormal = members[otherMemberIndex].webNormal;
+                return new List<Geo.Vector> { FlipVector(otherNormal) };
+            }
+
+            else if (connection.type == Connection.BR)
+            {
+                Geo.Plane jointPlane = ByTwoLines(members[memberIndex].webAxis, members[otherMemberIndex].webAxis);
+                Geo.Vector memberVector = Geo.Vector.ByTwoPoints(members[memberIndex].webAxis.StartPoint, members[memberIndex].webAxis.EndPoint);
+
+                Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
+
+                //return new List<Geo.Vector> { webNormal1, FlipVector(webNormal1) };
+                return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
+            }
+
+            else
+            {
+                return null;
+            }
+            
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="memberIndex"></param>
+        /// <returns></returns>
+        internal List<Geo.Vector> GetValidNormalsForMember(int memberIndex)
+        {
+            List<Geo.Vector> potentialVectors = GetValidNormalsForMemberForConnection(members[memberIndex].connections[0], memberIndex);
+
+            foreach (hConnection connection in members[memberIndex].connections)
+            {
+                List<Geo.Vector> checkVectors = GetValidNormalsForMemberForConnection(connection, memberIndex);
+                List<Geo.Vector> newVectors = new List<Geo.Vector>();
+                foreach (Geo.Vector pV in potentialVectors)
+                {
+                    foreach (Geo.Vector cV in checkVectors)
+                    {
+                        if (ParallelPlaneNormals(pV, cV))
+                    {
+                            newVectors.Add(pV);
+                        }
+                    }
+                    
+                }
+            }
+            
+            return potentialVectors;
+        }
+        
 
         //  ██╗   ██╗████████╗██╗██╗     
         //  ██║   ██║╚══██╔══╝██║██║     
@@ -355,6 +477,44 @@ namespace HowickMaker
         //                               
 
 
+
+        internal Geo.Vector GetBRNormal(hConnection connection, int memberIndex)
+        {
+            Geo.Line memberAxis = members[memberIndex].webAxis;
+            Geo.Line otherMemberAxis = members[connection.GetOtherIndex(memberIndex)].webAxis;
+
+            Geo.Vector memberVector = Geo.Vector.ByTwoPoints(memberAxis.StartPoint, memberAxis.EndPoint);
+            Geo.Vector otherMemberVector = null;
+
+            Geo.Vector otherMemberNormal = members[connection.GetOtherIndex(memberIndex)].webNormal;
+
+            Geo.Point center = (Geo.Point)memberAxis.Intersect(otherMemberAxis)[0];
+            
+            // Flip other member vector if needed
+            if ( SamePoints(memberAxis.StartPoint, otherMemberAxis.StartPoint) || SamePoints(memberAxis.EndPoint, otherMemberAxis.EndPoint) )
+            {
+                otherMemberVector = Geo.Vector.ByTwoPoints(otherMemberAxis.StartPoint, otherMemberAxis.EndPoint);
+            }
+
+            else
+            {
+                otherMemberVector = Geo.Vector.ByTwoPoints(otherMemberAxis.EndPoint, otherMemberAxis.StartPoint);
+            }
+
+            Geo.Vector xAxis = memberVector.Normalized().Add(otherMemberVector.Normalized());
+            Geo.Vector yAxis = memberVector.Cross(otherMemberVector);
+            Geo.Plane bisectingPlane = Geo.Plane.ByOriginXAxisYAxis(Geo.Point.ByCoordinates(0,0,0), xAxis, yAxis);
+
+            Geo.Point normalP = (Geo.Point)otherMemberNormal.AsPoint().Mirror(bisectingPlane);
+
+            Geo.Vector normal = Geo.Vector.ByCoordinates(normalP.X, normalP.Y, normalP.Z);
+
+            return normal;
+        }
+
+
+
+
         /// <summary>
         /// Find the plane that best fits 2 lines
         /// </summary>
@@ -363,8 +523,13 @@ namespace HowickMaker
         /// <returns>plane of best fit</returns>
         internal Geo.Plane ByTwoLines(Geo.Line line1, Geo.Line line2)
         {
-            List<Geo.Point> pts = new List<Geo.Point>{ line1.StartPoint, line1.EndPoint, line2.StartPoint, line2.EndPoint };
-            return Geo.Plane.ByBestFitThroughPoints(pts);
+            Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line1.StartPoint, line1.EndPoint);
+            Geo.Vector vec2 = Geo.Vector.ByTwoPoints(line2.StartPoint, line2.EndPoint);
+            Geo.Vector normal = vec1.Cross(vec2);
+
+            Geo.Plane p = Geo.Plane.ByOriginNormal(line1.StartPoint, normal);
+
+            return p;
         }
 
 
@@ -400,6 +565,15 @@ namespace HowickMaker
             double similarity = vec1.Dot(vec2);
 
             return (Math.Abs(similarity) > 1 - tolerance);
+        }
+
+        internal bool SamePoints(Geo.Point p1, Geo.Point p2)
+        {
+            bool x = Math.Abs(p1.X - p2.X) < tolerance;
+            bool y = Math.Abs(p1.Y - p2.Y) < tolerance;
+            bool z = Math.Abs(p1.Z - p2.Z) < tolerance;
+
+            return x && y && z;
         }
 
     }
