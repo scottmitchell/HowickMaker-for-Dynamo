@@ -18,7 +18,8 @@ namespace HowickMaker
     {
         FTF = 0,
         BR,
-        PT
+        PT,
+        T
     }
 
 
