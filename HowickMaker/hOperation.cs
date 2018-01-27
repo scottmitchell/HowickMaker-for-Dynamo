@@ -27,9 +27,15 @@ namespace HowickMaker
     }
 
 
-    public class hOperation
+    internal class hOperation
     {
-        internal double loc;
-        internal Operation type;
+        internal double _loc;
+        internal Operation _type;
+
+        internal hOperation(double loc, Operation type)
+        {
+            _loc = loc;
+            _type = type;
+        }
     }
 }

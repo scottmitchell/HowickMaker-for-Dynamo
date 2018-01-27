@@ -13,16 +13,19 @@ namespace HowickMaker
         public List<hConnection> _connections = new List<hConnection>();
         internal Graph _g;
         internal double _tolerance = 0.001;
+        internal double _WEBHoleOffset = (15.0 / 16);
         List<Geo.Line> _lines = new List<Geo.Line>();
+        List<hMember> _braceMembers = new List<hMember>();
 
         public hStructure()
         {
 
         }
 
-        public hStructure(List<Geo.Line> lines)
+        public hStructure(List<Geo.Line> lines, double tolerance)
         {
             _lines = lines;
+            _tolerance = tolerance;
             _members = new hMember[lines.Count];
             for (int i = 0; i < lines.Count; i++)
             {
@@ -55,10 +58,18 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        public static List<hMember> FromLines(List<Geo.Line> lines)
+        public static List<hMember> FromLines(List<Geo.Line> lines, double tolerance)
         {
-            hStructure structure = StructureFromLines(lines);
+            hStructure structure = StructureFromLines(lines, tolerance);
             return structure._members.ToList();
+
+        }
+
+        public static List<hMember> BracesFromLines(List<Geo.Line> lines, double tolerance, int type)
+        {
+            hStructure structure = StructureFromLines(lines, tolerance);
+            structure.GenerateBraces(7, 4, type);
+            return structure._braceMembers;
         }
 
 
@@ -77,11 +88,11 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        public static List<string> Test(List<Geo.Line> lines)
+        public static List<string> Test(List<Geo.Line> lines, double tolerance)
         {
             //hStructure structure = StructureFromLines(lines);
 
-            Graph g = graphFromLines(lines);
+            Graph g = graphFromLines(lines, tolerance);
             List<string> s = new List<string>();
             foreach (Vertex v in g.vertices)
             {
@@ -97,9 +108,9 @@ namespace HowickMaker
 
 
 
-        public static List<string> Test2(List<Geo.Line> lines)
+        public static List<string> Test2(List<Geo.Line> lines, double tolerance)
         {
-            hStructure structure = StructureFromLines(lines);
+            hStructure structure = StructureFromLines(lines, tolerance);
 
             List<string> cons = new List<string>();
 
@@ -282,13 +293,14 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines(List<Geo.Line> lines)
+        internal static hStructure StructureFromLines(List<Geo.Line> lines, double tolerance)
         {
-            hStructure structure = new hStructure(lines);
+            hStructure structure = new hStructure(lines, tolerance);
 
-            structure._g = graphFromLines(lines);
+            structure._g = graphFromLines(lines, structure._tolerance);
 
             structure.BuildMembersAndConnectionsFromGraph();
+            structure.ResolveFTFConnections();
 
             return structure;
         }
@@ -298,7 +310,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"> The list of lines we want to create a graph from </param>
         /// <returns> A connectivity graph </returns>
-        internal static Graph graphFromLines(List<Geo.Line> lines)
+        internal static Graph graphFromLines(List<Geo.Line> lines, double tolerance)
         {
             // Create the connectivity graph
             Graph g = new Graph(lines.Count);
@@ -313,7 +325,9 @@ namespace HowickMaker
                     if (i != j)
                     {
                         // Check if the two lines intersect
-                        if (lines[i].DoesIntersect(lines[j]))
+                        //if (lines[i].DoesIntersect(lines[j]))
+                        //if (LinesIntersectWithTolerance(lines[i], lines[j], tolerance))
+                        if (lines[i].DistanceTo(lines[j]) <= tolerance)
                         {
                             // If so, add j as a neighbor to i
                             g.vertices[i].addNeighbor(j);
@@ -495,7 +509,158 @@ namespace HowickMaker
             
             return potentialVectors;
         }
-        
+
+        #region Resolve BR Connections
+
+        internal void ResolveBRConnections()
+        {
+
+        }
+
+
+        /// <summary>
+        /// Generates brace hMembers for every braced connection (BR) in the structure
+        /// </summary>
+        /// <param name="braceLength"></param>
+        internal void GenerateBraces(double braceLength, double braceLength2, int type)
+        {
+            foreach (hConnection connection in _connections)
+            {
+                if (connection.type == Connection.BR)
+                {
+                    int mem1 = connection.members[0];
+                    int mem2 = connection.members[1];
+
+                    Geo.Point common;
+                    Geo.Point mem1End;
+                    Geo.Point mem2End;
+
+                    if (SamePoints(_members[mem1].webAxis.StartPoint, _members[mem2].webAxis.StartPoint))
+                    {
+                        common = _members[mem1].webAxis.StartPoint;
+                        mem1End = _members[mem1].webAxis.EndPoint;
+                        mem2End = _members[mem2].webAxis.EndPoint;
+                    }
+                    else if (SamePoints(_members[mem1].webAxis.StartPoint, _members[mem2].webAxis.EndPoint))
+                    {
+                        common = _members[mem1].webAxis.StartPoint;
+                        mem1End = _members[mem1].webAxis.EndPoint;
+                        mem2End = _members[mem2].webAxis.StartPoint;
+                    }
+                    else if (SamePoints(_members[mem1].webAxis.EndPoint, _members[mem2].webAxis.StartPoint))
+                    {
+                        common = _members[mem1].webAxis.EndPoint;
+                        mem1End = _members[mem1].webAxis.StartPoint;
+                        mem2End = _members[mem2].webAxis.EndPoint;
+                    }
+                    else
+                    {
+                        common = _members[mem1].webAxis.EndPoint;
+                        mem1End = _members[mem1].webAxis.StartPoint;
+                        mem2End = _members[mem2].webAxis.StartPoint;
+                    }
+
+                    Geo.Vector v1 = Geo.Vector.ByTwoPoints(common, mem1End).Normalized();
+                    Geo.Vector v2 = Geo.Vector.ByTwoPoints(common, mem2End).Normalized();
+                    Geo.Vector bisector = v1.Add(v2);
+                    bisector = bisector.Normalized();
+                    bisector = bisector.Scale(braceLength2);
+
+                    Geo.Vector brace3Normal = bisector.Rotate(v1.Cross(v2), 90).Normalized().Scale(0.75);
+                    Geo.Vector brace3Move = FlipVector(brace3Normal);
+                    Geo.Point b3End = common.Add(bisector);
+                    Geo.Line brace3Axis = Geo.Line.ByStartPointDirectionLength(common, bisector, braceLength2);
+                    hMember brace3 = new hMember(brace3Axis, brace3Normal);
+                    
+                    double a = v1.AngleWithVector(v2)/2.0 * (Math.PI/180);
+
+                    double z = braceLength2 * Math.Cos(a) + braceLength * Math.Sin(Math.Acos((braceLength2 * Math.Sin(a) / braceLength)));
+                    v1 = v1.Scale(z);
+                    v2 = v2.Scale(z);
+
+                    Geo.Point b1End = Geo.Point.ByCoordinates(common.X + v1.X, common.Y + v1.Y, common.Z + v1.Z);
+                    Geo.Point b2End = Geo.Point.ByCoordinates(common.X + v2.X, common.Y + v2.Y, common.Z + v2.Z);
+                    Geo.Vector brace1Normal = Geo.Vector.ByTwoPoints(brace3Axis.EndPoint, b1End).Rotate(v1.Cross(v2), -90);
+                    Geo.Vector brace2Normal = Geo.Vector.ByTwoPoints(brace3Axis.EndPoint, b2End).Rotate(v2.Cross(v1), -90);
+
+                    hMember brace1 = new hMember(Geo.Line.ByStartPointEndPoint(brace3Axis.EndPoint, b1End), brace1Normal);
+                    hMember brace2 = new hMember(Geo.Line.ByStartPointEndPoint(brace3Axis.EndPoint, b2End), brace2Normal);
+                    
+                    hMember brace4 = new hMember(Geo.Line.ByStartPointEndPoint(b1End, b2End), FlipVector(bisector));
+
+                    if (type == 0)
+                    {
+                        _braceMembers.Add(brace1);
+                        _braceMembers.Add(brace2);
+                        _braceMembers.Add(brace3);
+                    }
+
+                    else
+                    {
+                        _braceMembers.Add(brace4);
+                    }
+                }
+            }
+        }
+
+        #endregion
+
+        #region Resolve FTF Connections
+
+        internal void ResolveFTFConnections()
+        {
+            foreach (hConnection connection in _connections)
+            {
+                if (connection.type == Connection.FTF)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        // Get indices of involved members
+                        int index1 = connection.members[i];
+                        int index2 = connection.members[(i + 1) % 2];
+
+                        // Get involved web axes
+                        Geo.Line axis1 = _members[index1].webAxis;
+                        Geo.Line axis2 = _members[index2].webAxis;
+
+                        // Get intersection point
+                        Geo.Point intersectionPoint = ClosestPointToOtherLine(axis1, axis2);
+
+                        // Get angle between members
+                        double angle = (Math.PI/180) * Geo.Vector.ByTwoPoints(axis1.StartPoint, axis1.EndPoint).AngleWithVector(Geo.Vector.ByTwoPoints(axis2.StartPoint, axis2.EndPoint));
+                        angle = (angle < (Math.PI/2)) ? angle : Math.PI - angle;
+
+                        // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
+                        double minExtension = _WEBHoleOffset / Math.Sin(angle) + _WEBHoleOffset / Math.Tan(angle) + 1;
+
+                        // Check start point
+                        if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)
+                        {
+                            // Extend
+                            Geo.Vector moveVector = Geo.Vector.ByTwoPoints(axis1.EndPoint, axis1.StartPoint);
+                            moveVector = moveVector.Normalized();
+                            moveVector = moveVector.Scale(minExtension);
+                            Geo.Point newStartPoint = intersectionPoint.Add(moveVector);
+                            _members[index1].SetWebAxisStartPoint(newStartPoint);
+                        }
+
+                        // Check end point
+                        if (SamePoints(intersectionPoint, axis1.EndPoint) || intersectionPoint.DistanceTo(axis1.EndPoint) < minExtension)
+                        {
+                            // Extend
+                            Geo.Vector moveVector = Geo.Vector.ByTwoPoints(axis1.StartPoint, axis1.EndPoint);
+                            moveVector = moveVector.Normalized();
+                            moveVector = moveVector.Scale(minExtension);
+                            Geo.Point newEndPoint = intersectionPoint.Add(moveVector);
+                            _members[index1].SetWebAxisEndPoint(newEndPoint);
+                        }
+                    }
+                }
+            }
+        }
+
+        #endregion
+
 
         //  ██╗   ██╗████████╗██╗██╗     
         //  ██║   ██║╚══██╔══╝██║██║     
@@ -505,6 +670,8 @@ namespace HowickMaker
         //   ╚═════╝    ╚═╝   ╚═╝╚══════╝
         //                               
 
+
+        
 
 
         internal Geo.Vector GetBRNormal(hConnection connection, int memberIndex)
@@ -588,14 +755,25 @@ namespace HowickMaker
             return (Math.Abs(similarity) > 1 - _tolerance);
         }
 
-
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="vec1"></param>
+        /// <param name="vec2"></param>
+        /// <returns></returns>
         internal bool ParallelPlaneNormals(Geo.Vector vec1, Geo.Vector vec2)
         {
             double similarity = vec1.Dot(vec2);
 
             return (Math.Abs(similarity) > 1 - _tolerance);
         }
-
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns></returns>
         internal bool SamePoints(Geo.Point p1, Geo.Point p2)
         {
             bool x = Math.Abs(p1.X - p2.X) < _tolerance;
@@ -605,7 +783,56 @@ namespace HowickMaker
             return x && y && z;
         }
 
-        internal bool LinesIntersectWithTolerance(Geo.Line line1, Geo.Line line2, double tolerance)
+
+
+
+        #region Line Segment Distances
+
+        public static Geo.Point ClosestPointToOtherLine(Geo.Line line, Geo.Line other)
+        {
+            Geo.Point pt1 = line.StartPoint;
+            Geo.Point pt3 = other.StartPoint;
+
+            Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line.StartPoint, line.EndPoint);
+            Geo.Vector vec2 = Geo.Vector.ByTwoPoints(other.StartPoint, other.EndPoint);
+
+            double x1 = pt1.X;
+            double y1 = pt1.Y;
+            double z1 = pt1.Z;
+            double x2 = pt3.X;
+            double y2 = pt3.Y;
+            double z2 = pt3.Z;
+
+            double a1 = vec1.X;
+            double b1 = vec1.Y;
+            double c1 = vec1.Z;
+            double a2 = vec2.X;
+            double b2 = vec2.Y;
+            double c2 = vec2.Z;
+
+            double f = a1 * a2 + b1 * b2 + c1 * c2;
+            double g = -(a1 * a1 + b1 * b1 + c1 * c1);
+            double h = -(a1 * (x2 - x1) + b1 * (y2 - y1) + c1 * (z2 - z1));
+            double i = (a2 * a2 + b2 * b2 + c2 * c2);
+            double j = -1 * f;
+            double k = -(a2 * (x2 - x1) + b2 * (y2 - y1) + c2 * (z2 - z1));
+
+            double t = (k - (h * i / f)) / (j - (g * i / f));
+
+            double xp = x1 + (a1 * t);
+            double yp = y1 + (b1 * t);
+            double zp = z1 + (c1 * t);
+
+            return Geo.Point.ByCoordinates(xp, yp, zp);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="line1"></param>
+        /// <param name="line2"></param>
+        /// <returns></returns>
+        public static double LineToLineDistance(Geo.Line line1, Geo.Line line2)
         {
             Geo.Point pt1 = line1.StartPoint;
             Geo.Point pt2 = line1.EndPoint;
@@ -614,11 +841,147 @@ namespace HowickMaker
 
             Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line1.StartPoint, line1.EndPoint);
             Geo.Vector vec2 = Geo.Vector.ByTwoPoints(line2.StartPoint, line2.EndPoint);
-            
-            
 
-            return true;
+            double x1 = pt1.X;
+            double y1 = pt1.Y;
+            double z1 = pt1.Z;
+            double x2 = pt3.X;
+            double y2 = pt3.Y;
+            double z2 = pt3.Z;
+
+            double a1 = vec1.X;
+            double b1 = vec1.Y;
+            double c1 = vec1.Z;
+            double a2 = vec2.X;
+            double b2 = vec2.Y;
+            double c2 = vec2.Z;
+
+            double f = a1 * a2 + b1 * b2 + c1 * c2;
+            double g = -(a1 * a1 + b1 * b1 + c1 * c1);
+            double h = -(a1 * (x2 - x1) + b1 * (y2 - y1) + c1 * (z2 - z1));
+            double i = (a2 * a2 + b2 * b2 + c2 * c2);
+            double j = -1 * f;
+            double k = -(a2 * (x2 - x1) + b2 * (y2 - y1) + c2 * (z2 - z1));
+
+            double t = (k - (h * i / f)) / (j - (g * i / f));
+            double s = (h - (k * f / i)) / (g - (j * f / i));
+
+            if (t >= 0 && t <= 1 && s >= 0 && s <= 1)
+            {
+                double xp = x1 + (a1 * t);
+                double yp = y1 + (b1 * t);
+                double zp = z1 + (c1 * t);
+                double xq = x2 + (a2 * s);
+                double yq = y2 + (b2 * s);
+                double zq = z2 + (c2 * s);
+
+                double d9 = Math.Sqrt(Math.Pow((xq - xp), 2) + Math.Pow((yq - yp), 2) + Math.Pow((zq - zp), 2));
+                return d9;
+            }
+            else
+            {
+                return -1;
+            }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="line"></param>
+        /// <returns></returns>
+        public static double PointToLineDistance(Geo.Point point, Geo.Line line)
+        {
+            Geo.Point p = line.StartPoint;
+            Geo.Vector v = Geo.Vector.ByTwoPoints(line.StartPoint, line.EndPoint);
+
+            double xp = point.X;
+            double yp = point.Y;
+            double zp = point.Z;
+
+            double x1 = p.X;
+            double y1 = p.Y;
+            double z1 = p.Z;
+
+            double a1 = v.X;
+            double b1 = v.Y;
+            double c1 = v.Z;
+
+            double t = (-1 * (a1 * (x1 - xp) + b1 * (y1 - yp) + c1 * (z1 - zp))) / (a1 * a1 + b1 * b1 + c1 * c1);
+
+            if (t >= 0 && t <= 1)
+            {
+                double xq = x1 + (a1 * t);
+                double yq = y1 + (b1 * t);
+                double zq = z1 + (c1 * t);
+                double d = Math.Sqrt(Math.Pow((xq - xp), 2) + Math.Pow((yq - yp), 2) + Math.Pow((zq - zp), 2));
+                return d;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="line1"></param>
+        /// <param name="line2"></param>
+        /// <returns></returns>
+        public static double MinDistanceBetweenLines(Geo.Line line1, Geo.Line line2)
+        {
+            var distances = new List<double>();
+
+            Geo.Point pt1 = line1.StartPoint;
+            Geo.Point pt2 = line1.EndPoint;
+            Geo.Point pt3 = line2.StartPoint;
+            Geo.Point pt4 = line2.EndPoint;
+
+            double d1 = PointToLineDistance(pt1, line2);
+            if (d1 > 0) { distances.Add(d1); }
+
+            double d2 = PointToLineDistance(pt2, line2);
+            if (d2 > 0) { distances.Add(d2); }
+
+            double d3 = PointToLineDistance(pt3, line1);
+            if (d3 > 0) { distances.Add(d3); }
+
+            double d4 = PointToLineDistance(pt4, line1);
+            if (d4 > 0) { distances.Add(d4); }
+
+            double d5 = pt1.DistanceTo(pt3);
+            distances.Add(d5);
+
+            double d6 = pt1.DistanceTo(pt4);
+            distances.Add(d6);
+
+            double d7 = pt2.DistanceTo(pt3);
+            distances.Add(d7);
+
+            double d8 = pt2.DistanceTo(pt4);
+            distances.Add(d8);
+
+            double d9 = LineToLineDistance(line1, line2);
+            if (d9 > 0) { distances.Add(d9); }
+
+            return distances.Min();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="line1"></param>
+        /// <param name="line2"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+            public static bool LinesIntersectWithTolerance(Geo.Line line1, Geo.Line line2, double tolerance)
+        {
+            return MinDistanceBetweenLines(line1, line2) <= tolerance;
+        }
+
+        #endregion
     }
 }

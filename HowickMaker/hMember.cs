@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace HowickMaker
         internal Geo.Vector webNormal;
         internal int name;
         public List<hConnection> connections = new List<hConnection>();
-        public List<hOperation> operations = new List<hOperation>();
+        internal List<hOperation> operations = new List<hOperation>();
 
 
         //   ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██████╗ 
@@ -47,6 +48,37 @@ namespace HowickMaker
         }
 
 
+        //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
+        //  ██╔══██╗██║   ██║██╔══██╗    ██╔════╝████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
+        //  ██████╔╝██║   ██║██████╔╝    ██║     ██╔██╗ ██║███████╗   ██║   ██████╔╝
+        //  ██╔═══╝ ██║   ██║██╔══██╗    ██║     ██║╚██╗██║╚════██║   ██║   ██╔══██╗
+        //  ██║     ╚██████╔╝██████╔╝    ╚██████╗██║ ╚████║███████║   ██║   ██║  ██║
+        //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
+        //          
+
+        public static hMember ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
+        {
+            hMember member = new hMember(webAxis, webNormal, name);
+            return member;
+        }
+
+
+        //  ██████╗ ██╗   ██╗██████╗  
+        //  ██╔══██╗██║   ██║██╔══██╗ 
+        //  ██████╔╝██║   ██║██████╔╝  
+        //  ██╔═══╝ ██║   ██║██╔══██╗  
+        //  ██║     ╚██████╔╝██████╔╝ 
+        //  ╚═╝      ╚═════╝ ╚═════╝  
+        //          
+
+       
+        public static hMember AddOperationByLocationType(hMember member, double location, string type)
+        {
+            hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
+            member.AddOperation(op);
+            return member;
+        }
+        
 
         internal void AddOperation(hOperation operation)
         {
@@ -58,7 +90,27 @@ namespace HowickMaker
             this.connections.Add(connection);
         }
 
+        public static Geo.Line WebAxis(hMember member)
+        {
+            return member.webAxis;
+        }
+        
+        internal void SetWebAxisStartPoint(Geo.Point newStartPoint)
+        {
+            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(newStartPoint, webAxis.EndPoint);
+            webAxis = newAxis;
+        }
 
+        internal void SetWebAxisEndPoint(Geo.Point newEndPoint)
+        {
+            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(webAxis.StartPoint, newEndPoint);
+            webAxis = newAxis;
+        }
+
+        internal void SortOperations()
+        {
+            operations = operations.OrderBy(op => op._loc).ToList();
+        }
 
         //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗
         //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
@@ -67,11 +119,23 @@ namespace HowickMaker
         //  ███████╗██╔╝ ██╗██║     ╚██████╔╝██║  ██║   ██║   
         //  ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
         //                                   
-        
+
 
         public static void ExportToFile(string filePath, List<hMember> hMembers)
         {
-            
+            string csv = "";
+            foreach (hMember member in hMembers)
+            {
+                csv += member.name.ToString();
+                member.SortOperations();
+                foreach (hOperation op in member.operations)
+                {
+                    csv += op._type.ToString() + "," + op._loc.ToString() + ",";
+                }
+                csv += "\n";
+            }
+
+            File.WriteAllText(filePath, csv); 
         }
 
 
