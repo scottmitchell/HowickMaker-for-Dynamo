@@ -14,6 +14,8 @@ namespace HowickMaker
         internal Graph _g;
         internal double _tolerance = 0.001;
         internal double _WEBHoleOffset = (15.0 / 16);
+        internal double _StudHeight = 1.5;
+        internal double _StudWdith = 3.5;
         List<Geo.Line> _lines = new List<Geo.Line>();
         List<hMember> _braceMembers = new List<hMember>();
 
@@ -301,6 +303,7 @@ namespace HowickMaker
 
             structure.BuildMembersAndConnectionsFromGraph();
             structure.ResolveFTFConnections();
+            structure.ResolveBRConnections();
 
             return structure;
         }
@@ -370,11 +373,19 @@ namespace HowickMaker
         internal void Propogate(int current)
         {
             hMember currentMember = _members[current];
-
             if (_g.vertices[current].neighbors.Count > 0)
             {
-                // Iterate through each neighbor
+                var connections = new List<hConnection>();
                 foreach (int i in _g.vertices[current].neighbors)
+                {
+                    connections.Add(new hConnection(GetConnectionType(current, i), new List<int> { i, current }));
+                }
+
+                var indices = connections.OrderBy(x => (int)x.type).Select(x => x.members[0]);
+
+                // Iterate through each neighbor
+                //foreach (int i in _g.vertices[current].neighbors)
+                foreach (int i in indices)
                 {
                     // If we have not been to this vertex yet
                     if (!_g.vertices[i].visited)
@@ -388,6 +399,7 @@ namespace HowickMaker
 
                         List<Geo.Vector> vectors = GetValidNormalsForMember(i);
                         _members[i].webNormal = vectors[0];
+
 
                         _g.vertices[current].visited = true;
                         Propogate(i);
@@ -514,8 +526,134 @@ namespace HowickMaker
 
         internal void ResolveBRConnections()
         {
+            foreach (hConnection connection in _connections)
+            {
+                if (connection.type == Connection.BR)
+                {
+                    // Get common and end points of lines
+                    Geo.Point common0;
+                    Geo.Point mem1End0;
+                    Geo.Point mem2End0;
+                    Geo.Point common1;
+                    Geo.Point mem1End1;
+                    Geo.Point mem2End1;
 
+                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[0]].webAxis, _members[connection.members[1]].webAxis, out common0, out mem1End0, out mem2End0);
+                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[1]].webAxis, _members[connection.members[0]].webAxis, out common1, out mem1End1, out mem2End1);
+
+                    List<Geo.Point> common = new List<Geo.Point> { common0, common1 };
+                    List<Geo.Point> mem1End = new List<Geo.Point> { mem1End0, mem1End1 };
+                    List<Geo.Point> mem2End = new List<Geo.Point> { mem2End0, mem2End1 };
+
+                    for (int i = 0; i < 2; i++)
+                    {
+                        // Get indices of involved members
+                        int index1 = connection.members[i];
+                        int index2 = connection.members[(i + 1) % 2];
+
+                        // Web axes as vectors
+                        Geo.Vector vec1 = Geo.Vector.ByTwoPoints(common[i], mem1End[i]);
+                        Geo.Vector vec2 = Geo.Vector.ByTwoPoints(common[i], mem2End[i]);
+
+                        // Get angle between members
+                        double angle = vec1.AngleWithVector(vec2) * (Math.PI / 180);
+
+                        // Distance from DIMPLE to web (i.e. 0.5 * stud height)
+                        double c1 = _StudHeight / 2.0;
+
+                        // Compute extension to DIMPLE
+                        double d = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
+                        Geo.Vector connectionPlaneNormal = vec1.Cross(vec2);
+
+                        bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1].webNormal)) > 0;
+                        if (webOut)
+                        {
+                            d *= -1;
+                        }
+                        
+                        // Compute translation vector for end point in question
+                        Geo.Vector moveVector = FlipVector(vec1);
+
+                        // Get new end point
+                        moveVector = moveVector.Normalized();
+                        moveVector = moveVector.Scale(d + 0.75);
+                        Geo.Point newEndPoint = common[i].Add(moveVector);
+
+                        // Extend member and add operations
+                        if (SamePoints(common[i], _members[index1].webAxis.StartPoint))
+                        {
+                            _members[index1].SetWebAxisStartPoint(newEndPoint);
+                            _members[index1].AddOperationByLocationType(0.0, "END_TRUSS");
+                            _members[index1].AddOperationByLocationType(0.75, "DIMPLE");
+
+                            string interiorOp = (webOut) ? "LIP_CUT" : "NOTCH";
+                            string exteriorOp = (webOut) ? "NOTCH" : "LIP_CUT";
+
+                            _members[index1].AddOperationByLocationType(0.75, exteriorOp);
+
+                            double iLoc = 0.75;
+                            while (iLoc < (Math.Abs(d) + 0.25))
+                            {
+                                _members[index1].AddOperationByLocationType(iLoc, interiorOp);
+                                iLoc += 1.25;
+                            }
+                        }
+
+                        else
+                        {
+                            double l = _members[index1].webAxis.Length;
+                            _members[index1].SetWebAxisEndPoint(newEndPoint);
+                            _members[index1].AddOperationByLocationType(l - 0.0, "END_TRUSS");
+                            _members[index1].AddOperationByLocationType(l - 0.75, "DIMPLE");
+
+                            string interiorOp = (webOut) ? "LIP_CUT" : "NOTCH";
+                            string exteriorOp = (webOut) ? "NOTCH" : "LIP_CUT";
+
+                            _members[index1].AddOperationByLocationType(l - 0.75, exteriorOp);
+                            
+                            double iLoc = 0.75;
+                            while (iLoc < (Math.Abs(d) + 0.25))
+                            {
+                                _members[index1].AddOperationByLocationType(l - iLoc, interiorOp);
+                                iLoc += 1.25;
+                            }
+                        }
+
+                        
+                    }
+                }
+            }
         }
+
+
+        internal void GetCommonAndEndPointsOfTwoLines(Geo.Line line1, Geo.Line line2, out Geo.Point common, out Geo.Point line1End, out Geo.Point line2End)
+        {
+            if (SamePoints(line1.StartPoint, line2.StartPoint))
+            {
+                common = line1.StartPoint;
+                line1End = line1.EndPoint;
+                line2End = line2.EndPoint;
+            }
+            else if (SamePoints(line1.StartPoint, line2.EndPoint))
+            {
+                common = line1.StartPoint;
+                line1End = line1.EndPoint;
+                line2End = line2.StartPoint;
+            }
+            else if (SamePoints(line1.EndPoint, line2.StartPoint))
+            {
+                common = line1.EndPoint;
+                line1End = line1.StartPoint;
+                line2End = line2.EndPoint;
+            }
+            else
+            {
+                common = line1.EndPoint;
+                line1End = line1.StartPoint;
+                line2End = line2.StartPoint;
+            }
+        }
+
 
 
         /// <summary>
@@ -586,7 +724,8 @@ namespace HowickMaker
                     hMember brace1 = new hMember(Geo.Line.ByStartPointEndPoint(brace3Axis.EndPoint, b1End), brace1Normal);
                     hMember brace2 = new hMember(Geo.Line.ByStartPointEndPoint(brace3Axis.EndPoint, b2End), brace2Normal);
                     
-                    hMember brace4 = new hMember(Geo.Line.ByStartPointEndPoint(b1End, b2End), FlipVector(bisector));
+                    hMember brace4 = new hMember(Geo.Line.ByStartPointEndPoint(b1End, b2End), bisector);
+                    hMember brace5 = new hMember(Geo.Line.ByStartPointEndPoint(b1End, b2End), FlipVector(bisector));
 
                     if (type == 0)
                     {
@@ -595,9 +734,14 @@ namespace HowickMaker
                         _braceMembers.Add(brace3);
                     }
 
-                    else
+                    else if (type == 1)
                     {
                         _braceMembers.Add(brace4);
+                    }
+
+                    else
+                    {
+                        _braceMembers.Add(brace5);
                     }
                 }
             }
@@ -631,7 +775,7 @@ namespace HowickMaker
                         angle = (angle < (Math.PI/2)) ? angle : Math.PI - angle;
 
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
-                        double minExtension = _WEBHoleOffset / Math.Sin(angle) + _WEBHoleOffset / Math.Tan(angle) + 1;
+                        double minExtension = _WEBHoleOffset / Math.Sin(angle) - _WEBHoleOffset / Math.Tan(angle) + 1;
 
                         // Check start point
                         if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)

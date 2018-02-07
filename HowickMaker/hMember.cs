@@ -79,6 +79,19 @@ namespace HowickMaker
             return member;
         }
         
+        internal void AddOperationByPointType(Geo.Point pt, string type)
+        {
+            double location = webAxis.ParameterAtPoint(pt) * webAxis.Length;
+            hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
+            AddOperation(op);
+        }
+
+        internal void AddOperationByLocationType(double location, string type)
+        {
+            hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
+            AddOperation(op);
+        }
+
 
         internal void AddOperation(hOperation operation)
         {
@@ -136,6 +149,21 @@ namespace HowickMaker
             }
 
             File.WriteAllText(filePath, csv); 
+        }
+
+        public static string AsCSVLine(hMember member)
+        {
+            string csv = "";
+            csv += member.name.ToString();
+
+            member.SortOperations();
+            foreach (hOperation op in member.operations)
+            {
+                csv += op._type.ToString() + "," + op._loc.ToString() + ",";
+            }
+            
+
+            return csv;
         }
 
 
