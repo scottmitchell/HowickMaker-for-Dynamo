@@ -74,22 +74,22 @@ namespace HowickMaker
 
 
         /// <summary>
-        /// 
+        /// Solve a network of intersecting lines as steel studs meeting at planar connections
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        public static List<hMember> FromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
+        [MultiReturn(new[] { "members", "braces" })]
+        public static Dictionary<string, object> FromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
         {
             hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF);
-            return structure._members.ToList();
 
+            return new Dictionary<string, object>
+            {
+                { "members", structure._members.ToList() },
+                { "braces", structure._braceMembers.ToList() }
+            };
         }
 
-        public static List<hMember> BracesFromLines(List<Geo.Line> lines, double tolerance, int type, bool firstConnectionIsFTF)
-        {
-            hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF);
-            return structure._braceMembers.ToList();
-        }
 
 
 

@@ -30,9 +30,10 @@ namespace HowickMaker
 
         internal hMember()
         {
-            
+
         }
 
+        [IsVisibleInDynamoLibrary(false)]
         public hMember(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
         {
             this.webAxis = webAxis;
@@ -40,6 +41,7 @@ namespace HowickMaker
             this.name = name;
         }
 
+        [IsVisibleInDynamoLibrary(false)]
         public hMember(Geo.Line webAxis, int name = 0)
         {
             this.webAxis = webAxis;
@@ -71,7 +73,7 @@ namespace HowickMaker
         //  ╚═╝      ╚═════╝ ╚═════╝  
         //          
 
-       
+
         public static hMember AddOperationByLocationType(hMember member, double location, string type)
         {
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
@@ -134,8 +136,8 @@ namespace HowickMaker
         {
             this.connections.Add(connection);
         }
-        
-        
+
+
         /// <summary>
         /// Extend member by changing web axis start point. Adjust operations accordingly.
         /// </summary>
@@ -208,7 +210,7 @@ namespace HowickMaker
                 csv += "\n";
             }
 
-            File.WriteAllText(filePath, csv); 
+            File.WriteAllText(filePath, csv);
         }
 
         /// <summary>
@@ -282,7 +284,7 @@ namespace HowickMaker
             Geo.Point p5 = OP2.Add(lateralR);
 
             Geo.Point[] pts = { p0, p1, p2, p1, p2, p3, p2, p3, p4, p3, p4, p5, p4, p5, p6, p5, p6, p7 };
-            
+
             Geo.IndexGroup g0 = Geo.IndexGroup.ByIndices(0, 1, 2);
             Geo.IndexGroup g1 = Geo.IndexGroup.ByIndices(3, 4, 5);
             Geo.IndexGroup g2 = Geo.IndexGroup.ByIndices(6, 7, 8);
@@ -296,7 +298,7 @@ namespace HowickMaker
 
             var points = new List<Geo.Point>();
 
-            foreach(hOperation op in member.operations)
+            foreach (hOperation op in member.operations)
             {
                 points.Add(member.webAxis.PointAtParameter(op._loc / member.webAxis.Length));
             }
@@ -315,10 +317,125 @@ namespace HowickMaker
         [IsVisibleInDynamoLibrary(false)]
         public void Tessellate(IRenderPackage package, TessellationParameters parameters)
         {
-            // This example contains information to draw a point
-            package.AddPointVertex(0,0,0);
-            package.AddPointVertexColor(255, 0, 0, 255);
+            package.RequiresPerVertexColoration = true;
+
+            Geo.Point OP1 = this.webAxis.StartPoint;
+            Geo.Point OP2 = this.webAxis.EndPoint;
+
+            Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
+            Geo.Vector normal = webNormal;
+            Geo.Vector lateral = webAxis.Cross(normal);
+            lateral = lateral.Normalized();
+            lateral = lateral.Scale(1.75);
+            normal = normal.Normalized();
+            normal = normal.Scale(1.5);
+            Geo.Vector lateralR = Geo.Vector.ByCoordinates(lateral.X * -1, lateral.Y * -1, lateral.Z * -1);
+
+            Geo.Point p0 = OP1.Add(normal.Add(lateral));
+            Geo.Point p1 = OP2.Add(normal.Add(lateral));
+            Geo.Point p2 = OP1.Add(lateral);
+            Geo.Point p3 = OP2.Add(lateral);
+            Geo.Point p6 = OP1.Add(normal.Add(lateralR));
+            Geo.Point p7 = OP2.Add(normal.Add(lateralR));
+            Geo.Point p4 = OP1.Add(lateralR);
+            Geo.Point p5 = OP2.Add(lateralR);
+            lateral = lateral.Normalized().Scale(1.25);
+            lateralR = lateralR.Normalized().Scale(1.25);
+            Geo.Point p8 = OP1.Add(lateralR).Add(normal);
+            Geo.Point p9 = OP2.Add(lateralR).Add(normal);
+            Geo.Point p10 = OP1.Add(lateral).Add(normal);
+            Geo.Point p11 = OP2.Add(lateral).Add(normal);
+
+            Geo.Point[] pts = { p0, p1, p2, p1, p2, p3, p2, p3, p4, p3, p4, p5, p4, p5, p6, p5, p6, p7, p0, p1, p10, p1, p10, p11, p6, p7, p8, p7, p8, p9 };
+            Geo.Vector[] vectors = { lateral, normal, lateral.Reverse(), normal.Reverse(), normal.Reverse() };
+
+            var faces = new List<List<int>>
+            {
+                new List<int> { 0, 1, 2 },
+                new List<int> { 3, 4, 5 },
+                new List<int> { 6, 7, 8 },
+                new List<int> { 9, 10, 11 },
+                new List<int> { 12, 13, 14 },
+                new List<int> { 15, 16, 17 },
+                new List<int> { 18, 19, 20 },
+                new List<int> { 21, 22, 23 },
+                new List<int> { 24, 25, 26 },
+                new List<int> { 27, 28, 29 }
+            };
+
+            for (int i = 0; i < faces.Count; i++)
+            {
+                package.AddTriangleVertex(pts[faces[i][0]].X, pts[faces[i][0]].Y, pts[faces[i][0]].Z);
+                package.AddTriangleVertex(pts[faces[i][1]].X, pts[faces[i][1]].Y, pts[faces[i][1]].Z);
+                package.AddTriangleVertex(pts[faces[i][2]].X, pts[faces[i][2]].Y, pts[faces[i][2]].Z);
+                package.AddTriangleVertexColor(100, 100, 100, 255);
+                package.AddTriangleVertexColor(100, 100, 100, 255);
+                package.AddTriangleVertexColor(100, 100, 100, 255);
+                package.AddTriangleVertexNormal(vectors[i / 2].X, vectors[i / 2].Y, vectors[i / 2].Z);
+                package.AddTriangleVertexNormal(vectors[i / 2].X, vectors[i / 2].Y, vectors[i / 2].Z);
+                package.AddTriangleVertexNormal(vectors[i / 2].X, vectors[i / 2].Y, vectors[i / 2].Z);
+                package.AddTriangleVertexUV(0, 0);
+                package.AddTriangleVertexUV(0, 0);
+                package.AddTriangleVertexUV(0, 0);
+            }
+
+            foreach (hOperation op in operations)
+            {
+                Geo.Point opPoint = this.webAxis.PointAtParameter(op._loc / this.webAxis.Length);
+
+                switch (op._type)
+                {
+                    case Operation.WEB:
+                        package.AddPointVertex(opPoint.X, opPoint.Y, opPoint.Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+
+                        lateral = lateral.Normalized().Scale(15.0 / 16.0);
+                        lateralR = lateralR.Normalized().Scale(15.0 / 16.0);
+
+                        package.AddPointVertex(opPoint.Add(lateral).X, opPoint.Add(lateral).Y, opPoint.Add(lateral).Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertex(opPoint.Add(lateralR).X, opPoint.Add(lateralR).Y, opPoint.Add(lateralR).Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+                        break;
+
+                    case Operation.DIMPLE:
+                        lateral = lateral.Normalized().Scale(1.0);
+                        lateralR = lateralR.Normalized().Scale(1.0);
+                        normal = normal.Normalized().Scale(0.75);
+                        
+                        package.AddLineStripVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
+                        lateral = lateral.Normalized().Scale(2.5);
+                        package.AddLineStripVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
+                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexCount(2);
+
+                        lateral = lateral.Normalized().Scale(1.75);
+                        package.AddPointVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+
+                        package.AddLineStripVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
+                        lateralR = lateralR.Normalized().Scale(2.5);
+                        package.AddLineStripVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
+                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexCount(2);
+
+                        lateralR = lateralR.Normalized().Scale(1.75);
+                        package.AddPointVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+                        break;
+
+                    default:
+                        package.AddPointVertex(opPoint.X, opPoint.Y, opPoint.Z);
+                        package.AddPointVertexColor(255, 0, 0, 255);
+                        break;
+
+                }
+
+            }
         }
+
  
         #endregion
     }
