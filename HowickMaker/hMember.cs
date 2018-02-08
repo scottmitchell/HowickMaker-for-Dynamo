@@ -78,7 +78,39 @@ namespace HowickMaker
             member.AddOperation(op);
             return member;
         }
-        
+        public static hMember AddOperationByPointType(hMember member, Geo.Point point, string type)
+        {
+            member.AddOperationByPointType(point, type);
+            return member;
+        }
+
+        public static Geo.Line WebAxis(hMember member)
+        {
+            return member.webAxis;
+        }
+
+        public static List<Geo.Line> FlangeAxes(hMember member)
+        {
+            Geo.Point OP1 = member.webAxis.StartPoint;
+            Geo.Point OP2 = member.webAxis.EndPoint;
+            Geo.Vector webAxisVec = Geo.Vector.ByTwoPoints(OP1, OP2);
+            Geo.Vector normal = member.webNormal.Normalized().Scale(0.75); ;
+            Geo.Vector lateral = webAxisVec.Cross(normal).Normalized().Scale(1.75);
+            Geo.Line flangeLine1 = Geo.Line.ByStartPointEndPoint(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
+            lateral = webAxisVec.Cross(normal).Normalized().Scale(-1.75);
+            Geo.Line flangeLine2 = Geo.Line.ByStartPointEndPoint(OP2.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
+            return new List<Geo.Line> { flangeLine1, flangeLine2 };
+        }
+
+
+        //  ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗ █████╗ ██╗     
+        //  ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗████╗  ██║██╔══██╗██║     
+        //  ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝██╔██╗ ██║███████║██║     
+        //  ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗██║╚██╗██║██╔══██║██║     
+        //  ██║██║ ╚████║   ██║   ███████╗██║  ██║██║ ╚████║██║  ██║███████╗
+        //  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
+        //                                                                  
+
         internal void AddOperationByPointType(Geo.Point pt, string type)
         {
             double location = webAxis.ParameterAtPoint(pt) * webAxis.Length;
@@ -102,21 +134,47 @@ namespace HowickMaker
         {
             this.connections.Add(connection);
         }
-
-        public static Geo.Line WebAxis(hMember member)
-        {
-            return member.webAxis;
-        }
         
+        
+        /// <summary>
+        /// Extend member by changing web axis start point. Adjust operations accordingly.
+        /// </summary>
+        /// <param name="newStartPoint"></param>
         internal void SetWebAxisStartPoint(Geo.Point newStartPoint)
         {
+            // Create new axis
             Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(newStartPoint, webAxis.EndPoint);
+
+            // Compute new locations for operations relative to new axis
+            foreach (hOperation op in operations)
+            {
+                Geo.Point opPoint = webAxis.PointAtParameter(op._loc / webAxis.Length);
+                double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
+                op._loc = newLoc;
+            }
+
+            // Set new axis
             webAxis = newAxis;
         }
 
+        /// <summary>
+        /// Extend member by changing web axis end point. Adjust operations accordingly.
+        /// </summary>
+        /// <param name="newEndPoint"></param>
         internal void SetWebAxisEndPoint(Geo.Point newEndPoint)
         {
+            // Create new axis
             Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(webAxis.StartPoint, newEndPoint);
+
+            // Compute new locations for operations relative to new axis
+            foreach (hOperation op in operations)
+            {
+                Geo.Point opPoint = webAxis.PointAtParameter(op._loc / webAxis.Length);
+                double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
+                op._loc = newLoc;
+            }
+
+            // Set new axis
             webAxis = newAxis;
         }
 
@@ -134,38 +192,56 @@ namespace HowickMaker
         //                                   
 
 
-        public static void ExportToFile(string filePath, List<hMember> hMembers)
+        /// <summary>
+        /// Export a list of hMembers to csv file for Howick production
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="hMembers"></param>
+        /// <param name="normalLabel"></param>
+        public static void ExportToFile(string filePath, List<hMember> hMembers, bool normalLabel = true)
         {
             string csv = "";
+
             foreach (hMember member in hMembers)
             {
-                csv += member.name.ToString();
-                member.SortOperations();
-                foreach (hOperation op in member.operations)
-                {
-                    csv += op._type.ToString() + "," + op._loc.ToString() + ",";
-                }
+                csv += member.AsCSVLine(normalLabel);
                 csv += "\n";
             }
 
             File.WriteAllText(filePath, csv); 
         }
 
-        public static string AsCSVLine(hMember member)
+        /// <summary>
+        /// Returns a string representing the hMember as a csv line to be produced on the Howick
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="normalLabel"></param>
+        /// <returns></returns>
+        public static string AsCSVLine(hMember member, bool normalLabel = true)
+        {
+            return member.AsCSVLine(normalLabel);
+        }
+
+        /// <summary>
+        /// Returns a string representing the hMember as a csv line to be produced on the Howick
+        /// </summary>
+        /// <param name="normalLabel"></param>
+        /// <returns></returns>
+        internal string AsCSVLine(bool normalLabel = true)
         {
             string csv = "";
-            csv += member.name.ToString();
+            csv += name.ToString() + "," + "COMPONET" + ",";
+            csv += (normalLabel) ? "LABEL_NRM" + "," : "LABEL_INV" + ",";
+            csv += Math.Round(webAxis.Length, 2).ToString() + ",";
 
-            member.SortOperations();
-            foreach (hOperation op in member.operations)
+            SortOperations();
+            foreach (hOperation op in operations)
             {
-                csv += op._type.ToString() + "," + op._loc.ToString() + ",";
+                csv += op._type.ToString() + "," + Math.Round(op._loc, 2).ToString() + ",";
             }
-            
 
             return csv;
         }
-
 
 
 
@@ -181,7 +257,8 @@ namespace HowickMaker
         //    ╚═══╝  ╚═╝╚══════╝
         //                      
 
-        public static Geo.Mesh Draw(hMember member)
+        [MultiReturn(new[] { "member", "operations" })]
+        public static Dictionary<string, object> Draw(hMember member)
         {
             Geo.Point OP1 = member.webAxis.StartPoint;
             Geo.Point OP2 = member.webAxis.EndPoint;
@@ -204,9 +281,8 @@ namespace HowickMaker
             Geo.Point p4 = OP1.Add(lateralR);
             Geo.Point p5 = OP2.Add(lateralR);
 
-            Geo.Point[] pts = { p0, p1, p2,  p1, p2, p3,  p2, p3, p4,  p3, p4, p5,  p4, p5, p6,  p5, p6, p7 };
-
-
+            Geo.Point[] pts = { p0, p1, p2, p1, p2, p3, p2, p3, p4, p3, p4, p5, p4, p5, p6, p5, p6, p7 };
+            
             Geo.IndexGroup g0 = Geo.IndexGroup.ByIndices(0, 1, 2);
             Geo.IndexGroup g1 = Geo.IndexGroup.ByIndices(3, 4, 5);
             Geo.IndexGroup g2 = Geo.IndexGroup.ByIndices(6, 7, 8);
@@ -218,7 +294,19 @@ namespace HowickMaker
 
             Geo.Mesh mesh = Geo.Mesh.ByPointsFaceIndices(pts, ig);
 
-            return mesh;
+            var points = new List<Geo.Point>();
+
+            foreach(hOperation op in member.operations)
+            {
+                points.Add(member.webAxis.PointAtParameter(op._loc / member.webAxis.Length));
+            }
+
+            return new Dictionary<string, object>
+            {
+                { "member", mesh },
+                { "operations", points }
+            };
+
         }
 
 

@@ -22,7 +22,7 @@ namespace HowickMaker
         T
     }
 
-
+    [IsVisibleInDynamoLibrary(false)]
     public class hConnection
     {
         public Geo.Point location;

@@ -4,9 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Geo = Autodesk.DesignScript.Geometry;
+using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
+    [IsVisibleInDynamoLibrary(false)]
     public class hMesh
     {
         internal List<hFace> faces = new List<hFace>();
