@@ -382,6 +382,11 @@ namespace HowickMaker
                 //foreach (int i in _g.vertices[current].neighbors)
                 foreach (int i in indices)
                 {
+                    if (!ConnectionAlreadyMade(current, i))
+                    {
+                        
+                    }
+
                     // If we have not been to this vertex yet
                     if (!_g.vertices[i].visited)
                     {
@@ -401,6 +406,19 @@ namespace HowickMaker
                     }
                 }
             }
+        }
+
+        internal bool ConnectionAlreadyMade(int current, int prospective)
+        {
+            bool made = false;
+            foreach(hConnection con in _members[prospective].connections)
+            {
+                if (con.GetOtherIndex(prospective) == current)
+                {
+                    made = true;
+                }
+            }
+            return made;
         }
 
 
