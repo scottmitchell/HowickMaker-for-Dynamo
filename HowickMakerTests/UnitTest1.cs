@@ -86,5 +86,30 @@ namespace HowickMakerTests
 
             Assert.AreEqual(1, d);
         }
+
+
+        [TestMethod]
+        public void hConnectionEqualityTest()
+        {
+            List<int> members1 = new List<int> { 3, 5 };
+            List<int> members2 = new List<int> { 5, 3 };
+
+            hConnection con1 = new hConnection(Connection.BR, members1);
+            hConnection con2 = new hConnection(Connection.BR, members2);
+
+            Assert.AreEqual(con1, con2);
+        }
+
+        [TestMethod]
+        public void hConnectionContainsTest()
+        {
+            List<int> members1 = new List<int> { 3, 5 };
+            List<int> members2 = new List<int> { 5, 3 };
+
+            hConnection con1 = new hConnection(Connection.BR, members1);
+            hConnection con2 = new hConnection(Connection.BR, members2);
+            var connections = new List<hConnection> { con1 };
+            Assert.IsTrue(connections.Contains(con2));
+        }
     }
 }

@@ -34,6 +34,22 @@ namespace HowickMaker
         }
 
         [IsVisibleInDynamoLibrary(false)]
+        internal hMember(hMember member)
+        {
+            this.webAxis = member.webAxis;
+            this.webNormal = member.webNormal;
+            this.name = member.name;
+            foreach (hConnection con in member.connections)
+            {
+                this.connections.Add(con);
+            }
+            foreach (hOperation op in member.operations)
+            {
+                this.operations.Add(op);
+            }
+        }
+
+        [IsVisibleInDynamoLibrary(false)]
         public hMember(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
         {
             this.webAxis = webAxis;
@@ -73,17 +89,40 @@ namespace HowickMaker
         //  ╚═╝      ╚═════╝ ╚═════╝  
         //          
 
-
-        public static hMember AddOperationByLocationType(hMember member, double location, string type)
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="locations"></param>
+        /// <param name="types"></param>
+        /// <returns></returns>
+        public static hMember AddOperationByLocationType(hMember member, List<double> locations, List<string> types)
         {
-            hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
-            member.AddOperation(op);
-            return member;
+            hMember newMember = new hMember(member);
+            for (int i = 0; i < locations.Count; i++)
+            {
+                hOperation op = new hOperation(locations[i], (Operation)System.Enum.Parse(typeof(Operation), types[i]));
+                newMember.AddOperation(op);
+            }
+            return newMember;
         }
-        public static hMember AddOperationByPointType(hMember member, Geo.Point point, string type)
+
+        /// <summary>
+        /// Add operations to a member by specifiying the operation types and the points along the axis of the member at which they occur
+        /// </summary>
+        /// <param name="member"></param>
+        /// <param name="points"></param>
+        /// <param name="types"></param>
+        /// <returns name="hMember">></returns>
+        public static hMember AddOperationByPointType(hMember member, List<Geo.Point> points, List<string> types)
         {
-            member.AddOperationByPointType(point, type);
-            return member;
+            hMember newMember = new hMember(member);
+            for (int i = 0; i < points.Count; i++)
+            {
+                newMember.AddOperationByPointType(points[i], types[i]);
+            }
+            return newMember;
         }
 
         public static Geo.Line WebAxis(hMember member)
@@ -385,20 +424,23 @@ namespace HowickMaker
             foreach (hOperation op in operations)
             {
                 Geo.Point opPoint = this.webAxis.PointAtParameter(op._loc / this.webAxis.Length);
-
+                byte r = 81;
+                byte g = 255;
+                byte b = 144;
+                byte a = 255;
                 switch (op._type)
                 {
                     case Operation.WEB:
                         package.AddPointVertex(opPoint.X, opPoint.Y, opPoint.Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
 
                         lateral = lateral.Normalized().Scale(15.0 / 16.0);
                         lateralR = lateralR.Normalized().Scale(15.0 / 16.0);
 
                         package.AddPointVertex(opPoint.Add(lateral).X, opPoint.Add(lateral).Y, opPoint.Add(lateral).Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
                         package.AddPointVertex(opPoint.Add(lateralR).X, opPoint.Add(lateralR).Y, opPoint.Add(lateralR).Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
                         break;
 
                     case Operation.DIMPLE:
@@ -409,24 +451,24 @@ namespace HowickMaker
                         package.AddLineStripVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
                         lateral = lateral.Normalized().Scale(2.5);
                         package.AddLineStripVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(r, g, b, a);
+                        package.AddLineStripVertexColor(r, g, b, a);
                         package.AddLineStripVertexCount(2);
 
                         lateral = lateral.Normalized().Scale(1.75);
                         package.AddPointVertex(opPoint.Add(lateral.Add(normal)).X, opPoint.Add(lateral.Add(normal)).Y, opPoint.Add(lateral.Add(normal)).Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
 
                         package.AddLineStripVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
                         lateralR = lateralR.Normalized().Scale(2.5);
                         package.AddLineStripVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(r, g, b, a);
+                        package.AddLineStripVertexColor(r, g, b, a);
                         package.AddLineStripVertexCount(2);
 
                         lateralR = lateralR.Normalized().Scale(1.75);
                         package.AddPointVertex(opPoint.Add(lateralR.Add(normal)).X, opPoint.Add(lateralR.Add(normal)).Y, opPoint.Add(lateralR.Add(normal)).Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
                         break;
 
                     case Operation.SWAGE:
@@ -437,14 +479,14 @@ namespace HowickMaker
 
                         package.AddLineStripVertex(opPoint.Add(lateral.Add(webAxis)).X, opPoint.Add(lateral.Add(webAxis)).Y, opPoint.Add(lateral.Add(webAxis)).Z);
                         package.AddLineStripVertex(opPoint.Add(lateral.Add(webAxisR)).X, opPoint.Add(lateral.Add(webAxisR)).Y, opPoint.Add(lateral.Add(webAxisR)).Z);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(r, g, b, a);
+                        package.AddLineStripVertexColor(r, g, b, a);
                         package.AddLineStripVertexCount(2);
 
                         package.AddLineStripVertex(opPoint.Add(lateralR.Add(webAxis)).X, opPoint.Add(lateralR.Add(webAxis)).Y, opPoint.Add(lateralR.Add(webAxis)).Z);
                         package.AddLineStripVertex(opPoint.Add(lateralR.Add(webAxisR)).X, opPoint.Add(lateralR.Add(webAxisR)).Y, opPoint.Add(lateralR.Add(webAxisR)).Z);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
-                        package.AddLineStripVertexColor(255, 0, 0, 255);
+                        package.AddLineStripVertexColor(r, g, b, a);
+                        package.AddLineStripVertexColor(r, g, b, a);
                         package.AddLineStripVertexCount(2);
                         break;
 
@@ -460,9 +502,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
                         package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
                         package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -473,9 +515,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
                         package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
                         package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -487,9 +529,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
                         package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
                         package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -500,9 +542,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
                         package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
                         package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -510,6 +552,70 @@ namespace HowickMaker
                         package.AddTriangleVertexUV(0, 0);
                         package.AddTriangleVertexUV(0, 0);
                         break;
+
+                    case Operation.SERVICE_HOLE:
+                        lateral = lateral.Normalized().Scale(0.5);
+                        lateralR = lateralR.Normalized().Scale(0.5);
+                        webAxis = webAxis.Normalized().Scale(0.5);
+                        webAxisR = webAxisR.Normalized().Scale(0.5);
+                        normal = normal.Normalized().Scale(0.05);
+                        normalR = normalR.Normalized().Scale(0.05);
+
+                        boltPts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
+                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
+                        package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
+                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
+                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        boltPts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normalR))), opPoint.Add(lateral.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxis.Add(normalR))) };
+                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
+                        package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
+                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
+                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        break;
+
 
                     case Operation.NOTCH:
                         lateral = lateral.Normalized().Scale(1.75);
@@ -523,9 +629,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(notchPts[0].X, notchPts[0].Y, notchPts[0].Z);
                         package.AddTriangleVertex(notchPts[1].X, notchPts[1].Y, notchPts[1].Z);
                         package.AddTriangleVertex(notchPts[2].X, notchPts[2].Y, notchPts[2].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -536,9 +642,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(notchPts[0].X, notchPts[0].Y, notchPts[0].Z);
                         package.AddTriangleVertex(notchPts[2].X, notchPts[2].Y, notchPts[2].Z);
                         package.AddTriangleVertex(notchPts[3].X, notchPts[3].Y, notchPts[3].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -551,9 +657,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(notchPts[0].X, notchPts[0].Y, notchPts[0].Z);
                         package.AddTriangleVertex(notchPts[1].X, notchPts[1].Y, notchPts[1].Z);
                         package.AddTriangleVertex(notchPts[2].X, notchPts[2].Y, notchPts[2].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -564,9 +670,9 @@ namespace HowickMaker
                         package.AddTriangleVertex(notchPts[0].X, notchPts[0].Y, notchPts[0].Z);
                         package.AddTriangleVertex(notchPts[2].X, notchPts[2].Y, notchPts[2].Z);
                         package.AddTriangleVertex(notchPts[3].X, notchPts[3].Y, notchPts[3].Z);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
-                        package.AddTriangleVertexColor(255, 0, 0, 255);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                         package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
@@ -575,9 +681,152 @@ namespace HowickMaker
                         package.AddTriangleVertexUV(0, 0);
                         break;
 
+                    case Operation.LIP_CUT:
+                        lateral = lateral.Normalized().Scale(1.75);
+                        lateralR = lateralR.Normalized().Scale(1.75);
+                        webAxis = webAxis.Normalized().Scale(0.875);
+                        webAxisR = webAxisR.Normalized().Scale(0.875);
+                        normal = normal.Normalized().Scale(1.55);
+                        normalR = normalR.Normalized().Scale(0.05);
+                        Geo.Vector lateral2 = lateral.Normalized().Scale(1.25);
+                        Geo.Vector lateral2R = lateralR.Normalized().Scale(1.25);
+
+                        Geo.Point[] lipPts = { opPoint.Add(webAxis).Add(lateral).Add(normal), opPoint.Add(webAxisR).Add(lateral).Add(normal), opPoint.Add(webAxis).Add(lateral2).Add(normal), opPoint.Add(webAxisR).Add(lateral2).Add(normal) };
+                        package.AddTriangleVertex(lipPts[0].X, lipPts[0].Y, lipPts[0].Z);
+                        package.AddTriangleVertex(lipPts[1].X, lipPts[1].Y, lipPts[1].Z);
+                        package.AddTriangleVertex(lipPts[2].X, lipPts[2].Y, lipPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        package.AddTriangleVertex(lipPts[1].X, lipPts[1].Y, lipPts[1].Z);
+                        package.AddTriangleVertex(lipPts[2].X, lipPts[2].Y, lipPts[2].Z);
+                        package.AddTriangleVertex(lipPts[3].X, lipPts[3].Y, lipPts[3].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+
+                        lipPts = new Geo.Point[] { opPoint.Add(webAxis).Add(lateralR).Add(normal), opPoint.Add(webAxisR).Add(lateralR).Add(normal), opPoint.Add(webAxis).Add(lateral2R).Add(normal), opPoint.Add(webAxisR).Add(lateral2R).Add(normal) };
+                        package.AddTriangleVertex(lipPts[0].X, lipPts[0].Y, lipPts[0].Z);
+                        package.AddTriangleVertex(lipPts[1].X, lipPts[1].Y, lipPts[1].Z);
+                        package.AddTriangleVertex(lipPts[2].X, lipPts[2].Y, lipPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        package.AddTriangleVertex(lipPts[1].X, lipPts[1].Y, lipPts[1].Z);
+                        package.AddTriangleVertex(lipPts[2].X, lipPts[2].Y, lipPts[2].Z);
+                        package.AddTriangleVertex(lipPts[3].X, lipPts[3].Y, lipPts[3].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        break;
+
+
+                    case Operation.END_TRUSS:
+                        lateral = lateral.Normalized().Scale(1.8);
+                        lateralR = lateralR.Normalized().Scale(1.8);
+                        if(opPoint.DistanceTo(this.webAxis.StartPoint) < opPoint.DistanceTo(this.webAxis.EndPoint))
+                        {
+                            webAxis = webAxis.Normalized().Scale(0.5);
+                        }
+                        else
+                        {
+                            webAxis = webAxisR.Normalized().Scale(0.5);
+                        }
+                        
+                        normal = normal.Normalized().Scale(1.50);
+                        Geo.Vector normal2 = normal.Normalized().Scale(1.0);
+                        Geo.Vector normal3 = normal.Normalized().Scale(0.5);
+                        normalR = normalR.Normalized().Scale(0.05);
+                        lateral2 = lateral.Normalized().Scale(1.25);
+                        lateral2R = lateralR.Normalized().Scale(1.25);
+
+                        Geo.Point[] endTrussPts = { opPoint.Add(lateral).Add(normal2), opPoint.Add(lateral).Add(normal).Add(webAxis), opPoint.Add(lateral).Add(normal) };
+                        package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                        package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                        package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normal3), opPoint.Add(lateral).Add(webAxis), opPoint.Add(lateral) };
+                        package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                        package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                        package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal2), opPoint.Add(lateralR).Add(normal).Add(webAxis), opPoint.Add(lateralR).Add(normal) };
+                        package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                        package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                        package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+
+                        endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal3), opPoint.Add(lateralR).Add(webAxis), opPoint.Add(lateralR) };
+                        package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                        package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                        package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexColor(r, g, b, a);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        package.AddTriangleVertexUV(0, 0);
+                        break;
+
                     default:
                         package.AddPointVertex(opPoint.X, opPoint.Y, opPoint.Z);
-                        package.AddPointVertexColor(255, 0, 0, 255);
+                        package.AddPointVertexColor(r, g, b, a);
                         break;
 
                 }

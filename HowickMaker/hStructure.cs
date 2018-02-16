@@ -379,29 +379,33 @@ namespace HowickMaker
                 var indices = connections.OrderBy(x => (int)x.type).Select(x => x.members[0]);
 
                 // Iterate through each neighbor
-                //foreach (int i in _g.vertices[current].neighbors)
-                foreach (int i in indices)
+                foreach (int i in _g.vertices[current].neighbors)
+                //foreach (int i in indices)
                 {
-                    if (!ConnectionAlreadyMade(current, i))
+                    if (!(_g.vertices[i].neighbors.Count <= _members[i].connections.Count))
                     {
+                        hConnection con = new hConnection(GetConnectionType(current, i), new List<int> { i, current });
+
+                        if (!_connections.Contains(con))
+                        {
+                            _connections.Add(con);
+                        }
                         
+                        _members[i].connections.Add(con);
+                        //_members[current].connections.Add(con);
                     }
 
                     // If we have not been to this vertex yet
                     if (!_g.vertices[i].visited)
                     {
-                        hConnection con = new hConnection(GetConnectionType(current, i), new List<int> { i, current });
-
-                        _connections.Add(con);
-
-                        _members[i].connections.Add(con);
-                        _members[current].connections.Add(con);
+                        
 
                         List<Geo.Vector> vectors = GetValidNormalsForMember(i);
                         _members[i].webNormal = vectors[0];
 
 
                         _g.vertices[current].visited = true;
+                        Console.WriteLine(current + " to " + i);
                         Propogate(i);
                     }
                 }
@@ -830,7 +834,7 @@ namespace HowickMaker
                         }
 
                         // Compute intersection location and location of web holes for fasteners
-                        double intersectionLoc = axis1.ParameterAtPoint(intersectionPoint) * axis1.Length;
+                        double intersectionLoc = _members[index1].webAxis.ParameterAtPoint(intersectionPoint) * _members[index1].webAxis.Length;
                         double d1 = ((_WEBHoleSpacing / Math.Cos(angle)) - _WEBHoleSpacing) / Math.Tan(angle);
                         double d2 = (2 * _WEBHoleSpacing) / Math.Tan(angle);
 
@@ -838,7 +842,7 @@ namespace HowickMaker
                         List<double> webHoleLocations = new List<double> { intersectionLoc - (d1 + d2), intersectionLoc - (d1), intersectionLoc + (d1), intersectionLoc + (d1 + d2) };
                         foreach (double loc in webHoleLocations)
                         {
-                            if (loc >= 0 && loc <= axis1.Length)
+                            if (loc >= 0 && loc <= _members[index1].webAxis.Length)
                             {
                                 _members[index1].AddOperationByLocationType(loc, "WEB");
                             }

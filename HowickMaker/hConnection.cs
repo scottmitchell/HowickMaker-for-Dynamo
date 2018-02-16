@@ -63,5 +63,15 @@ namespace HowickMaker
 
             return index;
         }
+
+        public override bool Equals(object value)
+        {
+            hConnection con = value as hConnection;
+
+            return (con != null)
+                && (members.Contains(con.members[0]))
+                && (members.Contains(con.members[1]))
+                && (type == con.type);
+        }
     }
 }
