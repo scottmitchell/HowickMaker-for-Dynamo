@@ -16,6 +16,7 @@ namespace HowickMaker
         internal Graph _g;
         internal double _tolerance = 0.001;
         public bool _firstConnectionIsFTF = true;
+        public bool _flipped = false;
         internal double _WEBHoleSpacing = (15.0 / 16);
         internal double _StudHeight = 1.5;
         internal double _StudWdith = 3.5;
@@ -41,11 +42,12 @@ namespace HowickMaker
         }
 
         [IsVisibleInDynamoLibrary(false)]
-        public hStructure(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
+        public hStructure(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF, bool flipped)
         {
             _lines = lines;
             _tolerance = tolerance;
             _firstConnectionIsFTF = firstConnectionIsFTF;
+            _flipped = flipped;
             _members = new hMember[lines.Count];
             for (int i = 0; i < lines.Count; i++)
             {
@@ -79,9 +81,9 @@ namespace HowickMaker
         /// <param name="lines"></param>
         /// <returns></returns>
         [MultiReturn(new[] { "members", "braces" })]
-        public static Dictionary<string, object> FromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
+        public static Dictionary<string, object> FromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF = true, bool flipped = false)
         {
-            hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF);
+            hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF, flipped);
 
             return new Dictionary<string, object>
             {
@@ -125,9 +127,9 @@ namespace HowickMaker
 
 
 
-        public static List<string> Test_ViewConnections(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
+        public static List<string> Test_ViewConnections(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF = true, bool flipped = false)
         {
-            hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF);
+            hStructure structure = StructureFromLines(lines, tolerance, firstConnectionIsFTF, flipped);
 
             List<string> cons = new List<string>();
 
@@ -289,9 +291,9 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF)
+        internal static hStructure StructureFromLines(List<Geo.Line> lines, double tolerance, bool firstConnectionIsFTF, bool flipped)
         {
-            hStructure structure = new hStructure(lines, tolerance, firstConnectionIsFTF);
+            hStructure structure = new hStructure(lines, tolerance, firstConnectionIsFTF, flipped);
 
             structure._g = graphFromLines(lines, structure._tolerance);
 
@@ -352,8 +354,9 @@ namespace HowickMaker
             Geo.Line currentLine = _lines[0];
             Geo.Line nextLine = _lines[current.neighbors[0]];
             Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
+            Geo.Vector normal = _flipped ? currentPlane.Normal : FlipVector(currentPlane.Normal);
 
-            currentMember.webNormal = (_firstConnectionIsFTF) ? currentPlane.Normal : Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(currentPlane.Normal);
+            currentMember.webNormal = (_firstConnectionIsFTF) ? normal : Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal);
             _members[0] = currentMember;
 
             Propogate(0);
@@ -955,6 +958,7 @@ namespace HowickMaker
 
         internal void GetTerminalAndCrossMember(hConnection con, out Geo.Line terminal, out Geo.Line cross, out int iTerminal, out int iCross)
         {
+            // Initialize all variables. These should never be returned.. If my assumptions are correct
             terminal = null;
             cross = null;
             iTerminal = -1;
