@@ -424,9 +424,9 @@ namespace HowickMaker
             foreach (hOperation op in operations)
             {
                 Geo.Point opPoint = this.webAxis.PointAtParameter(op._loc / this.webAxis.Length);
-                byte r = 81;
-                byte g = 255;
-                byte b = 144;
+                byte r = 255;
+                byte g = 66;
+                byte b = 57;
                 byte a = 255;
                 switch (op._type)
                 {
@@ -495,8 +495,8 @@ namespace HowickMaker
                         lateralR = lateralR.Normalized().Scale(0.25);
                         webAxis = webAxis.Normalized().Scale(0.25);
                         webAxisR = webAxisR.Normalized().Scale(0.25);
-                        normal = normal.Normalized().Scale(0.05);
-                        normalR = normalR.Normalized().Scale(0.05);
+                        normal = normal.Normalized().Scale(0.01);
+                        normalR = normalR.Normalized().Scale(0.01);
 
                         Geo.Point[] boltPts = { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
@@ -558,8 +558,8 @@ namespace HowickMaker
                         lateralR = lateralR.Normalized().Scale(0.5);
                         webAxis = webAxis.Normalized().Scale(0.5);
                         webAxisR = webAxisR.Normalized().Scale(0.5);
-                        normal = normal.Normalized().Scale(0.05);
-                        normalR = normalR.Normalized().Scale(0.05);
+                        normal = normal.Normalized().Scale(0.01);
+                        normalR = normalR.Normalized().Scale(0.01);
 
                         boltPts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
                         package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
@@ -622,8 +622,8 @@ namespace HowickMaker
                         lateralR = lateralR.Normalized().Scale(1.75);
                         webAxis = webAxis.Normalized().Scale(0.875);
                         webAxisR = webAxisR.Normalized().Scale(0.875);
-                        normal = normal.Normalized().Scale(0.05);
-                        normalR = normalR.Normalized().Scale(0.05);
+                        normal = normal.Normalized().Scale(0.01);
+                        normalR = normalR.Normalized().Scale(0.01);
 
                         Geo.Point[] notchPts = { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
                         package.AddTriangleVertex(notchPts[0].X, notchPts[0].Y, notchPts[0].Z);
@@ -686,8 +686,8 @@ namespace HowickMaker
                         lateralR = lateralR.Normalized().Scale(1.75);
                         webAxis = webAxis.Normalized().Scale(0.875);
                         webAxisR = webAxisR.Normalized().Scale(0.875);
-                        normal = normal.Normalized().Scale(1.55);
-                        normalR = normalR.Normalized().Scale(0.05);
+                        normal = normal.Normalized().Scale(1.51);
+                        normalR = normalR.Normalized().Scale(0.01);
                         Geo.Vector lateral2 = lateral.Normalized().Scale(1.25);
                         Geo.Vector lateral2R = lateralR.Normalized().Scale(1.25);
 
@@ -749,8 +749,8 @@ namespace HowickMaker
 
 
                     case Operation.END_TRUSS:
-                        lateral = lateral.Normalized().Scale(1.8);
-                        lateralR = lateralR.Normalized().Scale(1.8);
+                        lateral = lateral.Normalized().Scale(1.76);
+                        lateralR = lateralR.Normalized().Scale(1.76);
                         if(opPoint.DistanceTo(this.webAxis.StartPoint) < opPoint.DistanceTo(this.webAxis.EndPoint))
                         {
                             webAxis = webAxis.Normalized().Scale(0.5);
@@ -763,7 +763,7 @@ namespace HowickMaker
                         normal = normal.Normalized().Scale(1.50);
                         Geo.Vector normal2 = normal.Normalized().Scale(1.0);
                         Geo.Vector normal3 = normal.Normalized().Scale(0.5);
-                        normalR = normalR.Normalized().Scale(0.05);
+                        normalR = normalR.Normalized().Scale(0.01);
                         lateral2 = lateral.Normalized().Scale(1.25);
                         lateral2R = lateralR.Normalized().Scale(1.25);
 
