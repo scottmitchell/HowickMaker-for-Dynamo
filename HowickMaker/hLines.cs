@@ -27,6 +27,8 @@ namespace HowickMaker
 
         public static List<Geo.Line> QuadStrategy_01(hMesh mesh, double offset)
         {
+            mesh.Reset();
+
             hLines network = new hLines(mesh, offset);
 
             network.GenerateRightHand(0);
@@ -48,7 +50,6 @@ namespace HowickMaker
             
 
             hVertex v1 = mesh.faces[faceIndex].vertices[edgeIndex];
-            //hVertex v2 = mesh.faces[faceIndex].vertices[(edgeIndex + direction + numEdges) & numEdges];
             hVertex v2 = mesh.faces[faceIndex].vertices[(edgeIndex + 1) % 4];
 
             Geo.Point midPoint = Geo.Point.ByCoordinates((v1.x + v2.x) / 2, (v1.y + v2.y) / 2, (v1.z + v2.z) / 2);
@@ -57,7 +58,15 @@ namespace HowickMaker
             move = move.Normalized();
             move = move.Scale(offset * direction);
 
-            return (Geo.Point)midPoint.Translate(move);
+            var returnPt = (Geo.Point)midPoint.Translate(move);
+
+            // Dispose
+            {
+                midPoint.Dispose();
+                move.Dispose();
+            }
+
+            return returnPt;
         }
 
         Geo.Line GetMemberLineR(int faceIndex, int edgeIndex, bool rightHand)
@@ -85,8 +94,21 @@ namespace HowickMaker
 
             Geo.Vector direction = v1.Cross(v1.Cross(v2));
             direction = direction.Reverse();
-            
-            return Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
+
+            var returnLine = Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
+
+            // Dispose
+            {
+                p1.Dispose();
+                p2.Dispose();
+                p3.Dispose();
+                memberPoint.Dispose();
+                nextMemberPoint.Dispose();
+                v1.Dispose();
+                v2.Dispose();
+                direction.Dispose();
+            }
+            return returnLine;
         }
 
         Geo.Line GetMemberLineL(int faceIndex, int edgeIndex, bool rightHand)
@@ -115,7 +137,20 @@ namespace HowickMaker
             Geo.Vector direction = v1.Cross(v1.Cross(v2));
             direction = direction.Reverse();
 
-            return Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
+            var returnLine = Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
+
+            // Dispose
+            {
+                p1.Dispose();
+                p2.Dispose();
+                p3.Dispose();
+                memberPoint.Dispose();
+                nextMemberPoint.Dispose();
+                v1.Dispose();
+                v2.Dispose();
+                direction.Dispose();
+            }
+            return returnLine;
         }
 
 
@@ -126,6 +161,9 @@ namespace HowickMaker
             {
                 Geo.Line memberLine = GetMemberLineR(faceIndex, i, true);
                 this.lines.Add(memberLine);
+
+                // Dispose
+                //memberLine.Dispose();
             }
 
             mesh.faces[faceIndex].visited = true;
@@ -149,6 +187,9 @@ namespace HowickMaker
             {
                 Geo.Line memberLine = GetMemberLineL(faceIndex, i, false);
                 this.lines.Add(memberLine);
+
+                // Dispose
+                //memberLine.Dispose();
             }
 
             mesh.faces[faceIndex].visited = true;

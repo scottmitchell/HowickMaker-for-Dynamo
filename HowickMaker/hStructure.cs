@@ -359,6 +359,14 @@ namespace HowickMaker
             currentMember.webNormal = (_firstConnectionIsFTF) ? normal : Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal);
             _members[0] = currentMember;
 
+            // Dispose
+            {
+                currentLine.Dispose();
+                nextLine.Dispose();
+                currentPlane.Dispose();
+                normal.Dispose();
+            }
+
             Propogate(0);
         }
 
@@ -402,14 +410,20 @@ namespace HowickMaker
                     // If we have not been to this vertex yet
                     if (!_g.vertices[i].visited)
                     {
-                        
-
                         List<Geo.Vector> vectors = GetValidNormalsForMember(i);
                         _members[i].webNormal = vectors[0];
 
 
                         _g.vertices[current].visited = true;
-                        Console.WriteLine(current + " to " + i);
+
+                        // Dispose
+                        {
+                            foreach (Geo.Vector v in vectors)
+                            {
+                                v.Dispose();
+                            }
+                        }
+
                         Propogate(i);
                     }
                 }
@@ -487,15 +501,22 @@ namespace HowickMaker
             if (connection.type == Connection.FTF)
             {
                 Geo.Vector otherNormal = _members[otherMemberIndex].webNormal;
-                return new List<Geo.Vector> { FlipVector(otherNormal) };
+                Geo.Vector reverseOtherNormal = FlipVector(otherNormal);
+
+                //Dispose
+                {
+                    otherNormal.Dispose();
+                }
+
+                return new List<Geo.Vector> { reverseOtherNormal };
             }
 
             else if (connection.type == Connection.BR)
             {
-                Geo.Plane jointPlane = ByTwoLines(_members[memberIndex].webAxis, _members[otherMemberIndex].webAxis);
-                Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex].webAxis.StartPoint, _members[memberIndex].webAxis.EndPoint);
+                //Geo.Plane jointPlane = ByTwoLines(_members[memberIndex].webAxis, _members[otherMemberIndex].webAxis);
+                //Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex].webAxis.StartPoint, _members[memberIndex].webAxis.EndPoint);
 
-                Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
+                //Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
                 
                 return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
             }
@@ -506,6 +527,12 @@ namespace HowickMaker
                 Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex].webAxis.StartPoint, _members[memberIndex].webAxis.EndPoint);
 
                 Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
+
+                // Dispose
+                {
+                    jointPlane.Dispose();
+                    memberVector.Dispose();
+                }
 
                 return new List<Geo.Vector> { webNormal1, FlipVector(webNormal1) };
             }

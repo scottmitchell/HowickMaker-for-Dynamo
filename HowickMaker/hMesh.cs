@@ -82,6 +82,14 @@ namespace HowickMaker
             return -1;
         }
 
+        internal void Reset()
+        {
+            foreach (hFace f in faces)
+            {
+                f.visited = false;
+            }
+        }
+
 
 
         public static string view(hMesh m)
