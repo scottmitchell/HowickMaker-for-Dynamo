@@ -320,18 +320,17 @@ namespace HowickMaker
             for (int i = 0; i < lines.Count; i++)
             {
                 // ...vs every other line
-                for (int j = 0; j < lines.Count; j++)
+                for (int j = i + 1; j < lines.Count; j++)
                 {
                     // Make sure we're not checking a line against itself
                     if (i != j)
                     {
                         // Check if the two lines intersect
-                        //if (lines[i].DoesIntersect(lines[j]))
-                        //if (LinesIntersectWithTolerance(lines[i], lines[j], tolerance))
                         if (lines[i].DistanceTo(lines[j]) <= tolerance)
                         {
                             // If so, add j as a neighbor to i
                             g.vertices[i].addNeighbor(j);
+                            g.vertices[j].addNeighbor(i);
                         }
                     }
                 }
@@ -360,12 +359,12 @@ namespace HowickMaker
             _members[0] = currentMember;
 
             // Dispose
-            {
+            /*{
                 currentLine.Dispose();
                 nextLine.Dispose();
                 currentPlane.Dispose();
                 normal.Dispose();
-            }
+            }*/
 
             Propogate(0);
         }
@@ -417,12 +416,12 @@ namespace HowickMaker
                         _g.vertices[current].visited = true;
 
                         // Dispose
-                        {
+                        /*{
                             foreach (Geo.Vector v in vectors)
                             {
                                 v.Dispose();
                             }
-                        }
+                        }*/
 
                         Propogate(i);
                     }
@@ -504,9 +503,9 @@ namespace HowickMaker
                 Geo.Vector reverseOtherNormal = FlipVector(otherNormal);
 
                 //Dispose
-                {
+                /*{
                     otherNormal.Dispose();
-                }
+                }*/
 
                 return new List<Geo.Vector> { reverseOtherNormal };
             }
@@ -529,10 +528,10 @@ namespace HowickMaker
                 Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
 
                 // Dispose
-                {
+                /*{
                     jointPlane.Dispose();
                     memberVector.Dispose();
-                }
+                }*/
 
                 return new List<Geo.Vector> { webNormal1, FlipVector(webNormal1) };
             }
@@ -838,10 +837,11 @@ namespace HowickMaker
                         // Get angle between members
                         double angle = (Math.PI/180) * Geo.Vector.ByTwoPoints(axis1.StartPoint, axis1.EndPoint).AngleWithVector(Geo.Vector.ByTwoPoints(axis2.StartPoint, axis2.EndPoint));
                         angle = (angle < (Math.PI/2)) ? angle : Math.PI - angle;
-
+                        
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
-                        double minExtension = _WEBHoleSpacing / Math.Sin(angle) - _WEBHoleSpacing / Math.Tan(angle) + 1;
-
+                        double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
+                        double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + 1;
+                        
                         // Check start point
                         if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)
                         {
@@ -863,11 +863,11 @@ namespace HowickMaker
                             Geo.Point newEndPoint = intersectionPoint.Add(moveVector);
                             _members[index1].SetWebAxisEndPoint(newEndPoint);
                         }
-
+                        
                         // Compute intersection location and location of web holes for fasteners
                         double intersectionLoc = _members[index1].webAxis.ParameterAtPoint(intersectionPoint) * _members[index1].webAxis.Length;
-                        double d1 = ((_WEBHoleSpacing / Math.Cos(angle)) - _WEBHoleSpacing) / Math.Tan(angle);
-                        double d2 = (2 * _WEBHoleSpacing) / Math.Tan(angle);
+                        double d1 = (angle % (Math.PI / 2) < _tolerance) ? 0 : ((_WEBHoleSpacing / Math.Cos(angle)) - _WEBHoleSpacing) / Math.Tan(angle);
+                        double d2 = (angle % (Math.PI / 2) < _tolerance) ? 0 : (2 * _WEBHoleSpacing) / Math.Tan(angle);
 
                         // Add valid web holes
                         List<double> webHoleLocations = new List<double> { intersectionLoc - (d1 + d2), intersectionLoc - (d1), intersectionLoc + (d1), intersectionLoc + (d1 + d2) };
@@ -881,6 +881,7 @@ namespace HowickMaker
 
                         // Add bolt hole for alignment
                         _members[index1].AddOperationByLocationType(intersectionLoc, "BOLT");
+                        
                     }
                 }
             }
@@ -1138,21 +1139,21 @@ namespace HowickMaker
 
         #region Line Segment Distances
 
-        [IsVisibleInDynamoLibrary(false)]
+        [IsVisibleInDynamoLibrary(true)]
         public static Geo.Point ClosestPointToOtherLine(Geo.Line line, Geo.Line other)
         {
-            Geo.Point pt1 = line.StartPoint;
-            Geo.Point pt3 = other.StartPoint;
+            Geo.Point startPt1 = line.StartPoint;
+            Geo.Point startPt2 = other.StartPoint;
 
             Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line.StartPoint, line.EndPoint);
             Geo.Vector vec2 = Geo.Vector.ByTwoPoints(other.StartPoint, other.EndPoint);
 
-            double x1 = pt1.X;
-            double y1 = pt1.Y;
-            double z1 = pt1.Z;
-            double x2 = pt3.X;
-            double y2 = pt3.Y;
-            double z2 = pt3.Z;
+            double x1 = startPt1.X;
+            double y1 = startPt1.Y;
+            double z1 = startPt1.Z;
+            double x2 = startPt2.X;
+            double y2 = startPt2.Y;
+            double z2 = startPt2.Z;
 
             double a1 = vec1.X;
             double b1 = vec1.Y;
