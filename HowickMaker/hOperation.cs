@@ -10,8 +10,7 @@ using Autodesk.DesignScript.Runtime;
 namespace HowickMaker
 {
     /// <summary>
-    /// 
-    /// 
+    /// List of valid operations on a Howick FRAMA 3200
     /// </summary>
     [IsVisibleInDynamoLibrary(false)]
     public enum Operation
@@ -26,7 +25,10 @@ namespace HowickMaker
         DIMPLE
     }
 
-
+    /// <summary>
+    /// Represents a Howick operation, 
+    /// including the type of operation and the location along a member where it occurs
+    /// </summary>
     internal class hOperation
     {
         internal double _loc;

@@ -61,10 +61,10 @@ namespace HowickMaker
             var returnPt = (Geo.Point)midPoint.Translate(move);
 
             // Dispose
-            {
+            /*{
                 midPoint.Dispose();
                 move.Dispose();
-            }
+            }*/
 
             return returnPt;
         }
@@ -98,7 +98,7 @@ namespace HowickMaker
             var returnLine = Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
 
             // Dispose
-            {
+            /*{
                 p1.Dispose();
                 p2.Dispose();
                 p3.Dispose();
@@ -107,7 +107,7 @@ namespace HowickMaker
                 v1.Dispose();
                 v2.Dispose();
                 direction.Dispose();
-            }
+            }*/
             return returnLine;
         }
 
@@ -140,7 +140,7 @@ namespace HowickMaker
             var returnLine = Geo.Line.ByStartPointDirectionLength(memberPoint, direction, length);
 
             // Dispose
-            {
+            /*{
                 p1.Dispose();
                 p2.Dispose();
                 p3.Dispose();
@@ -149,7 +149,7 @@ namespace HowickMaker
                 v1.Dispose();
                 v2.Dispose();
                 direction.Dispose();
-            }
+            }*/
             return returnLine;
         }
 

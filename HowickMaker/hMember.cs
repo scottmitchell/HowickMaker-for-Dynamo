@@ -19,6 +19,9 @@ namespace HowickMaker
         internal List<hOperation> operations = new List<hOperation>();
 
 
+
+
+
         //   ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██████╗ 
         //  ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
         //  ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ██████╔╝
@@ -32,6 +35,7 @@ namespace HowickMaker
         {
 
         }
+
 
         [IsVisibleInDynamoLibrary(false)]
         internal hMember(hMember member)
@@ -49,6 +53,7 @@ namespace HowickMaker
             }
         }
 
+
         [IsVisibleInDynamoLibrary(false)]
         public hMember(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
         {
@@ -56,6 +61,7 @@ namespace HowickMaker
             this.webNormal = webNormal;
             this.name = name;
         }
+        
 
         [IsVisibleInDynamoLibrary(false)]
         public hMember(Geo.Line webAxis, int name = 0)
@@ -66,6 +72,9 @@ namespace HowickMaker
         }
 
 
+
+
+
         //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
         //  ██╔══██╗██║   ██║██╔══██╗    ██╔════╝████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
         //  ██████╔╝██║   ██║██████╔╝    ██║     ██╔██╗ ██║███████╗   ██║   ██████╔╝
@@ -74,11 +83,22 @@ namespace HowickMaker
         //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
         //          
 
+
+        /// <summary>
+        /// Creates an hMember with its web lying along the webAxis, facing webNormal
+        /// </summary>
+        /// <param name="webAxis"></param>
+        /// <param name="webNormal"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public static hMember ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
         {
-            hMember member = new hMember(webAxis, webNormal, name);
+            hMember member = new hMember(webAxis, webNormal.Normalized(), name);
             return member;
         }
+
+
+
 
 
         //  ██████╗ ██╗   ██╗██████╗  
@@ -91,7 +111,7 @@ namespace HowickMaker
 
         
         /// <summary>
-        /// 
+        /// Adds operations to the member by specifying the locations and the types of operations
         /// </summary>
         /// <param name="member"></param>
         /// <param name="locations"></param>
@@ -108,8 +128,9 @@ namespace HowickMaker
             return newMember;
         }
 
+
         /// <summary>
-        /// Add operations to a member by specifiying the operation types and the points along the axis of the member at which they occur
+        /// Adds operations to a member by specifiying the operation types and the points along the axis of the member at which they occur
         /// </summary>
         /// <param name="member"></param>
         /// <param name="points"></param>
@@ -124,12 +145,24 @@ namespace HowickMaker
             }
             return newMember;
         }
+        
 
+        /// <summary>
+        /// Gets the web axis of the member
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
         public static Geo.Line WebAxis(hMember member)
         {
             return member.webAxis;
         }
 
+
+        /// <summary>
+        /// Gets the lines that run along the center of each flange of the member, parallel to the web axis
+        /// </summary>
+        /// <param name="member"></param>
+        /// <returns></returns>
         public static List<Geo.Line> FlangeAxes(hMember member)
         {
             Geo.Point OP1 = member.webAxis.StartPoint;
@@ -144,6 +177,9 @@ namespace HowickMaker
         }
 
 
+
+
+
         //  ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗ █████╗ ██╗     
         //  ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗████╗  ██║██╔══██╗██║     
         //  ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝██╔██╗ ██║███████║██║     
@@ -152,6 +188,12 @@ namespace HowickMaker
         //  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
         //                                                                  
 
+        
+        /// <summary>
+        /// Add an operation to the member by specifiying the type of operation and the point at which the operation should occur
+        /// </summary>
+        /// <param name="pt"></param>
+        /// <param name="type"></param>
         internal void AddOperationByPointType(Geo.Point pt, string type)
         {
             double location = webAxis.ParameterAtPoint(pt) * webAxis.Length;
@@ -159,6 +201,12 @@ namespace HowickMaker
             AddOperation(op);
         }
 
+
+        /// <summary>
+        /// AAdd an operation to the member by specifiying the type of operation and the location along the member at which the operation should occur
+        /// </summary>
+        /// <param name="location"></param>
+        /// <param name="type"></param>
         internal void AddOperationByLocationType(double location, string type)
         {
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
@@ -166,11 +214,20 @@ namespace HowickMaker
         }
 
 
+        /// <summary>
+        /// Add an hOperation to the member's list of operations
+        /// </summary>
+        /// <param name="operation"></param>
         internal void AddOperation(hOperation operation)
         {
             this.operations.Add(operation);
         }
 
+
+        /// <summary>
+        /// Add an hConnection to the member's list of connections
+        /// </summary>
+        /// <param name="connection"></param>
         internal void AddConnection(hConnection connection)
         {
             this.connections.Add(connection);
@@ -198,6 +255,7 @@ namespace HowickMaker
             webAxis = newAxis;
         }
 
+
         /// <summary>
         /// Extend member by changing web axis end point. Adjust operations accordingly.
         /// </summary>
@@ -218,11 +276,20 @@ namespace HowickMaker
             // Set new axis
             webAxis = newAxis;
         }
+        
 
+        /// <summary>
+        /// Sort the member's operations by operation location
+        /// </summary>
         internal void SortOperations()
         {
             operations = operations.OrderBy(op => op._loc).ToList();
         }
+
+
+
+
+
 
         //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗
         //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
@@ -252,6 +319,7 @@ namespace HowickMaker
             File.WriteAllText(filePath, csv);
         }
 
+
         /// <summary>
         /// Returns a string representing the hMember as a csv line to be produced on the Howick
         /// </summary>
@@ -263,8 +331,9 @@ namespace HowickMaker
             return member.AsCSVLine(normalLabel);
         }
 
+
         /// <summary>
-        /// Returns a string representing the hMember as a csv line to be produced on the Howick
+        /// Returns a string representing the hMember as a csv line that can be sent to the Howick
         /// </summary>
         /// <param name="normalLabel"></param>
         /// <returns></returns>
@@ -283,9 +352,7 @@ namespace HowickMaker
 
             return csv;
         }
-
-
-
+        
 
 
 
@@ -297,6 +364,7 @@ namespace HowickMaker
         //   ╚████╔╝ ██║███████╗
         //    ╚═══╝  ╚═╝╚══════╝
         //                      
+
 
         [MultiReturn(new[] { "member", "operations" })]
         public static Dictionary<string, object> Draw(hMember member)
@@ -561,10 +629,10 @@ namespace HowickMaker
                         normal = normal.Normalized().Scale(0.01);
                         normalR = normalR.Normalized().Scale(0.01);
 
-                        boltPts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
-                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
-                        package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
-                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        Geo.Point[] servicePts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normal))), opPoint.Add(lateral.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxisR.Add(normal))), opPoint.Add(lateralR.Add(webAxis.Add(normal))) };
+                        package.AddTriangleVertex(servicePts[0].X, servicePts[0].Y, servicePts[0].Z);
+                        package.AddTriangleVertex(servicePts[1].X, servicePts[1].Y, servicePts[1].Z);
+                        package.AddTriangleVertex(servicePts[2].X, servicePts[2].Y, servicePts[2].Z);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
@@ -575,9 +643,9 @@ namespace HowickMaker
                         package.AddTriangleVertexUV(0, 0);
                         package.AddTriangleVertexUV(0, 0);
 
-                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
-                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
-                        package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
+                        package.AddTriangleVertex(servicePts[0].X, servicePts[0].Y, servicePts[0].Z);
+                        package.AddTriangleVertex(servicePts[2].X, servicePts[2].Y, servicePts[2].Z);
+                        package.AddTriangleVertex(servicePts[3].X, servicePts[3].Y, servicePts[3].Z);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
@@ -588,10 +656,10 @@ namespace HowickMaker
                         package.AddTriangleVertexUV(0, 0);
                         package.AddTriangleVertexUV(0, 0);
 
-                        boltPts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normalR))), opPoint.Add(lateral.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxis.Add(normalR))) };
-                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
-                        package.AddTriangleVertex(boltPts[1].X, boltPts[1].Y, boltPts[1].Z);
-                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
+                        servicePts = new Geo.Point[] { opPoint.Add(lateral.Add(webAxis.Add(normalR))), opPoint.Add(lateral.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxisR.Add(normalR))), opPoint.Add(lateralR.Add(webAxis.Add(normalR))) };
+                        package.AddTriangleVertex(servicePts[0].X, servicePts[0].Y, servicePts[0].Z);
+                        package.AddTriangleVertex(servicePts[1].X, servicePts[1].Y, servicePts[1].Z);
+                        package.AddTriangleVertex(servicePts[2].X, servicePts[2].Y, servicePts[2].Z);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
@@ -602,9 +670,9 @@ namespace HowickMaker
                         package.AddTriangleVertexUV(0, 0);
                         package.AddTriangleVertexUV(0, 0);
 
-                        package.AddTriangleVertex(boltPts[0].X, boltPts[0].Y, boltPts[0].Z);
-                        package.AddTriangleVertex(boltPts[2].X, boltPts[2].Y, boltPts[2].Z);
-                        package.AddTriangleVertex(boltPts[3].X, boltPts[3].Y, boltPts[3].Z);
+                        package.AddTriangleVertex(servicePts[0].X, servicePts[0].Y, servicePts[0].Z);
+                        package.AddTriangleVertex(servicePts[2].X, servicePts[2].Y, servicePts[2].Z);
+                        package.AddTriangleVertex(servicePts[3].X, servicePts[3].Y, servicePts[3].Z);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
                         package.AddTriangleVertexColor(r, g, b, a);
