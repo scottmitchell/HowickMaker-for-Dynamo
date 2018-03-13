@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// Simple mesh face for use with HowickMaker
+    /// </summary>
     internal class hFace
     {
         internal List<hVertex> vertices = new List<hVertex>();

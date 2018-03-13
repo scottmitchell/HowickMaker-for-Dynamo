@@ -11,7 +11,7 @@ namespace HowickMaker
 {
 
     /// <summary>
-    /// 
+    /// List of supported connection types
     /// </summary>
     [IsVisibleInDynamoLibrary(false)]
     public enum Connection
@@ -22,6 +22,9 @@ namespace HowickMaker
         T
     }
 
+    /// <summary>
+    /// Represents a connection within an hStructure
+    /// </summary>
     [IsVisibleInDynamoLibrary(false)]
     public class hConnection
     {
@@ -47,7 +50,7 @@ namespace HowickMaker
 
 
         /// <summary>
-        /// 
+        /// Returns the index of the other member involved in this connection
         /// </summary>
         /// <param name="index"></param>
         /// <returns></returns>
@@ -64,6 +67,12 @@ namespace HowickMaker
             return index;
         }
 
+        /// <summary>
+        /// Equality for hConnections.
+        /// Order of members does not matter.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <returns></returns>
         public override bool Equals(object value)
         {
             hConnection con = value as hConnection;

@@ -8,6 +8,9 @@ using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// A simple mesh class for use with HowickMaker 
+    /// </summary>
     public class hMesh
     {
         internal List<hFace> faces = new List<hFace>();

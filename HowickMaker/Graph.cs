@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// Super simple graph for keeping track of member adjacencies
+    /// </summary>
     class Graph
     {
         internal Vertex[] vertices;

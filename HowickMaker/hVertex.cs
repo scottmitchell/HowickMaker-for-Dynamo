@@ -7,6 +7,9 @@ using Geo = Autodesk.DesignScript.Geometry;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// Simple mesh vertex for use with HowickMaker
+    /// </summary>
     internal class hVertex
     {
         internal double x;

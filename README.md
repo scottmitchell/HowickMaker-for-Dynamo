@@ -3,10 +3,8 @@
 HowickMaker for Dynamo is a set of tools for programming steel stud roll-forming machines with Dynamo. Currently, the plugin supports fabrication with the Howick FRAMA 3200 machine.
 
 ## Nodes
-
-### hMember
-
 ![picture alt](images/hMember.png?raw=true "hMember")
+### hMember
 
 Nodes for creation and manipulation of individual steel studs.
 
@@ -30,3 +28,7 @@ Nodes for solving large collections of steel studs.
     - Brace Length 1 (double) : The length of the primary brace(s) (the only brace if threePieceBrace == false, the twin braces if threePieceBrace == true).
     - Brace Length 2 (double) : The length of the secondary brace.
     - First Connection is Face-To-Face (boolean) : The first hMember is the first line in your list of input lines. The first hMember's first connection is the first line in the list that it's web axis intersects (other than itself). Should this connection be face-to-face or braced? 
+
+### hLines / hMesh
+
+hLines and hMesh contain nodes for particular workflows, and particular strategies of parametric steel stud fabrication and construction. Currently, this includes several quad-mesh and triangular-mesh strategies. More will be added as they are developed.

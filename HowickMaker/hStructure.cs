@@ -9,6 +9,10 @@ using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// A collection of connected hMembers, 
+    /// with associated connections, braces, etc.
+    /// </summary>
     public class hStructure
     {
         public hMember[] _members;

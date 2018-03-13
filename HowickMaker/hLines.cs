@@ -7,6 +7,9 @@ using Geo = Autodesk.DesignScript.Geometry;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// Tools for creating networks of lines that make valid steel stud structures.
+    /// </summary>
     public class hLines
     {
         hMesh mesh;

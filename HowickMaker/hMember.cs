@@ -10,6 +10,9 @@ using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
+    /// <summary>
+    /// Represents a steel stud
+    /// </summary>
     public class hMember : IGraphicItem
     {
         internal Geo.Line webAxis;
