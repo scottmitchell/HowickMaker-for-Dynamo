@@ -2,14 +2,20 @@
 
 HowickMaker for Dynamo is a set of tools for programming steel stud roll-forming machines with Dynamo. Currently, the plugin supports fabrication with the Howick FRAMA 3200 machine.
 
+## Basics
+
+### Units
+
+HowickMaker assumes you are working in inches. Files exported to the Howick will also be in inches.
+
 ## Nodes
 ![picture alt](images/hMember.png?raw=true "hMember")
 ### hMember
 
 Nodes for creation and manipulation of individual steel studs.
 
-- **hMember.ByLineVector** : Creates a steed stud (hMember) with the provided web axis (the Line running down the center of the stud's web) and web normal (a Vector pointing from the web of the stud to the lip of the stud).
-- **hMember.AddOperationByLocationType** : Adds an operation to the stud at a specified location along the len
+- **hMember.ByLineVector** : Creates a steel stud (hMember) with the provided web axis (the Line running down the center of the stud's web) and web normal (a Vector normal to the web, pointing toward the lip of the stud).
+- **hMember.AddOperationByLocationType** : Adds an operation to the stud at a specified location along the length of the stud.
 - **hMember.AddOperationByPointType** : Adds an operation to the stud at a specified point. 
 - **hMember.WebAxis** : Returns the web axis of the stud.
 - **hMember.FlangeAxes** : Returns the flange axes of the stud.
