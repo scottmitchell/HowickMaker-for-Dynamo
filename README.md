@@ -8,6 +8,17 @@ HowickMaker for Dynamo is a set of tools for programming steel stud roll-forming
 
 HowickMaker assumes you are working in inches. Files exported to the Howick will also be in inches.
 
+### Workflow
+![picture alt](images/workflow.png?raw=true "Workflow")
+**Lines -> Studs**
+In general, HowickMaker takes over once you know at least the web axes (see below) of the studs you want to make. Once you know where your studs are, HowickMaker can tell you how they are oriented, and how they connect to each other. If that's all you care about, you can go ahead and export from here.
+
+**Studs + Custom Operations**
+However, if you need to perform additional operations to the studs (for example: connections to a panel system, or through-holes for conduit), you can add these before exporting to the machine.
+
+**???? -> Lines**
+The most difficult part of the parametric, steel-stud workflow is finding lines that create valid steel-stud connections. You can do this yourself, or we can help. HowickMaker includes several ways to generate valid lines from meshes, and more workflows are under development.
+
 ## Nodes
 ![picture alt](images/hMember.png?raw=true "hMember")
 ### hMember
