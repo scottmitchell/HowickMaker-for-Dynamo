@@ -1,4 +1,4 @@
-<Workspace Version="1.3.0.875" X="482.08014610702" Y="525.008149585687" zoom="0.565862835211723" ScaleFactor="1" Name="Home" Description="" RunType="Automatic" RunPeriod="1000" HasRunWithoutCrash="True">
+<Workspace Version="1.3.0.875" X="536.924961234237" Y="592.549006824374" zoom="0.830821744672317" ScaleFactor="1" Name="Home" Description="" RunType="Automatic" RunPeriod="1000" HasRunWithoutCrash="True">
   <NamespaceResolutionMap />
   <Elements>
     <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="4778ce9d-c5ec-4265-8ee9-c97153b267ba" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="Vector.XAxis" x="-114.796726718789" y="-309.110868267821" isVisible="false" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="ProtoGeometry.dll" function="Autodesk.DesignScript.Geometry.Vector.XAxis" />
@@ -8,7 +8,7 @@
       <PortInfo index="2" default="True" />
     </Dynamo.Graph.Nodes.ZeroTouch.DSFunction>
     <CoreNodeModels.Input.DoubleSlider guid="c5738613-3168-466e-9cd4-b6366dfee529" type="CoreNodeModels.Input.DoubleSlider" nickname="Member Length" x="-610.148885106723" y="-246.333739713801" isVisible="false" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
-      <System.Double>28.9</System.Double>
+      <System.Double>26.4</System.Double>
       <Range min="0" max="100" step="0.1" />
     </CoreNodeModels.Input.DoubleSlider>
     <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="75fe077c-39de-4d1f-8c09-6d3d9f83b65e" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="Point.ByCoordinates" x="39.8560381523149" y="-635.360463283678" isVisible="false" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="ProtoGeometry.dll" function="Autodesk.DesignScript.Geometry.Point.ByCoordinates@double,double,double">
@@ -25,22 +25,42 @@
     </Dynamo.Graph.Nodes.ZeroTouch.DSFunction>
     <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="e0a8433e-51a1-4701-aeab-c67146a831d9" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="Vector.ZAxis" x="-395.01273195817" y="-476.48333600838" isVisible="false" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="ProtoGeometry.dll" function="Autodesk.DesignScript.Geometry.Vector.ZAxis" />
     <CoreNodeModels.Input.DoubleSlider guid="b2a1b8f7-8c2c-477a-a149-7d6e9ecac0c8" type="CoreNodeModels.Input.DoubleSlider" nickname="Rotate" x="-609.015661566182" y="-335.139852872239" isVisible="false" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
-      <System.Double>20.4</System.Double>
+      <System.Double>-2.69999999999999</System.Double>
       <Range min="-180" max="180" step="0.1" />
     </CoreNodeModels.Input.DoubleSlider>
-    <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="935c1d9e-79d3-42e1-95c4-08ab8db529e5" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="hStructure.FromLines" x="682.622734836404" y="-193.634203249496" isVisible="true" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="\\mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\HowickMaker.dll" function="HowickMaker.hStructure.FromLines@Autodesk.DesignScript.Geometry.Line[],double,bool">
+    <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="935c1d9e-79d3-42e1-95c4-08ab8db529e5" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="hStructure.FromLines" x="763.361340315321" y="-193.634203249496" isVisible="true" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="\\mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\HowickMaker.dll" function="HowickMaker.hStructure.FromLines@Autodesk.DesignScript.Geometry.Line[],var[]..[]">
       <PortInfo index="0" default="False" />
       <PortInfo index="1" default="False" />
-      <PortInfo index="2" default="False" />
     </Dynamo.Graph.Nodes.ZeroTouch.DSFunction>
-    <Dynamo.Graph.Nodes.CodeBlockNodeModel guid="aa77e13b-3c18-45bf-8c01-842d43c556ed" type="Dynamo.Graph.Nodes.CodeBlockNodeModel" nickname="Code Block" x="362.622734836404" y="-149.420869916162" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="False" IsFrozen="false" isPinned="false" CodeText="0.001;" ShouldFocus="false" />
-    <CoreNodeModels.Input.BoolSelector guid="8cb1a37e-4536-47b0-8c9d-a9e9da94c164" type="CoreNodeModels.Input.BoolSelector" nickname="Boolean" x="362.622734836404" y="-39.6342032494957" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
+    <CoreNodeModels.Input.BoolSelector guid="8cb1a37e-4536-47b0-8c9d-a9e9da94c164" type="CoreNodeModels.Input.BoolSelector" nickname="First Connection Is Face-To-Face" x="-127.517707962774" y="62.1357076610044" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
       <System.Boolean>False</System.Boolean>
     </CoreNodeModels.Input.BoolSelector>
     <CoreNodeModels.CreateList guid="e6a2b262-3996-4d9d-84f9-d8ab8daee1e1" type="CoreNodeModels.CreateList" nickname="List.Create" x="63.3157694839717" y="-376.217788352966" isVisible="false" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="False" IsFrozen="false" isPinned="false" inputcount="2">
       <PortInfo index="0" default="False" />
       <PortInfo index="1" default="False" />
     </CoreNodeModels.CreateList>
+    <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="29130c8a-6808-4498-bd28-d4919cc705f0" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="hStructure.StructureOptions" x="292.697632404897" y="-157.372574774157" isVisible="true" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="false" assembly="\\mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\HowickMaker.dll" function="HowickMaker.hStructure.StructureOptions@double,double,bool,double,double,bool">
+      <PortInfo index="0" default="True" />
+      <PortInfo index="1" default="True" />
+      <PortInfo index="2" default="True" />
+      <PortInfo index="3" default="True" />
+      <PortInfo index="4" default="True" />
+      <PortInfo index="5" default="True" />
+    </Dynamo.Graph.Nodes.ZeroTouch.DSFunction>
+    <CoreNodeModels.Input.BoolSelector guid="05aeac38-c289-494d-9de7-abba789ecca2" type="CoreNodeModels.Input.BoolSelector" nickname="Three Piece Brace" x="-53.0177079627742" y="-141.906315507048" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
+      <System.Boolean>False</System.Boolean>
+    </CoreNodeModels.Input.BoolSelector>
+    <CoreNodeModels.Input.DoubleSlider guid="41dff0e8-4275-4068-998f-d2a76cf9fb6d" type="CoreNodeModels.Input.DoubleSlider" nickname="Brace Length 1" x="-217.017707962774" y="-73.8923077843639" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
+      <System.Double>11.8</System.Double>
+      <Range min="0" max="100" step="0.1" />
+    </CoreNodeModels.Input.DoubleSlider>
+    <CoreNodeModels.Input.DoubleSlider guid="c8304b22-4569-4200-9ef1-faa9d1480cc5" type="CoreNodeModels.Input.DoubleSlider" nickname="Brace Length 2" x="-217.017707962774" y="-5.87830006167971" isVisible="true" isUpstreamVisible="true" lacing="Disabled" isSelectedInput="True" IsFrozen="false" isPinned="false">
+      <System.Double>8.1</System.Double>
+      <Range min="0" max="100" step="0.1" />
+    </CoreNodeModels.Input.DoubleSlider>
+    <Dynamo.Graph.Nodes.ZeroTouch.DSFunction guid="d490d2a8-9ad9-439e-8278-c091235cf5a6" type="Dynamo.Graph.Nodes.ZeroTouch.DSFunction" nickname="hMember.Length" x="62.2994754724915" y="164.25807309821" isVisible="true" isUpstreamVisible="true" lacing="Shortest" isSelectedInput="False" IsFrozen="false" isPinned="true" assembly="\\mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\HowickMaker.dll" function="HowickMaker.hMember.Length">
+      <PortInfo index="0" default="False" />
+    </Dynamo.Graph.Nodes.ZeroTouch.DSFunction>
   </Elements>
   <Connectors>
     <Dynamo.Graph.Connectors.ConnectorModel start="4778ce9d-c5ec-4265-8ee9-c97153b267ba" start_index="0" end="e6a2b262-3996-4d9d-84f9-d8ab8daee1e1" end_index="1" portType="0" />
@@ -52,19 +72,29 @@
     <Dynamo.Graph.Connectors.ConnectorModel start="7d98db1f-6318-4bd6-bdd8-0988ea495987" start_index="0" end="e6a2b262-3996-4d9d-84f9-d8ab8daee1e1" end_index="0" portType="0" />
     <Dynamo.Graph.Connectors.ConnectorModel start="e0a8433e-51a1-4701-aeab-c67146a831d9" start_index="0" end="7d98db1f-6318-4bd6-bdd8-0988ea495987" end_index="1" portType="0" />
     <Dynamo.Graph.Connectors.ConnectorModel start="b2a1b8f7-8c2c-477a-a149-7d6e9ecac0c8" start_index="0" end="7d98db1f-6318-4bd6-bdd8-0988ea495987" end_index="2" portType="0" />
-    <Dynamo.Graph.Connectors.ConnectorModel start="aa77e13b-3c18-45bf-8c01-842d43c556ed" start_index="0" end="935c1d9e-79d3-42e1-95c4-08ab8db529e5" end_index="1" portType="0" />
-    <Dynamo.Graph.Connectors.ConnectorModel start="8cb1a37e-4536-47b0-8c9d-a9e9da94c164" start_index="0" end="935c1d9e-79d3-42e1-95c4-08ab8db529e5" end_index="2" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="935c1d9e-79d3-42e1-95c4-08ab8db529e5" start_index="1" end="d490d2a8-9ad9-439e-8278-c091235cf5a6" end_index="0" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="8cb1a37e-4536-47b0-8c9d-a9e9da94c164" start_index="0" end="29130c8a-6808-4498-bd28-d4919cc705f0" end_index="5" portType="0" />
     <Dynamo.Graph.Connectors.ConnectorModel start="e6a2b262-3996-4d9d-84f9-d8ab8daee1e1" start_index="0" end="e7537294-26c9-4b33-970c-3e36ccc46d94" end_index="1" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="29130c8a-6808-4498-bd28-d4919cc705f0" start_index="0" end="935c1d9e-79d3-42e1-95c4-08ab8db529e5" end_index="1" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="05aeac38-c289-494d-9de7-abba789ecca2" start_index="0" end="29130c8a-6808-4498-bd28-d4919cc705f0" end_index="2" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="41dff0e8-4275-4068-998f-d2a76cf9fb6d" start_index="0" end="29130c8a-6808-4498-bd28-d4919cc705f0" end_index="3" portType="0" />
+    <Dynamo.Graph.Connectors.ConnectorModel start="c8304b22-4569-4200-9ef1-faa9d1480cc5" start_index="0" end="29130c8a-6808-4498-bd28-d4919cc705f0" end_index="4" portType="0" />
   </Connectors>
   <Notes />
   <Annotations>
-    <Dynamo.Graph.Annotations.AnnotationModel guid="da91533e-ea06-482d-8466-cd533f0d9fc6" annotationText="" left="-620.148885106723" top="-381.139852872239" width="320.633223540541" height="202.806113158438" fontSize="30" InitialTop="-335.139852872239" InitialHeight="186.806113158438" TextblockHeight="36" backgrouund="#FFB9F9E1">
+    <Dynamo.Graph.Annotations.AnnotationModel guid="da91533e-ea06-482d-8466-cd533f0d9fc6" annotationText="Member Parameters" left="-620.148885106723" top="-381.139852872239" width="320.633223540541" height="202.806113158438" fontSize="30" InitialTop="-335.139852872239" InitialHeight="186.806113158438" TextblockHeight="36" backgrouund="#FFB9F9E1">
       <Models ModelGuid="c5738613-3168-466e-9cd4-b6366dfee529" />
       <Models ModelGuid="b2a1b8f7-8c2c-477a-a149-7d6e9ecac0c8" />
+    </Dynamo.Graph.Annotations.AnnotationModel>
+    <Dynamo.Graph.Annotations.AnnotationModel guid="fc7ec487-05b5-4b8f-b280-7948fca5f37e" annotationText="Connection Parameters" left="-227.017707962774" top="-187.906315507048" width="319.5" height="318.042023168052" fontSize="30" InitialTop="-141.906315507048" InitialHeight="302.042023168052" TextblockHeight="36" backgrouund="#FFB9F9E1">
+      <Models ModelGuid="8cb1a37e-4536-47b0-8c9d-a9e9da94c164" />
+      <Models ModelGuid="05aeac38-c289-494d-9de7-abba789ecca2" />
+      <Models ModelGuid="41dff0e8-4275-4068-998f-d2a76cf9fb6d" />
+      <Models ModelGuid="c8304b22-4569-4200-9ef1-faa9d1480cc5" />
     </Dynamo.Graph.Annotations.AnnotationModel>
   </Annotations>
   <Presets />
   <Cameras>
-    <Camera Name="Background Preview" eyeX="19.2474417425542" eyeY="48.6225876624233" eyeZ="6.03268209889404" lookX="1.80303814636181" lookY="-49.4532418067104" lookZ="-9.55202547505371" upX="0.170100272962329" upY="0.39874902905345" upZ="-0.901146563777969" />
+    <Camera Name="Background Preview" eyeX="12.2263215396991" eyeY="23.9579199994885" eyeZ="7.0898782805302" lookX="2.19433606973799" lookY="-22.7352266857492" lookZ="-15.2476775269047" upX="0.0980529002147102" upY="0.725374372163636" upZ="-0.681335289622951" />
   </Cameras>
 </Workspace>

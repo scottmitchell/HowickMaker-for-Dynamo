@@ -38,3 +38,4 @@
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\Microsoft.Dynamic.xml
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\Microsoft.Scripting.Metadata.xml
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMaker\obj\Debug\HowickMaker.csproj.CoreCompileInputs.cache
+\\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMaker\bin\Debug\HowickMaker.xml

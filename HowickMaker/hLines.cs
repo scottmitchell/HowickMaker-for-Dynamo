@@ -17,7 +17,7 @@ namespace HowickMaker
         double offset;
 
 
-        public hLines(hMesh mesh, double offset)
+        internal hLines(hMesh mesh, double offset)
         {
             this.mesh = mesh;
             this.offset = offset;
@@ -28,6 +28,12 @@ namespace HowickMaker
 
         #region Quad Strategy 01
 
+        /// <summary>
+        /// Create "Howick-able" lines on a planar quad mesh
+        /// </summary>
+        /// <param name="hMesh"></param>
+        /// <param name="offset"></param>
+        /// <returns name = "lines"></returns>
         public static List<Geo.Line> QuadStrategy_01(hMesh mesh, double offset)
         {
             mesh.Reset();

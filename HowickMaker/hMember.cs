@@ -8,6 +8,7 @@ using Geo = Autodesk.DesignScript.Geometry;
 using Autodesk.DesignScript.Interfaces;
 using Autodesk.DesignScript.Runtime;
 
+
 namespace HowickMaker
 {
     /// <summary>
@@ -15,12 +16,54 @@ namespace HowickMaker
     /// </summary>
     public class hMember : IGraphicItem
     {
-        internal Geo.Line webAxis;
-        internal Geo.Vector webNormal;
-        internal int name;
+        /// <summary>
+        /// The web axis of a member
+        /// </summary>
+        /// <returns name="webAxis">The web axis of the member</returns>
+        public Geo.Line WebAxis
+        {
+            get { return _webAxis; }
+        }
+        internal Geo.Line _webAxis;
+
+        /// <summary>
+        /// The web normal of a member
+        /// </summary>
+        public Geo.Vector WebNormal
+        {
+            get { return _webNormal; }
+        }
+        internal Geo.Vector _webNormal;
+
+        /// <summary>
+        /// The flange axes of a member
+        /// </summary>
+        public List<Geo.Line> FlangeAxes
+        {
+            get { return GetFlangeAxes(); }
+        }
+        
+        /// <summary>
+        /// The name of a member
+        /// </summary>
+        public string Name
+        {
+            get { return _name; }
+        }
+        internal string _name;
+
+        /// <summary>
+        /// The length of a member
+        /// </summary>
+        public double Length
+        {
+            get { return WebAxis.Length; }
+        }
+
+        
         public List<hConnection> connections = new List<hConnection>();
         internal List<hOperation> operations = new List<hOperation>();
-
+        
 
 
 
@@ -34,6 +77,7 @@ namespace HowickMaker
         //                                                      
 
 
+        [IsVisibleInDynamoLibrary(false)]
         internal hMember()
         {
 
@@ -43,9 +87,9 @@ namespace HowickMaker
         [IsVisibleInDynamoLibrary(false)]
         internal hMember(hMember member)
         {
-            this.webAxis = member.webAxis;
-            this.webNormal = member.webNormal;
-            this.name = member.name;
+            _webAxis = member._webAxis;
+            _webNormal = member._webNormal;
+            _name = member._name;
             foreach (hConnection con in member.connections)
             {
                 this.connections.Add(con);
@@ -58,20 +102,20 @@ namespace HowickMaker
 
 
         [IsVisibleInDynamoLibrary(false)]
-        public hMember(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
+        internal hMember(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
         {
-            this.webAxis = webAxis;
-            this.webNormal = webNormal;
-            this.name = name;
+            _webAxis = webAxis;
+            _webNormal = webNormal;
+            _name = name;
         }
         
 
         [IsVisibleInDynamoLibrary(false)]
-        public hMember(Geo.Line webAxis, int name = 0)
+        internal hMember(Geo.Line webAxis, string name = "0")
         {
-            this.webAxis = webAxis;
-            this.webNormal = null;
-            this.name = name;
+            _webAxis = webAxis;
+            _webNormal = null;
+            _name = name;
         }
 
 
@@ -93,8 +137,8 @@ namespace HowickMaker
         /// <param name="webAxis"></param>
         /// <param name="webNormal"></param>
         /// <param name="name"></param>
-        /// <returns></returns>
-        public static hMember ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, int name = 0)
+        /// <returns name="hMember"></returns>
+        public static hMember ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
         {
             hMember member = new hMember(webAxis, webNormal.Normalized(), name);
             return member;
@@ -112,17 +156,17 @@ namespace HowickMaker
         //  ╚═╝      ╚═════╝ ╚═════╝  
         //          
 
-        
+
         /// <summary>
         /// Adds operations to the member by specifying the locations and the types of operations
         /// </summary>
         /// <param name="member"></param>
         /// <param name="locations"></param>
         /// <param name="types"></param>
-        /// <returns></returns>
-        public static hMember AddOperationByLocationType(hMember member, List<double> locations, List<string> types)
+        /// <returns name="hMember"></returns>
+        public hMember AddOperationByLocationType(List<double> locations, List<string> types)
         {
-            hMember newMember = new hMember(member);
+            hMember newMember = new hMember(this);
             for (int i = 0; i < locations.Count; i++)
             {
                 hOperation op = new hOperation(locations[i], (Operation)System.Enum.Parse(typeof(Operation), types[i]));
@@ -139,26 +183,25 @@ namespace HowickMaker
         /// <param name="points"></param>
         /// <param name="types"></param>
         /// <returns name="hMember">></returns>
-        public static hMember AddOperationByPointType(hMember member, List<Geo.Point> points, List<string> types)
+        public hMember AddOperationByPointType(List<Geo.Point> points, List<string> types)
         {
-            hMember newMember = new hMember(member);
+            hMember newMember = new hMember(this);
             for (int i = 0; i < points.Count; i++)
             {
                 newMember.AddOperationByPointType(points[i], types[i]);
             }
             return newMember;
         }
-        
 
+        /*
         /// <summary>
         /// Gets the web axis of the member
         /// </summary>
-        /// <param name="member"></param>
         /// <returns></returns>
-        public static Geo.Line WebAxis(hMember member)
+        public Geo.Line WebAxis()
         {
-            return member.webAxis;
-        }
+            return _webAxis;
+        }*/
 
 
         /// <summary>
@@ -166,16 +209,17 @@ namespace HowickMaker
         /// </summary>
         /// <param name="member"></param>
         /// <returns></returns>
-        public static List<Geo.Line> FlangeAxes(hMember member)
+        [IsVisibleInDynamoLibrary(false)]
+        public List<Geo.Line> GetFlangeAxes()
         {
-            Geo.Point OP1 = member.webAxis.StartPoint;
-            Geo.Point OP2 = member.webAxis.EndPoint;
+            Geo.Point OP1 = _webAxis.StartPoint;
+            Geo.Point OP2 = _webAxis.EndPoint;
             Geo.Vector webAxisVec = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = member.webNormal.Normalized().Scale(0.75); ;
+            Geo.Vector normal = _webNormal.Normalized().Scale(0.75); ;
             Geo.Vector lateral = webAxisVec.Cross(normal).Normalized().Scale(1.75);
             Geo.Line flangeLine1 = Geo.Line.ByStartPointEndPoint(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
             lateral = webAxisVec.Cross(normal).Normalized().Scale(-1.75);
-            Geo.Line flangeLine2 = Geo.Line.ByStartPointEndPoint(OP2.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
+            Geo.Line flangeLine2 = Geo.Line.ByStartPointEndPoint(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
             return new List<Geo.Line> { flangeLine1, flangeLine2 };
         }
 
@@ -199,7 +243,7 @@ namespace HowickMaker
         /// <param name="type"></param>
         internal void AddOperationByPointType(Geo.Point pt, string type)
         {
-            double location = webAxis.ParameterAtPoint(pt) * webAxis.Length;
+            double location = _webAxis.ParameterAtPoint(pt) * _webAxis.Length;
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
             AddOperation(op);
         }
@@ -244,18 +288,18 @@ namespace HowickMaker
         internal void SetWebAxisStartPoint(Geo.Point newStartPoint)
         {
             // Create new axis
-            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(newStartPoint, webAxis.EndPoint);
+            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(newStartPoint, _webAxis.EndPoint);
 
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)
             {
-                Geo.Point opPoint = webAxis.PointAtParameter(op._loc / webAxis.Length);
+                Geo.Point opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
                 double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
                 op._loc = newLoc;
             }
 
             // Set new axis
-            webAxis = newAxis;
+            _webAxis = newAxis;
         }
 
 
@@ -266,18 +310,18 @@ namespace HowickMaker
         internal void SetWebAxisEndPoint(Geo.Point newEndPoint)
         {
             // Create new axis
-            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(webAxis.StartPoint, newEndPoint);
+            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(_webAxis.StartPoint, newEndPoint);
 
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)
             {
-                Geo.Point opPoint = webAxis.PointAtParameter(op._loc / webAxis.Length);
+                Geo.Point opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
                 double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
                 op._loc = newLoc;
             }
 
             // Set new axis
-            webAxis = newAxis;
+            _webAxis = newAxis;
         }
         
 
@@ -343,9 +387,9 @@ namespace HowickMaker
         internal string AsCSVLine(bool normalLabel = true)
         {
             string csv = "";
-            csv += name.ToString() + "," + "COMPONET" + ",";
+            csv += _name.ToString() + "," + "COMPONET" + ",";
             csv += (normalLabel) ? "LABEL_NRM" + "," : "LABEL_INV" + ",";
-            csv += Math.Round(webAxis.Length, 2).ToString() + ",";
+            csv += Math.Round(_webAxis.Length, 2).ToString() + ",";
 
             SortOperations();
             foreach (hOperation op in operations)
@@ -355,7 +399,7 @@ namespace HowickMaker
 
             return csv;
         }
-        
+
 
 
 
@@ -369,14 +413,15 @@ namespace HowickMaker
         //                      
 
 
+        [IsVisibleInDynamoLibrary(false)]
         [MultiReturn(new[] { "member", "operations" })]
         public static Dictionary<string, object> Draw(hMember member)
         {
-            Geo.Point OP1 = member.webAxis.StartPoint;
-            Geo.Point OP2 = member.webAxis.EndPoint;
+            Geo.Point OP1 = member._webAxis.StartPoint;
+            Geo.Point OP2 = member._webAxis.EndPoint;
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = member.webNormal;
+            Geo.Vector normal = member._webNormal;
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);
@@ -410,7 +455,7 @@ namespace HowickMaker
 
             foreach (hOperation op in member.operations)
             {
-                points.Add(member.webAxis.PointAtParameter(op._loc / member.webAxis.Length));
+                points.Add(member._webAxis.PointAtParameter(op._loc / member._webAxis.Length));
             }
 
             return new Dictionary<string, object>
@@ -429,11 +474,11 @@ namespace HowickMaker
         {
             package.RequiresPerVertexColoration = true;
 
-            Geo.Point OP1 = this.webAxis.StartPoint;
-            Geo.Point OP2 = this.webAxis.EndPoint;
+            Geo.Point OP1 = this._webAxis.StartPoint;
+            Geo.Point OP2 = this._webAxis.EndPoint;
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = webNormal;
+            Geo.Vector normal = _webNormal;
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);
@@ -494,7 +539,7 @@ namespace HowickMaker
 
             foreach (hOperation op in operations)
             {
-                Geo.Point opPoint = this.webAxis.PointAtParameter(op._loc / this.webAxis.Length);
+                Geo.Point opPoint = this._webAxis.PointAtParameter(op._loc / this._webAxis.Length);
                 byte r = 255;
                 byte g = 66;
                 byte b = 57;
@@ -822,7 +867,7 @@ namespace HowickMaker
                     case Operation.END_TRUSS:
                         lateral = lateral.Normalized().Scale(1.76);
                         lateralR = lateralR.Normalized().Scale(1.76);
-                        if(opPoint.DistanceTo(this.webAxis.StartPoint) < opPoint.DistanceTo(this.webAxis.EndPoint))
+                        if(opPoint.DistanceTo(this._webAxis.StartPoint) < opPoint.DistanceTo(this._webAxis.EndPoint))
                         {
                             webAxis = webAxis.Normalized().Scale(0.5);
                         }
