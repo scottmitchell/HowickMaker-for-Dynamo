@@ -7,6 +7,6 @@
 *.o
 *.so
 
-bin/
-.vs/
-packages/
+**/bin
+**/.vs
+**/packages
