@@ -48,3 +48,4 @@
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMakerTests\bin\Debug\LibG.Interface.dll
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMakerTests\bin\Debug\HowickMaker.dll
 \\Mac\Home\Documents\Visual Studio 2017\Projects\HowickMaker\HowickMakerTests\bin\Debug\HowickMaker.pdb
+\\mac\home\documents\visual studio 2017\Projects\HowickMaker\HowickMakerTests\bin\Debug\HowickMaker.xml

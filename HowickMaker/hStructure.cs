@@ -82,16 +82,18 @@ namespace HowickMaker
         /// Solve a network of intersecting lines as steel studs meeting at planar connections
         /// </summary>
         /// <param name="lines"></param>
+        /// <param name="options"></param>
         /// <returns></returns>
         [MultiReturn(new[] { "members", "braces" })]
-        public static Dictionary<string, object> FromLines(List<Geo.Line> lines, Dictionary<string, object> options = null)
+        public static Dictionary<string, object> FromLines(List<Geo.Line> lines, string options = "null")
         {
-            double intersectionTolerance = (options == null) ? 0.001 : (double)options["IntersectionTolerance"];
-            double planarityTolerance = (options == null) ? 0.001 : (double)options["PlanarityTolerance"];
-            bool threePieceBrace = (options == null) ? false : (bool)options["ThreePieceBraces"];
-            double braceLength1 = (options == null) ? 6 : (double)options["BraceLength1"];
-            double braceLength2 = (options == null) ? 3 : (double)options["BraceLength2"];
-            bool firstConnectionIsFTF = (options == null) ? false : (bool)options["FirstConnectionIsFTF"];
+            string[] option = options.ToString().Split(',');
+            double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
+            double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
+            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[2]);
+            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[3]);
+            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[4]);
+            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[5]);
 
             hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
 
@@ -100,6 +102,12 @@ namespace HowickMaker
                 { "members", structure._members.ToList() },
                 { "braces", structure._braceMembers.ToList() }
             };
+        }
+
+        [IsVisibleInDynamoLibrary(false)]
+        internal static object GetDefault()
+        {
+            return null;
         }
 
 
@@ -112,10 +120,13 @@ namespace HowickMaker
         /// <param name="braceLength1"></param>
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
-        /// <returns></returns>
-        public static Dictionary<string, object> StructureOptions(double intersectionTolerance = 0.001, double planarityTolerance = 0.001, bool threePieceBrace = false, double braceLength1 = 6, double braceLength2 = 3, bool firstConnectionIsFTF = false)
+        /// <returns name="options"></returns>
+        public static string StructureOptions(double intersectionTolerance = 0.001, double planarityTolerance = 0.001, bool threePieceBrace = false, double braceLength1 = 6, double braceLength2 = 3, bool firstConnectionIsFTF = false)
         {
-            return new Dictionary<string, object>
+            string[] options = { intersectionTolerance.ToString(), planarityTolerance.ToString(), threePieceBrace.ToString(), braceLength1.ToString(), braceLength2.ToString(), firstConnectionIsFTF.ToString() };
+            string concat = String.Join(",", options.ToArray());
+            return concat;
+                /*return new Dictionary<string, object>
             {
                 { "IntersectionTolerance", intersectionTolerance },
                 { "PlanarityTolerance", planarityTolerance },
@@ -123,7 +134,7 @@ namespace HowickMaker
                 { "BraceLength1", braceLength1 },
                 { "BraceLength2", braceLength2 },
                 { "FirstConnectionIsFTF", firstConnectionIsFTF }
-            };
+            };*/
         }
 
 

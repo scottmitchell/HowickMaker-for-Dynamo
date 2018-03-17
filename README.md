@@ -33,10 +33,13 @@ Nodes for creation and manipulation of individual steel studs.
 - **hMember.ByLineVector** : Creates a steel stud (hMember) with the provided web axis (the Line running down the center of the stud's web) and web normal (a Vector normal to the web, pointing toward the lip of the stud).
 - **hMember.AddOperationByLocationType** : Adds an operation to the stud at a specified location along the length of the stud.
 - **hMember.AddOperationByPointType** : Adds an operation to the stud at a specified point. 
-- **hMember.WebAxis** : Returns the web axis of the stud.
-- **hMember.FlangeAxes** : Returns the flange axes of the stud.
 - **hMember.AsCSVLine** : Returns the stud as a string for fabrication.
 - **hMember.ExportToFile** : Exports a list of hMembers to file for fabrication.
+- **hMember.WebAxis** : Returns the web axis of the stud.
+- **hMember.WebNormal** : Returns the web normal of the stud.
+- **hMember.FlangeAxes** : Returns the flange axes of the stud.
+- **hMember.Name** : Returns the name of the stud. The name is used for parts labeling during fabrication.
+- **hMember.Length** : Returns the length of the stud.
 
 ### hStructure
 
