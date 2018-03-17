@@ -1,3 +1,12 @@
-# Compiled source ####################*.com*.class*.dll*.exe*.o*.so
+# Compiled source #
+###################
+*.com
+*.class
+*.dll
+*.exe
+*.o
+*.so
 
 bin/
+.vs/
+packages/
