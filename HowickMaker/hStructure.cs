@@ -357,10 +357,11 @@ namespace HowickMaker
             structure._g = graphFromLines(lines, structure._tolerance);
 
             structure.BuildMembersAndConnectionsFromGraph();
-            structure.GenerateBraces();
+            //structure.GenerateBraces();
             structure.ResolveFTFConnections();
             structure.ResolveBRConnections();
             structure.ResolveTConnections();
+            structure.ResolvePTConnections();
 
             return structure;
         }
@@ -951,7 +952,7 @@ namespace HowickMaker
                         
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
-                        double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + 1;
+                        double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + 2.5;
                         
                         // Check start point
                         if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)
@@ -1155,7 +1156,9 @@ namespace HowickMaker
                     int iInside;
                     int iOutisde;
                     GetInsideAndOutisdeMember(connection, out inside, out outside, out iInside, out iOutisde);
-
+                    
+                    Geo.Point intersectionPoint = ClosestPointToOtherLine(inside, outside);
+                    
                     // Web axes as vectors
                     Geo.Vector vec1 = Geo.Vector.ByTwoPoints(inside.StartPoint, inside.EndPoint);
                     Geo.Vector vec2 = Geo.Vector.ByTwoPoints(outside.StartPoint, outside.EndPoint);
@@ -1170,35 +1173,26 @@ namespace HowickMaker
                     // Compute extension to DIMPLE
                     double d1 = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
                     double d2 = ((c1 / Math.Cos(angle)) - c1) / (Math.Tan(angle));
+                    double x1 = (c1 / Math.Sin(angle)) - (c1 / Math.Tan(angle));
+                    double x2 = (c1 / Math.Sin(angle)) + (c1 / Math.Tan(angle));
                     bool b1 = _members[iOutisde]._webNormal.Dot(_members[iInside]._webNormal) < 0;
                     bool b2 = _members[iOutisde]._webNormal.Dot(vec1) > 0;
-                    double d = (b1) ? d1 : d2;
+                    double d = (b1) ? x2 : x1;
 
                     // Determine orientation of members to each other and adjust d accordingly
-                    if (b2)
+                    if (!b2)
                     {
                         d *= -1;
                     }
-
-                    // Compute translation vector for end point in question
-                    Geo.Vector moveVector = FlipVector(vec1);
-                    moveVector = moveVector.Normalized();
-                    moveVector = moveVector.Scale(d + 0.45);
-                    Geo.Point newEndPoint = inside.StartPoint.Add(moveVector);
-
-                    // Extend member
-                    bool atMemberStart = SamePoints(inside.StartPoint, _members[iInside]._webAxis.StartPoint);
-                    if (atMemberStart) { _members[iInside].SetWebAxisStartPoint(newEndPoint); }
-                    else { _members[iInside].SetWebAxisEndPoint(newEndPoint); }
+                    intersectionPoint = intersectionPoint.Add(vec1.Normalized().Scale(d));
 
                     // Add operations to terminal member of T joint
                     double l = _members[iInside]._webAxis.Length;
-                    _members[iInside].AddOperationByLocationType((atMemberStart) ? 0.0 : l - 0.0, "END_TRUSS");
-                    _members[iInside].AddOperationByLocationType((atMemberStart) ? 0.45 : l - 0.45, "DIMPLE");
-                    _members[iInside].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, "SWAGE");
-
+                    _members[iInside].AddOperationByPointType(intersectionPoint, "DIMPLE");
+                    _members[iInside].AddOperationByPointType(intersectionPoint, "SWAGE");
+                    
                     // Find the dimple point and its location on the cross member of the T joint
-                    Geo.Point dimplePoint = _members[iInside]._webAxis.PointAtParameter(((atMemberStart) ? 0.45 : l - 0.45) / l);
+                    Geo.Point dimplePoint = intersectionPoint;
                     double crossIntLoc = _members[iOutisde]._webAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde]._webAxis.Length;
                     dimplePoint = dimplePoint.Add(_members[iInside]._webNormal.Normalized().Scale(0.75));
                     double crossDimpleLoc = _members[iOutisde]._webAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde]._webAxis.Length;
@@ -1207,23 +1201,29 @@ namespace HowickMaker
                     _members[iOutisde].AddOperationByLocationType(crossDimpleLoc, "DIMPLE");
 
                     // Compute range offsets for LIP_CUT or NOTCH so that terminal member can insert into cross member
-                    double x1 = (c1 / Math.Sin(angle)) - (c1 / Math.Tan(angle));
-                    double x2 = (c1 / Math.Sin(angle)) + (c1 / Math.Tan(angle));
+                    
 
                     // Entering through Lip or Web?
                     string op = (b2) ? "LIP_CUT" : "NOTCH";
+                    string op2 = (b2) ? "NOTCH" : "LIP_CUT";
 
                     // Compute range for insertion operation
                     double clearance = 0.25;
                     bool pos = Geo.Vector.ByTwoPoints(_members[iOutisde]._webAxis.StartPoint, _members[iOutisde]._webAxis.EndPoint).Dot(vec1) > 0;
                     double start = (!pos) ? crossDimpleLoc + x1 + clearance : crossDimpleLoc - x1 - clearance;
+                    double start2 = (pos) ? crossDimpleLoc + x1 + clearance : crossDimpleLoc - x1 - clearance;
                     double end = (pos) ? crossDimpleLoc + x2 + clearance : crossDimpleLoc - x2 - clearance;
+                    double end2 = (!pos) ? crossDimpleLoc + x2 + clearance : crossDimpleLoc - x2 - clearance;
                     var range = new List<double> { start, end };
                     start = range.Min();
                     end = range.Max();
+                    var range2 = new List<double> { start2, end2 };
+                    start2 = range2.Min();
+                    end2 = range2.Max();
 
                     // Add insertion operations to cross member
                     double loc = start + 0.75;
+                    double loc2 = start2 + 0.75;
                     while (loc < end - 0.75)
                     {
                         _members[iOutisde].AddOperationByLocationType(loc, op);
@@ -1231,6 +1231,12 @@ namespace HowickMaker
                     }
                     _members[iOutisde].AddOperationByLocationType(end - 0.75, op);
 
+                    while (loc2 < end2 - 0.75)
+                    {
+                        _members[iOutisde].AddOperationByLocationType(loc2, op2);
+                        loc2 += 1.25;
+                    }
+                    _members[iOutisde].AddOperationByLocationType(end2 - 0.75, op2);
                 }
             }
         }
@@ -1238,27 +1244,10 @@ namespace HowickMaker
         internal void GetInsideAndOutisdeMember(hConnection con, out Geo.Line terminal, out Geo.Line cross, out int iTerminal, out int iCross)
         {
             // Initialize all variables. These should never be returned.. If my assumptions are correct
-            terminal = null;
-            cross = null;
-            iTerminal = -1;
-            iCross = -1;
-
-            foreach (int mem in con.members)
-            {
-                var pts = new List<Geo.Point> { _members[mem]._webAxis.StartPoint, _members[mem]._webAxis.EndPoint };
-
-                for (int i = 0; i < 2; i++)
-                {
-                    if (pts[i].DistanceTo(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis) < _tolerance)
-                    {
-                        terminal = Geo.Line.ByStartPointEndPoint(pts[i], pts[(i + 1) % 2]);
-                        cross = Geo.Line.ByStartPointEndPoint(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis.StartPoint, _members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis.EndPoint);
-                        iTerminal = mem;
-                        iCross = con.members[(con.members.IndexOf(mem) + 1) % 2];
-                        return;
-                    }
-                }
-            }
+            terminal = _members[con.members[0]].WebAxis;
+            cross = _members[con.members[1]].WebAxis;
+            iTerminal = con.members[0];
+            iCross = con.members[1];
         }
 
         #endregion
