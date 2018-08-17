@@ -79,7 +79,7 @@ namespace Strategies
         /// <param name="amount"></param>
         /// <param name="limit"></param>
         /// <returns></returns>
-        internal string Step(tAgent[] agents, double amount = 0.02, double limit = 0.1)
+        internal string Step(tAgent[] agents, double amount = 0.01, double limit = 0.1)
         {
             // Get value of moving back
             double paramMinus = new List<double> { limit, _currentParameter - amount }.Max();
@@ -128,19 +128,34 @@ namespace Strategies
         /// <param name="desiredOffset"></param>
         /// <param name="agents"></param>
         /// <returns></returns>
-        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 4.0)
+        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 6.0)
         {
             int furtherAgentIndexA = -1;
             Geo.Point intersectA = GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out furtherAgentIndexA);
-            double value = Math.Abs(desiredOffset - intersectA.DistanceTo(agents[furtherAgentIndexA]._edge));
+            Geo.Point edgeIntersectionA = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndexA]._edge, GetMemberLinesAtParameter(agents, parameter)[0]);
+            double outOfBounds = _edge.PointAtParameter(parameter).DistanceTo(intersectA) - _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionA);
+            double value1 = Math.Abs(desiredOffset - intersectA.DistanceTo(agents[furtherAgentIndexA]._edge));
+            if (outOfBounds > desiredOffset)
+            {
+                value1 *= 100 * outOfBounds;
+            }
+
+            double value2 = 0;
             if (!_isNaked)
             {
                 int furtherAgentIndexB = -1;
                 Geo.Point intersectB = GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherAgentIndexB);
-                value += Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
+                Geo.Point edgeIntersectionB = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndexB]._edge, GetMemberLinesAtParameter(agents, parameter)[1]);
+                value2 = Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
+                double outOfBounds2 = _edge.PointAtParameter(parameter).DistanceTo(intersectB) - _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionB);
+                value2 = Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
+                if (outOfBounds2 > desiredOffset)
+                {
+                    value2 *= 100 * outOfBounds2;
+                }
             }
 
-            return value;
+            return value1 + value2;
         }
 
 
