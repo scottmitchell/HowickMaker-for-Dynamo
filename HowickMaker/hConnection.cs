@@ -14,12 +14,12 @@ namespace HowickMaker
     /// List of supported connection types
     /// </summary>
     [IsVisibleInDynamoLibrary(false)]
-    public enum Connection
+    internal enum Connection
     {
         FTF = 0,
         BR,
         PT,
-        T
+        T,
     }
 
     /// <summary>
@@ -30,14 +30,14 @@ namespace HowickMaker
     {
         public Geo.Point location;
         public List<int> members = new List<int>();
-        public Connection type;
+        internal Connection type;
 
-        public hConnection(Connection type)
+        internal hConnection(Connection type)
         {
             this.type = type;
         }
 
-        public hConnection(Connection type, List<int> members)
+        internal hConnection(Connection type, List<int> members)
         {
             this.type = type;
             this.members = members;

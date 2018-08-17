@@ -11,16 +11,19 @@ namespace HowickMaker
     /// <summary>
     /// A simple mesh class for use with HowickMaker 
     /// </summary>
+    [IsVisibleInDynamoLibrary(false)]
     public class hMesh
     {
+        [IsVisibleInDynamoLibrary(false)]
         internal List<hFace> faces = new List<hFace>();
 
+        [IsVisibleInDynamoLibrary(false)]
         internal hMesh(List<hFace> faces)
         {
             this.faces = faces;
         }
 
-
+        [IsVisibleInDynamoLibrary(false)]
         public static hMesh hMeshFromOBJ(string filepath)
         {
             string[] lines = System.IO.File.ReadAllLines(filepath);
@@ -92,13 +95,13 @@ namespace HowickMaker
             }
         }
 
-
+        [IsVisibleInDynamoLibrary(false)]
         public static string View(hMesh m)
         {
             return m.ToString();
         }
 
-        
+        [IsVisibleInDynamoLibrary(false)]
         public override string ToString()
         {
             string s = "";

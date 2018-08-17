@@ -4,19 +4,21 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Geo = Autodesk.DesignScript.Geometry;
+using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
     /// <summary>
     /// Tools for creating networks of lines that make valid steel stud structures.
     /// </summary>
+    [IsVisibleInDynamoLibrary(false)]
     public class hLines
     {
         hMesh mesh;
         List<Geo.Line> lines = new List<Geo.Line>();
         double offset;
 
-
+        [IsVisibleInDynamoLibrary(false)]
         internal hLines(hMesh mesh, double offset)
         {
             this.mesh = mesh;

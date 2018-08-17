@@ -13,7 +13,7 @@ namespace HowickMaker
     /// List of valid operations on a Howick FRAMA 3200
     /// </summary>
     [IsVisibleInDynamoLibrary(false)]
-    public enum Operation
+    internal enum Operation
     {
         END_TRUSS = 0,
         NOTCH,

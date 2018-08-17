@@ -106,7 +106,7 @@ namespace HowickMakerTests
             List<int> members1 = new List<int> { 3, 5 };
             List<int> members2 = new List<int> { 5, 3 };
 
-            hConnection con1 = new hConnection(Connection.BR, members1);
+            hConnection con1 = new hConnection(HowickMaker.Connection.BR, members1);
             hConnection con2 = new hConnection(Connection.BR, members2);
             var connections = new List<hConnection> { con1 };
             Assert.IsTrue(connections.Contains(con2));

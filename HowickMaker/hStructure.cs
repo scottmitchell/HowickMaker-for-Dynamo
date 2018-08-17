@@ -29,6 +29,8 @@ namespace HowickMaker
         internal double _WEBHoleSpacing = (15.0 / 16);
         internal double _StudHeight = 1.5;
         internal double _StudWdith = 3.5;
+
+        List<int> _helpers = null;
         
         List<Geo.Line> _lines = new List<Geo.Line>();
         List<hMember> _braceMembers = new List<hMember>();
@@ -90,12 +92,34 @@ namespace HowickMaker
             string[] option = options.ToString().Split(',');
             double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
             double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
+            bool generateBraces = (options == "null") ? false : bool.Parse(option[2]);
+            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[3]);
+            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[4]);
+            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
+            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
+
+            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+
+            return new Dictionary<string, object>
+            {
+                { "members", structure._members.ToList() },
+                { "braces", structure._braceMembers.ToList() }
+            };
+        }
+
+
+        [IsVisibleInDynamoLibrary(false)]
+        public static Dictionary<string, object> FromLinesAndHelpers(List<Geo.Line> lines, List<int> helpers, string options = "null")
+        {
+            string[] option = options.ToString().Split(',');
+            double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
+            double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
             bool threePieceBrace = (options == "null") ? false : bool.Parse(option[2]);
             double braceLength1 = (options == "null") ? 6 : Double.Parse(option[3]);
             double braceLength2 = (options == "null") ? 3 : Double.Parse(option[4]);
             bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[5]);
 
-            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF, helpers);
 
             return new Dictionary<string, object>
             {
@@ -116,14 +140,15 @@ namespace HowickMaker
         /// </summary>
         /// <param name="intersectionTolerance"></param>
         /// <param name="planarityTolerance"></param>
+        /// <param name="generateBraces"></param>
         /// <param name="threePieceBrace"></param>
         /// <param name="braceLength1"></param>
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns name="options"></returns>
-        public static string StructureOptions(double intersectionTolerance = 0.001, double planarityTolerance = 0.001, bool threePieceBrace = false, double braceLength1 = 6, double braceLength2 = 3, bool firstConnectionIsFTF = false)
+        public static string StructureOptions(double intersectionTolerance = 0.001, double planarityTolerance = 0.001, bool generateBraces = false, bool threePieceBrace = false, double braceLength1 = 6, double braceLength2 = 3, bool firstConnectionIsFTF = false)
         {
-            string[] options = { intersectionTolerance.ToString(), planarityTolerance.ToString(), threePieceBrace.ToString(), braceLength1.ToString(), braceLength2.ToString(), firstConnectionIsFTF.ToString() };
+            string[] options = { intersectionTolerance.ToString(), planarityTolerance.ToString(), generateBraces.ToString(), threePieceBrace.ToString(), braceLength1.ToString(), braceLength2.ToString(), firstConnectionIsFTF.ToString() };
             string concat = String.Join(",", options.ToArray());
             return concat;
                 /*return new Dictionary<string, object>
@@ -155,6 +180,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
+        [IsVisibleInDynamoLibrary(false)]
         public static List<string> Test_ViewConnectivityGraph(List<Geo.Line> lines, double tolerance)
         {
             Graph g = graphFromLines(lines, tolerance);
@@ -188,7 +214,7 @@ namespace HowickMaker
             double braceLength2 = (options == null) ? 3 : (double)options["BraceLength2"];
             bool firstConnectionIsFTF = (options == null) ? false : (bool)options["FirstConnectionIsFTF"];
 
-            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, false, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
 
             List<string> cons = new List<string>();
 
@@ -350,14 +376,34 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        internal static hStructure StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool generateBraces,  bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
 
             structure._g = graphFromLines(lines, structure._tolerance);
 
             structure.BuildMembersAndConnectionsFromGraph();
-            //structure.GenerateBraces();
+            if (generateBraces)
+            {
+                structure.GenerateBraces();
+            }
+            structure.ResolveFTFConnections();
+            structure.ResolveBRConnections();
+            structure.ResolveTConnections();
+            structure.ResolvePTConnections();
+
+            return structure;
+        }
+
+        internal static hStructure StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF, List<int> helpers)
+        {
+            hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
+
+            structure._g = graphFromLines(lines, structure._tolerance);
+            structure._helpers = helpers;
+
+            structure.BuildMembersAndConnectionsFromGraph();
+            structure.GenerateBraces();
             structure.ResolveFTFConnections();
             structure.ResolveBRConnections();
             structure.ResolveTConnections();
@@ -472,6 +518,7 @@ namespace HowickMaker
 
                         try
                         {
+                            //vectors = (List<Geo.Vector>)vectors.OrderBy(x => Math.Abs(x.Dot(Geo.Vector.ByTwoPoints(currentMember.WebAxis.StartPoint, currentMember.WebAxis.EndPoint))));
                             _members[i]._webNormal = vectors[0];
                         }
                         catch
@@ -953,6 +1000,7 @@ namespace HowickMaker
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + 2.5;
+                        
                         
                         // Check start point
                         if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)
