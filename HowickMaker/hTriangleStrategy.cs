@@ -21,11 +21,19 @@ namespace Strategies
         /// Initiates a Triangle Strategy solver from a MeshTookkit mesh
         /// </summary>
         /// <param name="mesh"></param>
-        public hTriangleStrategy(Mesh mesh)
+        public hTriangleStrategy(Mesh mesh, int iterations)
         {
             this._mesh = mesh;
             this._agents = new tAgent[mesh.EdgeCount];
             CreateAgents();
+
+            for(int i = 0; i < iterations; i++)
+            {
+                foreach (tAgent agent in _agents)
+                {
+                    _test.Add(agent.Step(_agents));
+                }
+            }
         }
 
         internal void CreateAgents()
@@ -116,14 +124,15 @@ namespace Strategies
         /// </summary>
         /// <param name="mesh"></param>
         /// <returns></returns>
-        public static List<Geo.Line> FromMesh(Mesh mesh)
+        public static List<Geo.Line> FromMesh(Mesh mesh, int iterations)
         {
-            var solver = new hTriangleStrategy(mesh);
+            var solver = new hTriangleStrategy(mesh, iterations);
             return solver.GetSolvedWebAxes();
         }
-
-
         
+
+
+
 
         internal void GetAgentNeighbors(tAgent agent)
         {

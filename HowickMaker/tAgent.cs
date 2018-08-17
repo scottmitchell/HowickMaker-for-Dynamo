@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Geo = Autodesk.DesignScript.Geometry;
 using Autodesk.DesignScript.Interfaces;
 using Autodesk.DesignScript.Runtime;
+using Mesh = Autodesk.Dynamo.MeshToolkit.Mesh;
 
 
 namespace Strategies
@@ -49,7 +50,8 @@ namespace Strategies
             }
 
             _edge = edge;
-            _currentParameter = 0.5;
+            Random r = new Random();
+            _currentParameter = 0.45;
             _faceIndexA = faceIndexA;
             _faceIndexB = faceIndexB;
             _faceNormalA = faceNormalA;
@@ -62,14 +64,100 @@ namespace Strategies
             _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
         }
 
+
+        internal void SetLines()
+        {
+            _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
+            _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
+        }
+
+
+        /// <summary>
+        /// Iterative Relaxtion
+        /// </summary>
+        /// <param name="agents"></param>
+        /// <param name="amount"></param>
+        /// <param name="limit"></param>
+        /// <returns></returns>
+        internal string Step(tAgent[] agents, double amount = 0.02, double limit = 0.1)
+        {
+            // Get value of moving back
+            double paramMinus = new List<double> { limit, _currentParameter - amount }.Max();
+            double valueMinus = GetStateValue(agents, paramMinus);
+
+            // Get value of staying
+            double valueCurrent = GetStateValue(agents, _currentParameter);
+
+            // Get value of moving forward
+            double paramPlus = new List<double> { 1.0 - limit, _currentParameter + amount }.Min();
+            double valuePlus = GetStateValue(agents, paramPlus);
+
+            // Get deltas
+            double deltaMinus = valueMinus - valueCurrent;
+            double deltaPlus = valuePlus - valueCurrent;
+
+            // Choose
+            if (deltaMinus < deltaPlus)
+            {
+                if (valueMinus < valueCurrent)
+                {
+                    _currentParameter = paramMinus;
+                    SetLines();
+                    return "vM = " + valueMinus + ", vC = " + valueCurrent + ", vP = " + valuePlus;
+                }
+            }
+            else
+            {
+                if (valuePlus < valueCurrent)
+                {
+                    _currentParameter = paramPlus;
+                    SetLines();
+                    return "vM = " + valueMinus + ", vC = " + valueCurrent + ", vP = " + valuePlus;
+                }
+            }
+            return "vM = " + valueMinus + ", vC = " + valueCurrent + ", vP = " + valuePlus;
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="mesh"></param>
+        /// <param name="parameter"></param>
+        /// <param name="desiredOffset"></param>
+        /// <param name="agents"></param>
+        /// <returns></returns>
+        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 4.0)
+        {
+            int furtherAgentIndexA = -1;
+            Geo.Point intersectA = GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out furtherAgentIndexA);
+            double value = Math.Abs(desiredOffset - intersectA.DistanceTo(agents[furtherAgentIndexA]._edge));
+            if (!_isNaked)
+            {
+                int furtherAgentIndexB = -1;
+                Geo.Point intersectB = GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherAgentIndexB);
+                value += Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
+            }
+
+            return value;
+        }
+
+
+
+        /// <summary>
+        /// Draw the member lines given the agents current state
+        /// </summary>
+        /// <param name="agents"></param>
+        /// <returns></returns>
         internal List<Geo.Line> GetMemberLines(tAgent[] agents)
         {
             var lines = new List<Geo.Line>();
-            Geo.Point p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineA, agents[_neighborsA[0]].GetLine(_faceIndexA));
+            Geo.Point p = GetFurtherIntersection(_faceIndexA, agents);
             lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p));
             if (!_isNaked)
             {
-                p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineB, agents[_neighborsB[0]].GetLine(_faceIndexB));
+                p = GetFurtherIntersection(_faceIndexB, agents);
                 lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p));
             }
 
@@ -77,6 +165,26 @@ namespace Strategies
         }
 
 
+        internal List<Geo.Line> GetMemberLinesAtParameter(tAgent[] agents, double parameter)
+        {
+            var lines = new List<Geo.Line>();
+            Geo.Point p = GetFurtherIntersection(_faceIndexA, agents);
+            lines.Add(Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(parameter), _lineDirectionA, 1));
+            if (!_isNaked)
+            {
+                p = GetFurtherIntersection(_faceIndexB, agents);
+                lines.Add(Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(parameter), _lineDirectionB, 1));
+            }
+
+            return lines;
+        }
+
+
+        /// <summary>
+        /// Get the correct line from a neighboring agent
+        /// </summary>
+        /// <param name="faceIndex"></param>
+        /// <returns></returns>
         internal Geo.Line GetLine(int faceIndex)
         {
             if (faceIndex == _faceIndexA)
@@ -93,6 +201,83 @@ namespace Strategies
             }
         }
 
+
+        /// <summary>
+        /// Find the intersection with other two members of a given face that is further away from the agent
+        /// </summary>
+        /// <param name="faceIndex"></param>
+        /// <param name="agents"></param>
+        /// <returns></returns>
+        internal Geo.Point GetFurtherIntersection(int faceIndex, tAgent[] agents)
+        {
+            Geo.Point p;
+            Geo.Point p2;
+            if (faceIndex == _faceIndexA)
+            {
+                p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineA, agents[_neighborsA[0]].GetLine(_faceIndexA));
+                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(_lineA, agents[_neighborsA[1]].GetLine(_faceIndexA));
+            }
+            else if (faceIndex == _faceIndexB)
+            {
+                p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineB, agents[_neighborsB[0]].GetLine(_faceIndexB));
+                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(_lineB, agents[_neighborsB[1]].GetLine(_faceIndexB));
+            }
+            else
+            {
+                throw new System.ArgumentException("Invalid faceIndex for this agent", _name.ToString());
+            }
+
+            if (_edge.PointAtParameter(_currentParameter).DistanceTo(p) > _edge.PointAtParameter(_currentParameter).DistanceTo(p2))
+            {
+                return p;
+            }
+            else
+            {
+                return p2;
+            }
+        }
+
+
+        internal Geo.Point GetFurtherIntersectionAtParameter(double parameter, int faceIndex, tAgent[] agents, out int FurtherAgentIndex)
+        {
+            var linesAtParameter = GetMemberLinesAtParameter(agents, parameter);
+            Geo.Point p;
+            Geo.Point p2;
+            if (faceIndex == _faceIndexA)
+            {
+                p = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[0], agents[_neighborsA[0]].GetLine(_faceIndexA));
+                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[0], agents[_neighborsA[1]].GetLine(_faceIndexA));
+            }
+            else if (faceIndex == _faceIndexB)
+            {
+                p = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[1], agents[_neighborsB[0]].GetLine(_faceIndexB));
+                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[1], agents[_neighborsB[1]].GetLine(_faceIndexB));
+            }
+            else
+            {
+                throw new System.ArgumentException("Invalid faceIndex for this agent", _name.ToString());
+            }
+
+            if (_edge.PointAtParameter(parameter).DistanceTo(p) > _edge.PointAtParameter(parameter).DistanceTo(p2))
+            {
+                FurtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[0] : _neighborsB[0];
+                return p;
+            }
+            else
+            {
+                FurtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[1] : _neighborsB[1];
+                return p2;
+            }
+        }
+
+
+       
+
+
+        /// <summary>
+        /// Return relevant agent info as a string
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             var str = _name.ToString() + "____ NeighborsA: " + _neighborsA[0] + ", " + _neighborsA[1] +  "____";
