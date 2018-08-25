@@ -28,6 +28,26 @@ namespace Strategies
         internal Geo.Line _edge;
         internal bool _isNaked;
 
+        internal tAgent(int name)
+        {
+            _name = name;
+            _isNaked = true;
+            _faceIndexA = -1;
+            _faceIndexB = -1;
+            _neighborsB = null;
+        }
+
+        internal void Setup()
+        {
+            _currentParameter = 0.5;
+
+            Geo.Vector edgeVector = Geo.Vector.ByTwoPoints(_edge.StartPoint, _edge.EndPoint);
+            _lineDirectionA = _faceNormalA.Cross(edgeVector);
+            _lineDirectionB = (_isNaked) ? null : _faceNormalB.Cross(edgeVector);
+            _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
+            _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
+        }
+
         internal tAgent(int name, Geo.Line edge, List<int> neighbors, int faceIndexA, int faceIndexB, Geo.Vector faceNormalA, Geo.Vector faceNormalB)
         {
             _name = name;
@@ -51,7 +71,7 @@ namespace Strategies
 
             _edge = edge;
             Random r = new Random();
-            _currentParameter = 0.45;
+            _currentParameter = 0.5;
             _faceIndexA = faceIndexA;
             _faceIndexB = faceIndexB;
             _faceNormalA = faceNormalA;
@@ -137,7 +157,7 @@ namespace Strategies
             double value1 = Math.Abs(desiredOffset - intersectA.DistanceTo(agents[furtherAgentIndexA]._edge));
             if (outOfBounds > desiredOffset)
             {
-                value1 *= 100 * outOfBounds;
+                value1 *= 1000 * outOfBounds;
             }
 
             double value2 = 0;
@@ -151,7 +171,7 @@ namespace Strategies
                 value2 = Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
                 if (outOfBounds2 > desiredOffset)
                 {
-                    value2 *= 100 * outOfBounds2;
+                    value2 *= 1000 * outOfBounds2;
                 }
             }
 
@@ -176,6 +196,10 @@ namespace Strategies
                 lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p));
             }
 
+            // Dispose
+            {
+                p.Dispose();
+            }
             return lines;
         }
 
@@ -191,6 +215,10 @@ namespace Strategies
                 lines.Add(Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(parameter), _lineDirectionB, 1));
             }
 
+            // Dispose
+            {
+                p.Dispose();
+            }
             return lines;
         }
 

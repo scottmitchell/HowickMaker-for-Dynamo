@@ -14,6 +14,7 @@ namespace Strategies
     {
         public Mesh _mesh;
         private tAgent[] _agents;
+        List<Geo.Line> states = new List<Geo.Line>();
 
         public List<string> _test = new List<string>();
 
@@ -21,25 +22,51 @@ namespace Strategies
         /// Initiates a Triangle Strategy solver from a MeshTookkit mesh
         /// </summary>
         /// <param name="mesh"></param>
+        /// <param name="iterations"></param>
         public hTriangleStrategy(Mesh mesh, int iterations)
         {
             this._mesh = mesh;
             this._agents = new tAgent[mesh.EdgeCount];
-            CreateAgents();
+            CreateAgents2();
 
             for(int i = 0; i < iterations; i++)
             {
                 foreach (tAgent agent in _agents)
                 {
                     _test.Add(agent.Step(_agents));
+                    states.Add(agent.GetMemberLines(_agents)[0]);
+                    if (!agent._isNaked)
+                    {
+                        states.Add(agent.GetMemberLines(_agents)[1]);
+                    }
                 }
             }
         }
 
-        internal void CreateAgents()
+        internal void CreateAgents2()
         {
+            var agentsDict = new Dictionary<HashSet<int>, tAgent>(HashSet<int>.CreateSetComparer());
+
             var indices = _mesh.VertexIndicesByTri();
             var faces = SplitList(indices);
+            var normals = _mesh.TriangleNormals();
+
+            // Loop through every face
+            for (int i = 0; i < faces.Count; i++)
+            {
+                for (int j = 0; j < faces[i].Count; j++)
+                {
+                    int start = faces[i][j];
+                    int end = faces[i][(j + 1) % faces[i].Count];
+                    var key = new HashSet<int> { start, end };
+
+                    if (!agentsDict.ContainsKey(key))
+                    {
+                        agentsDict[key] = new tAgent(agentsDict.Count);
+                        agentsDict[key]._edge = Geo.Line.ByStartPointEndPoint(_mesh.Vertices()[start], _mesh.Vertices()[end]);
+                    }
+                }
+            }
 
             // Loop through every face
             for (int i = 0; i < faces.Count; i++)
@@ -49,7 +76,53 @@ namespace Strategies
                 {
                     int start = faces[i][j];
                     int end = faces[i][(j + 1) % faces[i].Count];
-                    int agentIndex = GetAgentIndex(start, end);
+                    int third = faces[i][(j + 2) % faces[i].Count];
+                    var key = new HashSet<int> { start, end };
+
+                    if (agentsDict[key]._faceIndexA != -1)
+                    {
+                        agentsDict[key]._isNaked = false;
+                        agentsDict[key]._faceIndexB = i;
+                        agentsDict[key]._faceNormalB = normals[i];
+                        var neighborsB1 = agentsDict[new HashSet<int> { start, third }]._name;
+                        var neighborsB2 = agentsDict[new HashSet<int> { end, third }]._name;
+                        agentsDict[key]._neighborsB = new int[] { neighborsB1, neighborsB2 };
+                    }
+                    else
+                    {
+                        agentsDict[key]._faceIndexA = i;
+                        agentsDict[key]._faceNormalA = normals[i];
+                        var neighborsA1 = agentsDict[new HashSet<int> { start, third }]._name;
+                        var neighborsA2 = agentsDict[new HashSet<int> { end, third }]._name;
+                        agentsDict[key]._neighborsA = new int[] { neighborsA1, neighborsA2 };
+                    }
+                }
+            }
+
+            _agents = agentsDict.Values.ToArray();
+
+            foreach (tAgent agent in _agents)
+            {
+                agent.Setup();
+            }
+        }
+
+
+
+        internal void CreateAgents()
+        {
+            var indices = _mesh.VertexIndicesByTri();
+            var faces = SplitList(indices);
+
+            // Loop through every face
+            for (int i = 0; i < faces.Count; i++)       // f
+            {
+                // Loop through every edge of every face
+                for (int j = 0; j < faces[i].Count; j++)        // 3
+                {
+                    int start = faces[i][j];
+                    int end = faces[i][(j + 1) % faces[i].Count];
+                    int agentIndex = GetAgentIndex(start, end);     // e
 
                     // Check to make sure we haven't already created an agent for this edge
                     if (_agents[agentIndex] == null)
@@ -60,13 +133,13 @@ namespace Strategies
                         Geo.Line currentEdge = Geo.Line.ByStartPointEndPoint(_mesh.Vertices()[start], _mesh.Vertices()[end]);
 
                         // Loop through every face again
-                        for (int k = 0; k < faces.Count; k++)
+                        for (int k = 0; k < faces.Count; k++)       // f
                         {
                             // Only look at faces that aren't this face (face[i])
                             if (k != i)
                             {
                                 // Find the other face that contains this edge, if such a face exists
-                                if (faces[k].Contains(start) && faces[k].Contains(end))
+                                if (faces[k].Contains(start) && faces[k].Contains(end))     // 6
                                 {
                                     adjacentFace = k;
 
@@ -141,9 +214,14 @@ namespace Strategies
         }
 
 
-        public List<string> vertices()
+        public List<Geo.Point> AgentsAsPoints()
         {
-            return this._test;
+            var agents = new List<Geo.Point>();
+            foreach (tAgent agent in _agents)
+            {
+                agents.Add(agent._edge.PointAtParameter(agent._currentParameter));
+            }
+            return agents;
         }
 
         internal List<Geo.Line> GetSolvedWebAxes()
