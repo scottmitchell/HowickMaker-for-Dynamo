@@ -14,7 +14,7 @@ namespace Strategies
     {
         public Mesh _mesh;
         private tAgent[] _agents;
-        List<Geo.Line> states = new List<Geo.Line>();
+        List<List<Geo.Line>> states = new List<List<Geo.Line>>();
 
         public List<string> _test = new List<string>();
 
@@ -27,23 +27,29 @@ namespace Strategies
         {
             this._mesh = mesh;
             this._agents = new tAgent[mesh.EdgeCount];
-            CreateAgents2();
+            CreateAgents();
 
             for(int i = 0; i < iterations; i++)
             {
+                var state = new List<Geo.Line>();
                 foreach (tAgent agent in _agents)
                 {
                     _test.Add(agent.Step(_agents));
-                    states.Add(agent.GetMemberLines(_agents)[0]);
+                    state.Add(agent.GetMemberLines(_agents)[0]);
                     if (!agent._isNaked)
                     {
-                        states.Add(agent.GetMemberLines(_agents)[1]);
+                        state.Add(agent.GetMemberLines(_agents)[1]);
                     }
                 }
+                states.Add(state);
             }
         }
 
-        internal void CreateAgents2()
+
+        /// <summary>
+        /// 
+        /// </summary>
+        internal void CreateAgents()
         {
             var agentsDict = new Dictionary<HashSet<int>, tAgent>(HashSet<int>.CreateSetComparer());
 
@@ -107,113 +113,23 @@ namespace Strategies
             }
         }
 
-
-
-        internal void CreateAgents()
-        {
-            var indices = _mesh.VertexIndicesByTri();
-            var faces = SplitList(indices);
-
-            // Loop through every face
-            for (int i = 0; i < faces.Count; i++)       // f
-            {
-                // Loop through every edge of every face
-                for (int j = 0; j < faces[i].Count; j++)        // 3
-                {
-                    int start = faces[i][j];
-                    int end = faces[i][(j + 1) % faces[i].Count];
-                    int agentIndex = GetAgentIndex(start, end);     // e
-
-                    // Check to make sure we haven't already created an agent for this edge
-                    if (_agents[agentIndex] == null)
-                    {
-                        int thirdVertex = faces[i][(j + 2) % faces[i].Count];
-                        int adjacentFace = -1;
-                        int adjacentFaceThirdVertex = -1;
-                        Geo.Line currentEdge = Geo.Line.ByStartPointEndPoint(_mesh.Vertices()[start], _mesh.Vertices()[end]);
-
-                        // Loop through every face again
-                        for (int k = 0; k < faces.Count; k++)       // f
-                        {
-                            // Only look at faces that aren't this face (face[i])
-                            if (k != i)
-                            {
-                                // Find the other face that contains this edge, if such a face exists
-                                if (faces[k].Contains(start) && faces[k].Contains(end))     // 6
-                                {
-                                    adjacentFace = k;
-
-                                    // Find the vertex on the adjacent face that is not associated with this edge
-                                    var currentIndex = 0;
-                                    while (faces[k][currentIndex] == start || faces[k][currentIndex] == end)
-                                    {
-                                        currentIndex++;
-                                    }
-                                    adjacentFaceThirdVertex = faces[k][currentIndex];
-                                }
-                            }
-                        }
-
-                        // Determine neighboring agent indices
-                        var neighbors = new List<int> { GetAgentIndex(start, thirdVertex), GetAgentIndex(end, thirdVertex) };
-                        if (adjacentFace != -1)
-                        {
-                            neighbors.Add(GetAgentIndex(start, adjacentFaceThirdVertex));
-                            neighbors.Add(GetAgentIndex(end, adjacentFaceThirdVertex));
-                        }
-
-                        // Create new agent
-                        _agents[agentIndex] = new tAgent(agentIndex, currentEdge, neighbors, i, adjacentFace, _mesh.TriangleNormals()[i], (adjacentFace != -1) ? _mesh.TriangleNormals()[adjacentFace] : null);
-
-                        var edgeStats = _agents[agentIndex].ToString();
-                        _test.Add(edgeStats);
-                    }
-                }
-            }
-        }
-        
-
-
-        internal int GetAgentIndex(int start, int end, double tolerance = 0.001)
-        {
-            var startPoint = _mesh.Vertices()[start];
-            var endPoint = _mesh.Vertices()[end];
-
-            for (int i = 0; i < _mesh.EdgeCount; i++)
-            {
-                if (_mesh.Edges()[i].StartPoint.DistanceTo(startPoint) < tolerance || _mesh.Edges()[i].StartPoint.DistanceTo(endPoint) < tolerance)
-                {
-                    if (_mesh.Edges()[i].EndPoint.DistanceTo(startPoint) < tolerance || _mesh.Edges()[i].EndPoint.DistanceTo(endPoint) < tolerance)
-                    {
-                        return i;
-                    }
-                }
-            }
-            return -1;
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="mesh"></param>
+        /// <param name="iterations"></param>
         /// <returns></returns>
-        public static List<Geo.Line> FromMesh(Mesh mesh, int iterations)
+        public static List<List<Geo.Line>> FromMesh(Mesh mesh, int iterations)
         {
             var solver = new hTriangleStrategy(mesh, iterations);
-            return solver.GetSolvedWebAxes();
-        }
-        
-
-
-
-
-        internal void GetAgentNeighbors(tAgent agent)
-        {
-            var startPoint = agent._edge.StartPoint;
-            var endPoint = agent._edge.EndPoint;
+            return solver.states;
         }
 
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         public List<Geo.Point> AgentsAsPoints()
         {
             var agents = new List<Geo.Point>();
@@ -222,19 +138,6 @@ namespace Strategies
                 agents.Add(agent._edge.PointAtParameter(agent._currentParameter));
             }
             return agents;
-        }
-
-        internal List<Geo.Line> GetSolvedWebAxes()
-        {
-            var pts = new List<Geo.Line>();
-            foreach (tAgent agent in _agents)
-            {
-                foreach (Geo.Line l in agent.GetMemberLines(_agents))
-                {
-                    pts.Add(l);
-                }
-            }
-            return pts;
         }
 
 
@@ -250,7 +153,7 @@ namespace Strategies
         {
             if (list.Count % size != 0)
             {
-                throw new System.ArgumentException("List length must be divisible by split size", "lsit");          
+                throw new System.ArgumentException("List length must be divisible by split size", "list");          
             }
 
             var splitList = new List<List<T>>();

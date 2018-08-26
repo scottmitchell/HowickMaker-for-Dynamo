@@ -48,43 +48,6 @@ namespace Strategies
             _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
         }
 
-        internal tAgent(int name, Geo.Line edge, List<int> neighbors, int faceIndexA, int faceIndexB, Geo.Vector faceNormalA, Geo.Vector faceNormalB)
-        {
-            _name = name;
-            if (neighbors.Count == 2)
-            {
-                _neighborsA = new int[] { neighbors[0], neighbors[1] };
-                _neighborsB = null;
-                _isNaked = true;
-            }
-            else if (neighbors.Count == 4)
-            {
-                _neighborsA = new int[] { neighbors[0], neighbors[1] };
-                _neighborsB = new int[] { neighbors[2], neighbors[3] };
-                _isNaked = false;
-            }
-            else
-            {
-                throw new System.ArgumentException("Neighboring edge list should be 2 (naked edge) "
-                                                 + "or 4 (interior) for triangle meshes", "neighbors");
-            }
-
-            _edge = edge;
-            Random r = new Random();
-            _currentParameter = 0.5;
-            _faceIndexA = faceIndexA;
-            _faceIndexB = faceIndexB;
-            _faceNormalA = faceNormalA;
-            _faceNormalB = faceNormalB;
-
-            Geo.Vector edgeVector = Geo.Vector.ByTwoPoints(_edge.StartPoint, _edge.EndPoint);
-            _lineDirectionA = _faceNormalA.Cross(edgeVector);
-            _lineDirectionB = (_isNaked) ? null : _faceNormalB.Cross(edgeVector);
-            _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
-            _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
-        }
-
-
         internal void SetLines()
         {
             _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
@@ -150,30 +113,37 @@ namespace Strategies
         /// <returns></returns>
         internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 6.0)
         {
-            int furtherAgentIndexA = -1;
-            Geo.Point intersectA = GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out furtherAgentIndexA);
-            Geo.Point edgeIntersectionA = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndexA]._edge, GetMemberLinesAtParameter(agents, parameter)[0]);
-            double outOfBounds = _edge.PointAtParameter(parameter).DistanceTo(intersectA) - _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionA);
-            double value1 = Math.Abs(desiredOffset - intersectA.DistanceTo(agents[furtherAgentIndexA]._edge));
-            if (outOfBounds > desiredOffset)
-            {
-                value1 *= 1000 * outOfBounds;
-            }
+            int furtherAgentIndex = -1;
+            int closerAgentIndex = -1;
+            GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out Geo.Point furtherIntersect, out Geo.Point closerIntersect, out furtherAgentIndex, out closerAgentIndex);
+
+            Geo.Point edgeIntersectionA = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[0]);
+            //double value1 = Math.Abs(desiredOffset - furtherIntersect.DistanceTo(agents[furtherAgentIndex]._edge));
+            double value1 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
+
+            double outOfBoundsA1 = _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionA) - _edge.PointAtParameter(parameter).DistanceTo(furtherIntersect);
+            double outOfBoundsA2 = _edge.PointAtParameter(parameter).DistanceTo(closerIntersect);
+            if (outOfBoundsA1 > desiredOffset) { value1 *= 1000 * outOfBoundsA1; }
+            if (outOfBoundsA2 > desiredOffset) { value1 *= 1000 * outOfBoundsA2; }
+
+
 
             double value2 = 0;
             if (!_isNaked)
             {
-                int furtherAgentIndexB = -1;
-                Geo.Point intersectB = GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherAgentIndexB);
-                Geo.Point edgeIntersectionB = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndexB]._edge, GetMemberLinesAtParameter(agents, parameter)[1]);
-                value2 = Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
-                double outOfBounds2 = _edge.PointAtParameter(parameter).DistanceTo(intersectB) - _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionB);
-                value2 = Math.Abs(desiredOffset - intersectB.DistanceTo(agents[furtherAgentIndexB]._edge));
-                if (outOfBounds2 > desiredOffset)
-                {
-                    value2 *= 1000 * outOfBounds2;
-                }
+                GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherIntersect, out closerIntersect, out furtherAgentIndex, out closerAgentIndex);
+
+                Geo.Point edgeIntersectionB = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[1]);
+                //value2 = Math.Abs(desiredOffset - furtherIntersect.DistanceTo(agents[furtherAgentIndex]._edge));
+                value2 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
+
+                double outOfBoundsB1 = _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionB) - _edge.PointAtParameter(parameter).DistanceTo(furtherIntersect);
+                double outOfBoundsB2 = _edge.PointAtParameter(parameter).DistanceTo(closerIntersect);
+                if (outOfBoundsB1 > desiredOffset) { value2 *= 1000 * outOfBoundsB1; }
+                if (outOfBoundsB2 > desiredOffset) { value2 *= 1000 * outOfBoundsB2; }
             }
+
+
 
             return value1 + value2;
         }
@@ -204,7 +174,7 @@ namespace Strategies
         }
 
 
-        internal List<Geo.Line> GetMemberLinesAtParameter(tAgent[] agents, double parameter)
+        internal List<Geo.Line> GetLinesAtParameter(tAgent[] agents, double parameter)
         {
             var lines = new List<Geo.Line>();
             Geo.Point p = GetFurtherIntersection(_faceIndexA, agents);
@@ -281,9 +251,9 @@ namespace Strategies
         }
 
 
-        internal Geo.Point GetFurtherIntersectionAtParameter(double parameter, int faceIndex, tAgent[] agents, out int FurtherAgentIndex)
+        internal void GetFurtherIntersectionAtParameter(double parameter, int faceIndex, tAgent[] agents, out Geo.Point furtherIntersect, out Geo.Point closerIntersect, out int furtherAgentIndex, out int closerAgentIndex)
         {
-            var linesAtParameter = GetMemberLinesAtParameter(agents, parameter);
+            var linesAtParameter = GetLinesAtParameter(agents, parameter);
             Geo.Point p;
             Geo.Point p2;
             if (faceIndex == _faceIndexA)
@@ -303,13 +273,17 @@ namespace Strategies
 
             if (_edge.PointAtParameter(parameter).DistanceTo(p) > _edge.PointAtParameter(parameter).DistanceTo(p2))
             {
-                FurtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[0] : _neighborsB[0];
-                return p;
+                furtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[0] : _neighborsB[0];
+                closerAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[1] : _neighborsB[1];
+                furtherIntersect = p;
+                closerIntersect = p2;
             }
             else
             {
-                FurtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[1] : _neighborsB[1];
-                return p2;
+                furtherAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[1] : _neighborsB[1];
+                closerAgentIndex = (faceIndex == _faceIndexA) ? _neighborsA[0] : _neighborsB[0];
+                furtherIntersect = p2;
+                closerIntersect = p;
             }
         }
 
