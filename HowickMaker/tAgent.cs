@@ -14,12 +14,15 @@ namespace Strategies
     internal class tAgent
     {
         internal int _name;
+        internal double _tolerance = 0.001;
         internal int _faceIndexA;
         internal int _faceIndexB;
         internal int[] _neighborsA;
         internal int[] _neighborsB;
         internal Geo.Vector _faceNormalA;
         internal Geo.Vector _faceNormalB;
+        internal Geo.Surface _faceSurfaceA;
+        internal Geo.Surface _faceSurfaceB;
         internal Geo.Vector _lineDirectionA;
         internal Geo.Vector _lineDirectionB;
         internal Geo.Line _lineA;
@@ -27,6 +30,7 @@ namespace Strategies
         internal double _currentParameter;
         internal Geo.Line _edge;
         internal bool _isNaked;
+        internal bool _isFlat;
 
         internal tAgent(int name)
         {
@@ -46,6 +50,8 @@ namespace Strategies
             _lineDirectionB = (_isNaked) ? null : _faceNormalB.Cross(edgeVector);
             _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
             _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
+
+            _isFlat = (_isNaked) ? false : _faceNormalA.Normalized().Dot(_faceNormalB.Normalized()) == 1;
         }
 
         internal void SetLines()
@@ -118,13 +124,13 @@ namespace Strategies
             GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out Geo.Point furtherIntersect, out Geo.Point closerIntersect, out furtherAgentIndex, out closerAgentIndex);
 
             Geo.Point edgeIntersectionA = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[0]);
-            //double value1 = Math.Abs(desiredOffset - furtherIntersect.DistanceTo(agents[furtherAgentIndex]._edge));
             double value1 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
+            double outOfBounds = 0;
 
-            double outOfBoundsA1 = _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionA) - _edge.PointAtParameter(parameter).DistanceTo(furtherIntersect);
-            double outOfBoundsA2 = _edge.PointAtParameter(parameter).DistanceTo(closerIntersect);
-            if (outOfBoundsA1 > desiredOffset) { value1 *= 1000 * outOfBoundsA1; }
-            if (outOfBoundsA2 > desiredOffset) { value1 *= 1000 * outOfBoundsA2; }
+            double outOfBoundsA1 = furtherIntersect.DistanceTo(_faceSurfaceA);
+            double outOfBoundsA2 = closerIntersect.DistanceTo(_faceSurfaceA);
+            if (outOfBoundsA1 > _tolerance) { outOfBounds += 1000 * outOfBoundsA1; }
+            if (outOfBoundsA2 > _tolerance) { outOfBounds += 100 * outOfBoundsA2; }
 
 
 
@@ -134,21 +140,19 @@ namespace Strategies
                 GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherIntersect, out closerIntersect, out furtherAgentIndex, out closerAgentIndex);
 
                 Geo.Point edgeIntersectionB = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[1]);
-                //value2 = Math.Abs(desiredOffset - furtherIntersect.DistanceTo(agents[furtherAgentIndex]._edge));
                 value2 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
 
-                double outOfBoundsB1 = _edge.PointAtParameter(parameter).DistanceTo(edgeIntersectionB) - _edge.PointAtParameter(parameter).DistanceTo(furtherIntersect);
-                double outOfBoundsB2 = _edge.PointAtParameter(parameter).DistanceTo(closerIntersect);
-                if (outOfBoundsB1 > desiredOffset) { value2 *= 1000 * outOfBoundsB1; }
-                if (outOfBoundsB2 > desiredOffset) { value2 *= 1000 * outOfBoundsB2; }
+                double outOfBoundsB1 = furtherIntersect.DistanceTo(_faceSurfaceB);
+                double outOfBoundsB2 = closerIntersect.DistanceTo(_faceSurfaceB);
+                if (outOfBoundsB1 > _tolerance) { outOfBounds += 1000 * outOfBoundsB1; }
+                if (outOfBoundsB2 > _tolerance) { outOfBounds += 100 * outOfBoundsB2; }
             }
 
+            double value = (_isNaked) ? value1 + outOfBounds : new List<double> { value1, value2 }.Max() + outOfBounds;
 
-
-            return value1 + value2;
+            return value;
         }
-
-
+        
 
         /// <summary>
         /// Draw the member lines given the agents current state
@@ -157,13 +161,22 @@ namespace Strategies
         /// <returns></returns>
         internal List<Geo.Line> GetMemberLines(tAgent[] agents)
         {
+            
             var lines = new List<Geo.Line>();
             Geo.Point p = GetFurtherIntersection(_faceIndexA, agents);
             lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p));
             if (!_isNaked)
             {
-                p = GetFurtherIntersection(_faceIndexB, agents);
-                lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p));
+                Geo.Point p2 = GetFurtherIntersection(_faceIndexB, agents);
+                if (_isFlat)
+                {
+                    lines.Clear();
+                    lines.Add(Geo.Line.ByStartPointEndPoint(p2, p));
+                }
+                else
+                {
+                lines.Add(Geo.Line.ByStartPointEndPoint(_edge.PointAtParameter(_currentParameter), p2));
+                }
             }
 
             // Dispose

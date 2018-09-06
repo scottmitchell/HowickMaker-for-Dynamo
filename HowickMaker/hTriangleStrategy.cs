@@ -12,6 +12,7 @@ namespace Strategies
 {
     public class hTriangleStrategy
     {
+        internal double _desiredOffset = 2;
         public Mesh _mesh;
         private tAgent[] _agents;
         List<List<Geo.Line>> states = new List<List<Geo.Line>>();
@@ -34,14 +35,17 @@ namespace Strategies
                 var state = new List<Geo.Line>();
                 foreach (tAgent agent in _agents)
                 {
-                    _test.Add(agent.Step(_agents));
-                    state.Add(agent.GetMemberLines(_agents)[0]);
-                    if (!agent._isNaked)
+                    var memberLines = agent.GetMemberLines(_agents);
+                    foreach (Geo.Line l in memberLines)
                     {
-                        state.Add(agent.GetMemberLines(_agents)[1]);
+                        state.Add(l);
                     }
                 }
                 states.Add(state);
+                foreach (tAgent agent in _agents)
+                {
+                    _test.Add(agent.Step(_agents));
+                }
             }
         }
 
@@ -56,6 +60,7 @@ namespace Strategies
             var indices = _mesh.VertexIndicesByTri();
             var faces = SplitList(indices);
             var normals = _mesh.TriangleNormals();
+            var surfaces = MakeOffsetFaces(faces, _mesh.Vertices(), normals);
 
             // Loop through every face
             for (int i = 0; i < faces.Count; i++)
@@ -90,6 +95,7 @@ namespace Strategies
                         agentsDict[key]._isNaked = false;
                         agentsDict[key]._faceIndexB = i;
                         agentsDict[key]._faceNormalB = normals[i];
+                        agentsDict[key]._faceSurfaceB = surfaces[i];
                         var neighborsB1 = agentsDict[new HashSet<int> { start, third }]._name;
                         var neighborsB2 = agentsDict[new HashSet<int> { end, third }]._name;
                         agentsDict[key]._neighborsB = new int[] { neighborsB1, neighborsB2 };
@@ -98,6 +104,7 @@ namespace Strategies
                     {
                         agentsDict[key]._faceIndexA = i;
                         agentsDict[key]._faceNormalA = normals[i];
+                        agentsDict[key]._faceSurfaceA = surfaces[i];
                         var neighborsA1 = agentsDict[new HashSet<int> { start, third }]._name;
                         var neighborsA2 = agentsDict[new HashSet<int> { end, third }]._name;
                         agentsDict[key]._neighborsA = new int[] { neighborsA1, neighborsA2 };
@@ -123,6 +130,19 @@ namespace Strategies
         {
             var solver = new hTriangleStrategy(mesh, iterations);
             return solver.states;
+        }
+
+        public List<Geo.Line> getNakedEdges()
+        {
+            var naked = new List<Geo.Line>();
+            foreach (tAgent agent in _agents)
+            {
+                if (agent._isNaked)
+                {
+                    naked.Add(agent._edge);
+                }
+            }
+            return naked;
         }
 
 
@@ -170,6 +190,24 @@ namespace Strategies
             }
 
             return splitList;
+        }
+
+        internal List<Geo.Surface> MakeOffsetFaces(List<List<int>> faces, List<Geo.Point> vertices, List<Geo.Vector> normals)
+        {
+            var offsetFaces = new List<Geo.Surface>();
+            foreach (List<int> face in faces)
+            {
+                var pts = new List<Geo.Point>();
+                foreach (int i in face)
+                {
+                    pts.Add(vertices[i]);
+                }
+
+                var outline = Geo.Polygon.ByPoints(pts);
+                var offsetOutline = outline.Offset(-_desiredOffset);
+                offsetFaces.Add(Geo.Surface.ByPatch(offsetOutline));
+            }
+            return offsetFaces;
         }
 
     }
