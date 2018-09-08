@@ -59,3 +59,7 @@ Nodes for solving large collections of steel studs.
 ### hLines / hMesh
 
 hLines and hMesh contain nodes for particular workflows, and particular strategies of parametric steel stud fabrication and construction. Currently, this includes several quad-mesh and triangular-mesh strategies. More will be added as they are developed.
+
+## License
+
+HowickMaker is licensed under the [MIT license](http://opensource.org/licenses/MIT).
