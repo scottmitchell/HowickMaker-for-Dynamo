@@ -134,6 +134,11 @@
     <PostBuildEvent>copy /Y "$(SolutionDir)\HowickMaker\bin\Debug\HowickMaker.dll" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\2.1\packages\_HowickMaker\bin"
 copy /Y "$(SolutionDir)\HowickMaker\bin\Debug\HowickMaker.xml" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\2.1\packages\_HowickMaker\bin"
 
+
+
+copy /Y "$(SolutionDir)\HowickMaker\bin\Debug\HowickMaker.dll" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\1.3\packages\HowickMaker\bin"
+copy /Y "$(SolutionDir)\HowickMaker\bin\Debug\HowickMaker.xml" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\1.3\packages\HowickMaker\bin"
+
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

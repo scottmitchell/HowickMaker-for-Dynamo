@@ -18,7 +18,7 @@ namespace HowickMaker
         public hMember[] _members;
         public List<hConnection> _connections = new List<hConnection>();
         internal Graph _g;
-
+        internal bool _advanced = false;
         internal double _tolerance = 0.001;
         internal double _planarityTolerance = 0.001;
         internal bool _firstConnectionIsFTF = false;
@@ -31,12 +31,18 @@ namespace HowickMaker
         internal double _StudWdith = 3.5;
 
         List<int> _helpers = null;
+        List<string> _labels;
         
         List<Geo.Line> _lines = new List<Geo.Line>();
         List<hMember> _braceMembers = new List<hMember>();
 
+        Dictionary<string, Geo.Vector> _webNormalsDict;
+        Dictionary<string, int> _priorityDict;
 
-        [IsVisibleInDynamoLibrary(false)]
+        List<List<double>> _dots = new List<List<double>>();
+
+
+       [IsVisibleInDynamoLibrary(false)]
         internal hStructure(List<Geo.Line> lines, double tolerance)
         {
             _lines = lines;
@@ -64,6 +70,26 @@ namespace HowickMaker
             for (int i = 0; i < lines.Count; i++)
             {
                 _members[i] = new hMember(lines[i], i.ToString());
+                _members[i]._label = i.ToString();
+            }
+        }
+
+        [IsVisibleInDynamoLibrary(false)]
+        internal hStructure(List<Geo.Line> lines, List<string> labels, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        {
+            _lines = lines;
+            _tolerance = intersectionTolerance;
+            _planarityTolerance = planarityTolerance;
+            _threePieceBrace = threePieceBrace;
+            _braceLength1 = braceLength1;
+            _braceLength2 = braceLength2;
+            _firstConnectionIsFTF = firstConnectionIsFTF;
+
+            _members = new hMember[lines.Count];
+            for (int i = 0; i < lines.Count; i++)
+            {
+                _members[i] = new hMember(lines[i], i.ToString());
+                _members[i]._label = labels[i];
             }
         }
 
@@ -77,7 +103,29 @@ namespace HowickMaker
         //  ██╔═══╝ ██║   ██║██╔══██╗    ██║     ██║╚██╗██║╚════██║   ██║   ██╔══██╗
         //  ██║     ╚██████╔╝██████╔╝    ╚██████╗██║ ╚████║███████║   ██║   ██║  ██║
         //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
-        //                                                                          
+        //               
+
+        [MultiReturn(new[] { "members", "braces", "dots" })]
+        public static Dictionary<string, object> FromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, string options = "null")
+        {
+            string[] option = options.ToString().Split(',');
+            double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
+            double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
+            bool generateBraces = (options == "null") ? false : bool.Parse(option[2]);
+            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[3]);
+            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[4]);
+            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
+            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
+
+            hStructure structure = StructureFromLines_Advanced(lines, names, webNormalsDict, priorityDict, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+
+            return new Dictionary<string, object>
+            {
+                { "members", structure._members.ToList() },
+                { "braces", structure._braceMembers.ToList() },
+                { "dots", structure._dots }
+            };
+        }
 
 
         /// <summary>
@@ -108,18 +156,27 @@ namespace HowickMaker
         }
 
 
-        [IsVisibleInDynamoLibrary(false)]
-        public static Dictionary<string, object> FromLinesAndHelpers(List<Geo.Line> lines, List<int> helpers, string options = "null")
+
+
+        /// <summary>
+        /// Solve a network of intersecting lines as steel studs meeting at planar connections
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="options"></param>
+        /// <returns></returns>
+        [MultiReturn(new[] { "members", "braces" })]
+        public static Dictionary<string, object> CSP_FromLines(List<Geo.Line> lines, string options = "null")
         {
             string[] option = options.ToString().Split(',');
             double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
             double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
-            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[2]);
-            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[3]);
-            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[4]);
-            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[5]);
+            bool generateBraces = (options == "null") ? false : bool.Parse(option[2]);
+            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[3]);
+            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[4]);
+            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
+            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
 
-            hStructure structure = StructureFromLines(lines, intersectionTolerance, planarityTolerance, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF, helpers);
+            hStructure structure = CSP_StructureFromLines(lines, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
 
             return new Dictionary<string, object>
             {
@@ -151,15 +208,6 @@ namespace HowickMaker
             string[] options = { intersectionTolerance.ToString(), planarityTolerance.ToString(), generateBraces.ToString(), threePieceBrace.ToString(), braceLength1.ToString(), braceLength2.ToString(), firstConnectionIsFTF.ToString() };
             string concat = String.Join(",", options.ToArray());
             return concat;
-                /*return new Dictionary<string, object>
-            {
-                { "IntersectionTolerance", intersectionTolerance },
-                { "PlanarityTolerance", planarityTolerance },
-                { "ThreePieceBraces", threePieceBrace },
-                { "BraceLength1", braceLength1 },
-                { "BraceLength2", braceLength2 },
-                { "FirstConnectionIsFTF", firstConnectionIsFTF }
-            };*/
         }
 
 
@@ -370,7 +418,41 @@ namespace HowickMaker
         //  ╚═════╝    ╚═╝   ╚══════╝
         //                                                 
 
-            
+        /// <summary>
+        /// Generate an hStructure from a set of input lines and other parameters
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <returns></returns>
+        internal static hStructure CSP_StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        {
+            hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
+
+            structure._g = graphFromLines(lines, structure._tolerance);
+
+            structure.BuildMembersAndConnectionsFromGraph();
+
+
+            /*if (generateBraces)
+            {
+                structure.GenerateBraces();
+            }
+            structure.ResolveFTFConnections();
+            structure.ResolveBRConnections();
+            structure.ResolveTConnections();
+            structure.ResolvePTConnections();*/
+
+            return structure;
+        }
+
+
+        internal int CSP_SelectUnassignedVariable()
+        {
+            int selection = -1;
+            return -1;
+        }
+
+
+
         /// <summary>
         /// Generate an hStructure from a set of input lines and other parameters
         /// </summary>
@@ -391,6 +473,50 @@ namespace HowickMaker
             structure.ResolveBRConnections();
             structure.ResolveTConnections();
             structure.ResolvePTConnections();
+
+            return structure;
+        }
+
+        /// <summary>
+        /// Generate an hStructure from a set of input lines and other parameters
+        /// </summary>
+        /// <param name="lines"></param>
+        /// <param name="names"></param>
+        /// <param name="webNormalsDict"></param>
+        /// <param name="priorityDict"></param>
+        /// <param name="intersectionTolerance"></param>
+        /// <param name="planarityTolerance"></param>
+        /// <param name="generateBraces"></param>
+        /// <param name="threePieceBraces"></param>
+        /// <param name="braceLength1"></param>
+        /// <param name="braceLength2"></param>
+        /// <param name="firstConnectionIsFTF"></param>
+        /// <returns></returns>
+        internal static hStructure StructureFromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        {
+            hStructure structure = new hStructure(lines, names, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
+            structure._advanced = true;
+            structure._labels = names;
+            structure._webNormalsDict = webNormalsDict;
+            structure._priorityDict = priorityDict;
+
+            structure._g = graphFromLines(lines, structure._tolerance);
+
+            structure.BuildMembersAndConnectionsFromGraph();
+
+            if (generateBraces)
+            {
+                structure.GenerateBraces();
+            }
+            structure.ResolveFTFConnections();
+            structure.ResolveBRConnections();
+            structure.ResolveTConnections();
+            structure.ResolvePTConnections();
+
+            for (int i = 0; i < lines.Count; i++)
+            {
+                structure._members[i]._label = names[i];
+            }
 
             return structure;
         }
@@ -451,18 +577,29 @@ namespace HowickMaker
         /// Initiate recursive propogation across line network
         /// </summary>
         /// <param name="lines"></param>
-        internal void BuildMembersAndConnectionsFromGraph()
+        internal void BuildMembersAndConnectionsFromGraph(int start = 0)
         {
-            Vertex current = _g.vertices[0];
+            Vertex current = _g.vertices[start];
             
             hMember currentMember = new hMember(_lines[current.name], current.name.ToString());
-            Geo.Line currentLine = _lines[0];
-            Geo.Line nextLine = _lines[current.neighbors[0]];
+            Geo.Line currentLine = _lines[start];
+            Geo.Line nextLine = _lines[current.neighbors[start]];
             Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
             Geo.Vector normal = currentPlane.Normal;
 
-            currentMember._webNormal = (_firstConnectionIsFTF) ? normal : Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal);
-            _members[0] = currentMember;
+            List<Geo.Vector> vectors = new List<Geo.Vector> { Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal), Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse() };
+            Geo.Vector choice = vectors[0];
+            if (_webNormalsDict.ContainsKey(_members[0]._label))
+            {
+                var target = _webNormalsDict[_members[0]._label].Normalized();
+                var vects = vectors.OrderBy(x => -1 * x.Normalized().Dot(target)).ToList();
+
+                choice = vects[0];
+            }
+
+            currentMember._webNormal = (_firstConnectionIsFTF) ? normal : choice;
+
+            _members[start] = currentMember;
 
             // Dispose
             /*{
@@ -475,6 +612,7 @@ namespace HowickMaker
             Propogate(0);
         }
 
+        
 
         /// <summary>
         /// Recursive propogation across line network
@@ -515,15 +653,24 @@ namespace HowickMaker
                     if (!_g.vertices[i].visited)
                     {
                         List<Geo.Vector> vectors = GetValidNormalsForMember(i);
+                        Geo.Vector choice = vectors[0];
+                        if (_webNormalsDict.ContainsKey(_members[i]._label))
+                        {
+                            var target = _webNormalsDict[_members[i]._label];
+                            var dots = new List<double>();
+                            foreach (Geo.Vector v in vectors)
+                            {
+                                dots.Add(v.Normalized().Dot(target));
+                            }
+                            var vects = vectors.OrderBy(x => -1 * x.Dot(target)).ToList();
+                            choice = vects[0];
+                        }
 
-                        try
+                        if (vectors.Count > 0)
                         {
                             //vectors = (List<Geo.Vector>)vectors.OrderBy(x => Math.Abs(x.Dot(Geo.Vector.ByTwoPoints(currentMember.WebAxis.StartPoint, currentMember.WebAxis.EndPoint))));
-                            _members[i]._webNormal = vectors[0];
-                        }
-                        catch
-                        {
-                            throw;
+                            _members[i]._webNormal = choice;
+                            //_members[i]._webNormal = _webNormalsDict[_members[i]._label];
                         }
 
 
@@ -578,7 +725,7 @@ namespace HowickMaker
             {
                 return Connection.FTF;
             }
-            else
+            else if (PerpendicularPlaneNormals(_members[i]._webNormal, jointPlane.Normal))
             {
                 if (_lines[i].StartPoint.DistanceTo(_lines[j]) < _tolerance || _lines[i].EndPoint.DistanceTo(_lines[j]) < _tolerance)
                 {
@@ -611,6 +758,10 @@ namespace HowickMaker
                     return Connection.PT;
                 }
             }
+            else
+            {
+                return Connection.Invalid;
+            }
         }
 
         
@@ -639,12 +790,23 @@ namespace HowickMaker
 
             else if (connection.type == Connection.BR)
             {
+                Geo.Plane jointPlane = ByTwoLines(_members[memberIndex]._webAxis, _members[otherMemberIndex]._webAxis);
+                Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
+
+                Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
+                return new List<Geo.Vector> { webNormal1, webNormal1.Reverse() };
+
+                //return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
+            }
+
+            else if (connection.type == Connection.Invalid)
+            {
                 //Geo.Plane jointPlane = ByTwoLines(_members[memberIndex].webAxis, _members[otherMemberIndex].webAxis);
                 //Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex].webAxis.StartPoint, _members[memberIndex].webAxis.EndPoint);
 
                 //Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
-                
-                return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
+
+                return new List<Geo.Vector> { };
             }
 
             else
@@ -674,7 +836,7 @@ namespace HowickMaker
         internal List<Geo.Vector> GetValidNormalsForMember(int memberIndex)
         {
             List<Geo.Vector> potentialVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
-
+            //List < Geo.Vector > allVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
             foreach (hConnection connection in _members[memberIndex].connections)
             {
                 List<Geo.Vector> checkVectors = GetValidNormalsForMemberForConnection(connection, memberIndex);
@@ -683,6 +845,7 @@ namespace HowickMaker
                 {
                     foreach (Geo.Vector cV in checkVectors)
                     {
+                        //allVectors.Add(cV);
                         if (pV.Dot(cV) > 1 - _tolerance)
                         {
                             newVectors.Add(pV);
@@ -691,7 +854,7 @@ namespace HowickMaker
                 }
                 potentialVectors = newVectors;
             }
-            
+            //return allVectors;
             return potentialVectors;
         }
 
@@ -1311,7 +1474,7 @@ namespace HowickMaker
                     Geo.Line outside;
                     int iInside;
                     int iOutisde;
-                    GetInsideAndOutisdeMember(connection, out inside, out outside, out iInside, out iOutisde);
+                    GetInsideAndOutsideMember(connection, out inside, out outside, out iInside, out iOutisde);
                     
                     Geo.Point intersectionPoint = ClosestPointToOtherLine(inside, outside);
                     
@@ -1397,13 +1560,31 @@ namespace HowickMaker
             }
         }
 
-        internal void GetInsideAndOutisdeMember(hConnection con, out Geo.Line terminal, out Geo.Line cross, out int iTerminal, out int iCross)
+        internal void GetInsideAndOutsideMember(hConnection con, out Geo.Line inside, out Geo.Line outside, out int iInside, out int iOutside)
         {
-            // Initialize all variables. These should never be returned.. If my assumptions are correct
-            terminal = _members[con.members[0]].WebAxis;
-            cross = _members[con.members[1]].WebAxis;
-            iTerminal = con.members[0];
-            iCross = con.members[1];
+            string label1 = _members[con.members[0]]._label;
+            string label2 = _members[con.members[1]]._label;
+
+            int priority1 = (_priorityDict.ContainsKey(_members[con.members[0]]._label)) ? _priorityDict[_members[con.members[0]]._label] : 0;
+            int priority2 = (_priorityDict.ContainsKey(_members[con.members[1]]._label)) ? _priorityDict[_members[con.members[1]]._label] : 0;
+
+            bool yes = _priorityDict[_members[con.members[0]]._label] > _priorityDict[_members[con.members[1]]._label];
+
+            if (yes)
+            {
+                inside = _members[con.members[0]].WebAxis;
+                outside = _members[con.members[1]].WebAxis;
+                iInside = con.members[0];
+                iOutside = con.members[1];
+            }
+            else
+            {
+                inside = _members[con.members[1]].WebAxis;
+                outside = _members[con.members[0]].WebAxis;
+                iInside = con.members[1];
+                iOutside = con.members[0];
+            }
+            
         }
 
         #endregion
@@ -1416,7 +1597,7 @@ namespace HowickMaker
         //  ╚██████╔╝   ██║   ██║███████╗
         //   ╚═════╝    ╚═╝   ╚═╝╚══════╝
         //                               
-
+        
 
         /// <summary>
         /// Get the normal for a member involeved in a BR connection
@@ -1518,7 +1699,21 @@ namespace HowickMaker
             return (Math.Abs(similarity) > 1 - _tolerance);
         }
 
-        
+
+        /// <summary>
+        /// Determines whether two planes are perpendicular by comparing normals
+        /// </summary>
+        /// <param name="vec1"></param>
+        /// <param name="vec2"></param>
+        /// <returns></returns>
+        internal bool PerpendicularPlaneNormals(Geo.Vector vec1, Geo.Vector vec2)
+        {
+            double similarity = vec1.Dot(vec2);
+
+            return (Math.Abs(similarity) < _tolerance);
+        }
+
+
         /// <summary>
         /// Determine if two points are the same, with tolerance
         /// </summary>

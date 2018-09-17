@@ -48,7 +48,7 @@ namespace HowickMaker
         /// </summary>
         public string Name
         {
-            get { return _name; }
+            get { return (_label == null) ? _name : _label; }
         }
         internal string _name;
 
@@ -63,6 +63,7 @@ namespace HowickMaker
         
         public List<hConnection> connections = new List<hConnection>();
         internal List<hOperation> operations = new List<hOperation>();
+        internal string _label;
         
 
 

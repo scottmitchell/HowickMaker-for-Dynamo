@@ -20,6 +20,7 @@ namespace HowickMaker
         BR,
         PT,
         T,
+        Invalid,
     }
 
     /// <summary>
