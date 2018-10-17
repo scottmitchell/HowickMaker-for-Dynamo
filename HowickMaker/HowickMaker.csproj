@@ -124,6 +124,7 @@
     <Compile Include="hVertex.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="tAgent.cs" />
+    <Compile Include="triple.cs" />
     <Compile Include="Vertex.cs" />
   </ItemGroup>
   <ItemGroup>

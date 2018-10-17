@@ -43,7 +43,7 @@ namespace Strategies
 
         internal void Setup()
         {
-            _currentParameter = 0.5;
+            _currentParameter = 0.45;
 
             Geo.Vector edgeVector = Geo.Vector.ByTwoPoints(_edge.StartPoint, _edge.EndPoint);
             _lineDirectionA = _faceNormalA.Cross(edgeVector);
@@ -51,7 +51,8 @@ namespace Strategies
             _lineA = Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionA, 1);
             _lineB = (_isNaked) ? null : Geo.Line.ByStartPointDirectionLength(_edge.PointAtParameter(_currentParameter), _lineDirectionB, 1);
 
-            _isFlat = (_isNaked) ? false : _faceNormalA.Normalized().Dot(_faceNormalB.Normalized()) == 1;
+            _isFlat = (_isNaked) ? false : _faceNormalA.Normalized().Dot(_faceNormalB.Normalized()) >= .9999;
+            //_isFlat = false;
         }
 
         internal void SetLines()

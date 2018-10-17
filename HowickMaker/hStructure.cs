@@ -180,7 +180,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"></param>
         /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
+        [IsVisibleInDynamoLibrary(true)]
         public static List<string> Test_ViewConnectivityGraph(List<Geo.Line> lines, double tolerance)
         {
             Graph g = graphFromLines(lines, tolerance);
@@ -1021,7 +1021,8 @@ namespace HowickMaker
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + 1;
                         double extendToMaxCoverage = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
-                        minExtension = extendToMaxCoverage;
+                        //minExtension = extendToMaxCoverage;
+                        minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + 1;
 
 
                         // Check start point
