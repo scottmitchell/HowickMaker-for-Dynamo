@@ -385,7 +385,7 @@ namespace HowickMaker
         /// <param name="filePath"></param>
         /// <param name="hMembers"></param>
         /// <param name="normalLabel"></param>
-        [IsVisibleInDynamoLibrary(false)]
+        [IsVisibleInDynamoLibrary(true)]
         public static void ExportToHMK(string filePath, List<hMember> hMembers, bool normalLabel = true)
         {
             string csv = "";

@@ -43,7 +43,7 @@ namespace Strategies
 
         internal void Setup()
         {
-            _currentParameter = 0.45;
+            _currentParameter = 0.5;
 
             Geo.Vector edgeVector = Geo.Vector.ByTwoPoints(_edge.StartPoint, _edge.EndPoint);
             _lineDirectionA = _faceNormalA.Cross(edgeVector);
@@ -118,7 +118,7 @@ namespace Strategies
         /// <param name="desiredOffset"></param>
         /// <param name="agents"></param>
         /// <returns></returns>
-        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 6.0)
+        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 9.0)
         {
             int furtherAgentIndex = -1;
             int closerAgentIndex = -1;
