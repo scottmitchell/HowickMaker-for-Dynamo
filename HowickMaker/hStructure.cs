@@ -1184,7 +1184,8 @@ namespace HowickMaker
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + 1;
                         double extendToMaxCoverage = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
-                        minExtension = extendToMaxCoverage;
+                        double noExtra = (angle % (Math.PI / 2) == 0) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
+                        minExtension = noExtra;
 
 
                         // Check start point
