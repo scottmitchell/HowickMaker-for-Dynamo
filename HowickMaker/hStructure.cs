@@ -38,6 +38,7 @@ namespace HowickMaker
 
         Dictionary<string, Geo.Vector> _webNormalsDict;
         Dictionary<string, int> _priorityDict;
+        Dictionary<string, int> _extensionDict;
 
         List<List<double>> _dots = new List<List<double>>();
 
@@ -105,8 +106,8 @@ namespace HowickMaker
         //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
         //               
 
-        [MultiReturn(new[] { "members", "braces", "dots" })]
-        public static Dictionary<string, object> FromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, string options = "null")
+        [MultiReturn(new[] { "members", "braces", "connections" })]
+        public static Dictionary<string, object> FromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, Dictionary<string, int> extensionDict, string options = "null")
         {
             string[] option = options.ToString().Split(',');
             double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
@@ -117,13 +118,13 @@ namespace HowickMaker
             double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
             bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
 
-            hStructure structure = StructureFromLines_Advanced(lines, names, webNormalsDict, priorityDict, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+            hStructure structure = StructureFromLines_Advanced(lines, names, webNormalsDict, priorityDict, extensionDict, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
 
             return new Dictionary<string, object>
             {
                 { "members", structure._members.ToList() },
                 { "braces", structure._braceMembers.ToList() },
-                { "dots", structure._dots }
+                { "connections", structure._connections }
             };
         }
 
@@ -492,17 +493,24 @@ namespace HowickMaker
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        internal static hStructure StructureFromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, Dictionary<string, int> extensionDict, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             hStructure structure = new hStructure(lines, names, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
             structure._advanced = true;
             structure._labels = names;
             structure._webNormalsDict = webNormalsDict;
             structure._priorityDict = priorityDict;
+            structure._extensionDict = extensionDict;
+
+            
 
             structure._g = graphFromLines(lines, structure._tolerance);
 
             structure.BuildMembersAndConnectionsFromGraph();
+            for (int i = 0; i < lines.Count; i++)
+            {
+                structure._members[i]._label = names[i];
+            }
 
             if (generateBraces)
             {
@@ -1184,8 +1192,19 @@ namespace HowickMaker
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + 1;
                         double extendToMaxCoverage = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
-                        double noExtra = (angle % (Math.PI / 2) == 0) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
-                        minExtension = noExtra;
+                        double noExtra = (angle % (Math.PI / 2) == 0 || Math.Abs(angle - (Math.PI / 2)) < 0.01 || angle < 0.01) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
+                        int type = 0;
+                        if (this._extensionDict.ContainsKey(_members[index1]._label))
+                        {
+                            type = _extensionDict[_members[index1]._label];
+                        }
+
+                        minExtension = noExtra + 1.5;
+
+                        if (type == 1)
+                        {
+                            minExtension -= 1.5;
+                        }
 
 
                         // Check start point
@@ -1569,7 +1588,10 @@ namespace HowickMaker
             int priority1 = (_priorityDict.ContainsKey(_members[con.members[0]]._label)) ? _priorityDict[_members[con.members[0]]._label] : 0;
             int priority2 = (_priorityDict.ContainsKey(_members[con.members[1]]._label)) ? _priorityDict[_members[con.members[1]]._label] : 0;
 
-            bool yes = _priorityDict[_members[con.members[0]]._label] > _priorityDict[_members[con.members[1]]._label];
+            bool yes = false;
+            if (_priorityDict.ContainsKey(_members[con.members[0]]._label) && _priorityDict.ContainsKey(_members[con.members[1]]._label)){
+                yes = _priorityDict[_members[con.members[0]]._label] > _priorityDict[_members[con.members[1]]._label];
+            }
 
             if (yes)
             {

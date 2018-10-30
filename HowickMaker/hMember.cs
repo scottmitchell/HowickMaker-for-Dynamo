@@ -91,6 +91,7 @@ namespace HowickMaker
             _webAxis = member._webAxis;
             _webNormal = member._webNormal;
             _name = member._name;
+            _label = member._label;
             foreach (hConnection con in member.connections)
             {
                 this.connections.Add(con);
@@ -236,6 +237,29 @@ namespace HowickMaker
             return new List<Geo.Line> { flangeLine1, flangeLine2 };
         }
 
+        public List<hMember> SplitAtLocation(hMember member, double loc)
+        {
+            var webAxes = member.WebAxis.SplitByParameter(loc / member.WebAxis.Length);
+            var mem1 = new hMember(Geo.Line.ByStartPointEndPoint(webAxes[0].StartPoint, webAxes[0].EndPoint), member.WebNormal, member.Name + "-1");
+            var mem2 = new hMember(Geo.Line.ByStartPointEndPoint(webAxes[1].StartPoint, webAxes[1].EndPoint), member.WebNormal, member.Name + "-2");
+            mem1._label = member.Name + "-1";
+            mem2._label = member.Name + "-2";
+
+            foreach (hOperation op in member.operations)
+            {
+                if (op._loc < loc)
+                {
+                    mem1.AddOperationByLocationType(op._loc, op._type.ToString());
+                }
+                else
+                {
+                    var newLoc = op._loc - loc;
+                    mem2.AddOperationByLocationType(newLoc, op._type.ToString());
+                }
+            }
+
+            return (new List<hMember> { mem1, mem2 });
+        }
 
 
 
@@ -386,7 +410,7 @@ namespace HowickMaker
         /// <param name="filePath"></param>
         /// <param name="hMembers"></param>
         /// <param name="normalLabel"></param>
-        [IsVisibleInDynamoLibrary(false)]
+        [IsVisibleInDynamoLibrary(true)]
         public static void ExportToHMK(string filePath, List<hMember> hMembers, bool normalLabel = true)
         {
             string csv = "";
@@ -422,7 +446,8 @@ namespace HowickMaker
         internal string AsHMKLine(bool normalLabel = true)
         {
             string csv = "";
-            csv += _name.ToString() + "," + "COMPONENT" + ",";
+            var tempName = (_label == null) ? _name : _label;
+            csv += "COMPONENT" + "," + tempName + ",";
             csv += (normalLabel) ? "LABEL_NRM" + "," : "LABEL_INV" + ",";
             csv += "1,";
             csv += Math.Round(_webAxis.Length, 2).ToString() + ",";
@@ -458,7 +483,7 @@ namespace HowickMaker
         internal string AsCSVLine(bool normalLabel = true)
         {
             string csv = "";
-            csv += _name.ToString() + "," + "COMPONENT" + ",";
+            csv += "COMPONENT" + "," + _label + ",";
             csv += (normalLabel) ? "LABEL_NRM" + "," : "LABEL_INV" + ",";
             csv += "1,";
             csv += Math.Round(_webAxis.Length, 2).ToString();

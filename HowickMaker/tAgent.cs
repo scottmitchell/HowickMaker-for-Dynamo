@@ -148,7 +148,7 @@ namespace Strategies
                 if (outOfBoundsB2 > _tolerance) { outOfBounds += 100 * outOfBoundsB2; }
             }
 
-            double value = (_isNaked) ? value1 + outOfBounds : new List<double> { value1, value2 }.Max() + outOfBounds;
+            double value = (_isNaked) ? value1 + outOfBounds : new List<double> { value1, value2 }.Sum() + outOfBounds;
 
             return value;
         }

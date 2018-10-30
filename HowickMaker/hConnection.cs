@@ -26,10 +26,11 @@ namespace HowickMaker
     /// <summary>
     /// Represents a connection within an hStructure
     /// </summary>
-    [IsVisibleInDynamoLibrary(false)]
+    [IsVisibleInDynamoLibrary(true)]
     public class hConnection
     {
-        public Geo.Point location;
+        internal Geo.Point location;
+        public Geo.Point intersectionPoint;
         public List<int> members = new List<int>();
         internal Connection type;
 
@@ -44,7 +45,7 @@ namespace HowickMaker
             this.members = members;
         }
 
-        public void AddMember(int member)
+        internal void AddMember(int member)
         {
             this.members.Add(member);
         }
@@ -74,7 +75,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public override bool Equals(object value)
+        internal override bool Equals(object value)
         {
             hConnection con = value as hConnection;
 

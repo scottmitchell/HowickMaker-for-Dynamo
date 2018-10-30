@@ -12,7 +12,7 @@ namespace Strategies
 {
     public class hTriangleStrategy
     {
-        internal double _desiredOffset = 2;
+        internal double _desiredOffset = 4;
         public Mesh _mesh;
         private tAgent[] _agents;
         List<List<Geo.Line>> states = new List<List<Geo.Line>>();
