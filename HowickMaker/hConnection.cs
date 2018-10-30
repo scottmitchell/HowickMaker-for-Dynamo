@@ -29,10 +29,22 @@ namespace HowickMaker
     [IsVisibleInDynamoLibrary(true)]
     public class hConnection
     {
-        internal Geo.Point location;
-        public Geo.Point intersectionPoint;
+        public Geo.Point location;
         public List<int> members = new List<int>();
         internal Connection type;
+        public string connectionType {
+            get
+            {
+                return type.ToString();
+            }
+        }
+        public List<int> connectionMemberIndices
+        {
+            get
+            {
+                return members;
+            }
+        }
 
         internal hConnection(Connection type)
         {
@@ -75,7 +87,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        internal override bool Equals(object value)
+        public override bool Equals(object value)
         {
             hConnection con = value as hConnection;
 

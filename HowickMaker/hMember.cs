@@ -16,6 +16,12 @@ namespace HowickMaker
     /// </summary>
     public class hMember : IGraphicItem
     {
+        public List<hConnection> Connections {
+            get
+            {
+                return connections;
+            }
+        }
         /// <summary>
         /// The web axis of a member
         /// </summary>
