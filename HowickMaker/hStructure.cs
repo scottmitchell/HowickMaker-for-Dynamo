@@ -30,7 +30,6 @@ namespace HowickMaker
         internal double _StudHeight = 1.5;
         internal double _StudWdith = 3.5;
 
-        List<int> _helpers = null;
         List<string> _labels;
         
         List<Geo.Line> _lines = new List<Geo.Line>();
@@ -94,8 +93,15 @@ namespace HowickMaker
         //               
 
         [MultiReturn(new[] { "members", "braces", "connections" })]
-        public static Dictionary<string, object> FromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, Dictionary<string, int> extensionDict, string options = "null")
+        public static Dictionary<string, object> FromLines_Advanced(
+            List<Geo.Line> lines, 
+            List<string> names = null, 
+            Dictionary<string, Geo.Vector> webNormalsDict = null, 
+            Dictionary<string, int> priorityDict = null, 
+            Dictionary<string, int> extensionDict = null, 
+            string options = "null")
         {
+            // Parse Options
             string[] option = options.ToString().Split(',');
             double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
             double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
@@ -105,7 +111,25 @@ namespace HowickMaker
             double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
             bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
 
-            hStructure structure = StructureFromLines_Advanced(lines, names, webNormalsDict, priorityDict, extensionDict, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
+            // Create empty dictionaries if unprovided
+            if (webNormalsDict == null) { webNormalsDict = new Dictionary<string, Geo.Vector>(); }
+            if (priorityDict == null) { priorityDict = new Dictionary<string, int>(); }
+            if (extensionDict == null) { extensionDict = new Dictionary<string, int>(); }
+
+
+            hStructure structure = StructureFromLines_Advanced(
+                lines,
+                names, 
+                webNormalsDict, 
+                priorityDict, 
+                extensionDict, 
+                intersectionTolerance, 
+                planarityTolerance,
+                generateBraces, 
+                threePieceBrace, 
+                braceLength1, 
+                braceLength2, 
+                firstConnectionIsFTF);
 
             return new Dictionary<string, object>
             {
@@ -485,20 +509,15 @@ namespace HowickMaker
                 // ...vs every other line
                 for (int j = i + 1; j < lines.Count; j++)
                 {
-                    // Make sure we're not checking a line against itself
-                    if (i != j)
+                    // Check if the two lines intersect
+                    if (lines[i].DistanceTo(lines[j]) <= tolerance)
                     {
-                        // Check if the two lines intersect
-                        if (lines[i].DistanceTo(lines[j]) <= tolerance)
-                        {
-                            // If so, add j as a neighbor to i
-                            g.vertices[i].addNeighbor(j);
-                            g.vertices[j].addNeighbor(i);
-                        }
+                        // If so, i and j are neighbors
+                        g.vertices[i].addNeighbor(j);
+                        g.vertices[j].addNeighbor(i);
                     }
                 }
             }
-
             return g;
         }
 
@@ -506,6 +525,7 @@ namespace HowickMaker
         /// <summary>
         /// Initiate recursive propogation across line network
         /// </summary>
+        /// <param name="start"></param>
         /// <param name="lines"></param>
         internal void BuildMembersAndConnectionsFromGraph(int start = 0)
         {
@@ -618,26 +638,6 @@ namespace HowickMaker
                     }
                 }
             }
-        }
-
-
-        /// <summary>
-        /// Determine if this connection already exists in the hStructure
-        /// </summary>
-        /// <param name="current"></param>
-        /// <param name="prospective"></param>
-        /// <returns></returns>
-        internal bool ConnectionAlreadyMade(int current, int prospective)
-        {
-            bool made = false;
-            foreach(hConnection con in _members[prospective].connections)
-            {
-                if (con.GetOtherIndex(prospective) == current)
-                {
-                    made = true;
-                }
-            }
-            return made;
         }
 
 
@@ -1080,6 +1080,7 @@ namespace HowickMaker
         }
 
         #endregion
+
 
         #region Resolve FTF Connections
 
