@@ -43,19 +43,6 @@ namespace HowickMaker
         List<List<double>> _dots = new List<List<double>>();
 
 
-       [IsVisibleInDynamoLibrary(false)]
-        internal hStructure(List<Geo.Line> lines, double tolerance)
-        {
-            _lines = lines;
-            _tolerance = tolerance;
-            _members = new hMember[lines.Count];
-            for (int i = 0; i < lines.Count; i++)
-            {
-                _members[i] = new hMember(lines[i], i.ToString());
-            }
-        }
-
-
         [IsVisibleInDynamoLibrary(false)]
         internal hStructure(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
@@ -157,42 +144,6 @@ namespace HowickMaker
         }
 
 
-
-
-        /// <summary>
-        /// Solve a network of intersecting lines as steel studs meeting at planar connections
-        /// </summary>
-        /// <param name="lines"></param>
-        /// <param name="options"></param>
-        /// <returns></returns>
-        [MultiReturn(new[] { "members", "braces" })]
-        public static Dictionary<string, object> CSP_FromLines(List<Geo.Line> lines, string options = "null")
-        {
-            string[] option = options.ToString().Split(',');
-            double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
-            double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
-            bool generateBraces = (options == "null") ? false : bool.Parse(option[2]);
-            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[3]);
-            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[4]);
-            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
-            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
-
-            hStructure structure = CSP_StructureFromLines(lines, intersectionTolerance, planarityTolerance, generateBraces, threePieceBrace, braceLength1, braceLength2, firstConnectionIsFTF);
-
-            return new Dictionary<string, object>
-            {
-                { "members", structure._members.ToList() },
-                { "braces", structure._braceMembers.ToList() }
-            };
-        }
-
-        [IsVisibleInDynamoLibrary(false)]
-        internal static object GetDefault()
-        {
-            return null;
-        }
-
-
         /// <summary>
         /// Optional parameters, for use with hStructure.FromLines
         /// </summary>
@@ -204,9 +155,25 @@ namespace HowickMaker
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns name="options"></returns>
-        public static string StructureOptions(double intersectionTolerance = 0.001, double planarityTolerance = 0.001, bool generateBraces = false, bool threePieceBrace = false, double braceLength1 = 6, double braceLength2 = 3, bool firstConnectionIsFTF = false)
+        public static string StructureOptions(
+            double intersectionTolerance = 0.001, 
+            double planarityTolerance = 0.001, 
+            bool generateBraces = false, 
+            bool threePieceBrace = false, 
+            double braceLength1 = 6, 
+            double braceLength2 = 3, 
+            bool firstConnectionIsFTF = false
+            )
         {
-            string[] options = { intersectionTolerance.ToString(), planarityTolerance.ToString(), generateBraces.ToString(), threePieceBrace.ToString(), braceLength1.ToString(), braceLength2.ToString(), firstConnectionIsFTF.ToString() };
+            string[] options = {
+                intersectionTolerance.ToString(),
+                planarityTolerance.ToString(),
+                generateBraces.ToString(),
+                threePieceBrace.ToString(),
+                braceLength1.ToString(),
+                braceLength2.ToString(),
+                firstConnectionIsFTF.ToString()
+            };
             string concat = String.Join(",", options.ToArray());
             return concat;
         }
@@ -419,39 +386,6 @@ namespace HowickMaker
         //  ╚═════╝    ╚═╝   ╚══════╝
         //                                                 
 
-        /// <summary>
-        /// Generate an hStructure from a set of input lines and other parameters
-        /// </summary>
-        /// <param name="lines"></param>
-        /// <returns></returns>
-        internal static hStructure CSP_StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
-        {
-            hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
-
-            structure._g = graphFromLines(lines, structure._tolerance);
-
-            structure.BuildMembersAndConnectionsFromGraph();
-
-
-            /*if (generateBraces)
-            {
-                structure.GenerateBraces();
-            }
-            structure.ResolveFTFConnections();
-            structure.ResolveBRConnections();
-            structure.ResolveTConnections();
-            structure.ResolvePTConnections();*/
-
-            return structure;
-        }
-
-
-        internal int CSP_SelectUnassignedVariable()
-        {
-            int selection = -1;
-            return -1;
-        }
-
 
 
         /// <summary>
@@ -506,6 +440,11 @@ namespace HowickMaker
 
             structure._g = graphFromLines(lines, structure._tolerance);
 
+            for (int i = 0; i < lines.Count; i++)
+            {
+                structure._members[i]._label = names[i];
+            }
+
             structure.BuildMembersAndConnectionsFromGraph();
             for (int i = 0; i < lines.Count; i++)
             {
@@ -525,23 +464,6 @@ namespace HowickMaker
             {
                 structure._members[i]._label = names[i];
             }
-
-            return structure;
-        }
-
-        internal static hStructure StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF, List<int> helpers)
-        {
-            hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
-
-            structure._g = graphFromLines(lines, structure._tolerance);
-            structure._helpers = helpers;
-
-            structure.BuildMembersAndConnectionsFromGraph();
-            structure.GenerateBraces();
-            structure.ResolveFTFConnections();
-            structure.ResolveBRConnections();
-            structure.ResolveTConnections();
-            structure.ResolvePTConnections();
 
             return structure;
         }
@@ -1191,6 +1113,7 @@ namespace HowickMaker
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + 1;
+                        double mE = minExtension;
                         double extendToMaxCoverage = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
                         double noExtra = (angle % (Math.PI / 2) == 0 || Math.Abs(angle - (Math.PI / 2)) < 0.01 || angle < 0.01) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
                         int type = 0;
@@ -1204,6 +1127,10 @@ namespace HowickMaker
                         if (type == 1)
                         {
                             minExtension -= 1.5;
+                        }
+                        else
+                        {
+                            minExtension = mE - 0.25;
                         }
 
 
