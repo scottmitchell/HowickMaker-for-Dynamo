@@ -1,0 +1,11 @@
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMakerDynamo.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMakerDynamo.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMaker.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\ProtoGeometry.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMaker.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMaker.xml
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\obj\Debug\HowickMakerDynamo.csprojResolveAssemblyReference.cache
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\obj\Debug\HowickMakerDynamo.csproj.CoreCompileInputs.cache
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\obj\Debug\HowickMakerDynamo.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\obj\Debug\HowickMakerDynamo.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\DynamoServices.dll

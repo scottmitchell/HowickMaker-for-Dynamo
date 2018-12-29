@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Geo = Autodesk.DesignScript.Geometry;
-using Autodesk.DesignScript.Interfaces;
-using Autodesk.DesignScript.Runtime;
 
 
 namespace HowickMaker
@@ -14,7 +11,7 @@ namespace HowickMaker
     /// <summary>
     /// Represents a steel stud
     /// </summary>
-    public class hMember : IGraphicItem
+    public class hMember
     {
         public List<hConnection> Connections {
             get
@@ -55,6 +52,7 @@ namespace HowickMaker
         public string Name
         {
             get { return (_label == null) ? _name : _label; }
+            set { _label = value; _name = value; }
         }
         internal string _name;
 
@@ -82,17 +80,13 @@ namespace HowickMaker
         //  ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║  ██║
         //   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
         //                                                      
-
-
-        [IsVisibleInDynamoLibrary(false)]
+        
         internal hMember()
         {
 
         }
-
-
-        [IsVisibleInDynamoLibrary(false)]
-        internal hMember(hMember member)
+        
+        public hMember(hMember member)
         {
             _webAxis = member._webAxis;
             _webNormal = member._webNormal;
@@ -107,19 +101,15 @@ namespace HowickMaker
                 this.operations.Add(op);
             }
         }
-
-
-        [IsVisibleInDynamoLibrary(false)]
-        internal hMember(Line webAxis, Triple webNormal, string name = "0")
+        
+        public hMember(Line webAxis, Triple webNormal, string name = "0")
         {
             _webAxis = webAxis;
             _webNormal = webNormal;
             _name = name;
         }
         
-
-        [IsVisibleInDynamoLibrary(false)]
-        internal hMember(Line webAxis, string name = "0")
+        public hMember(Line webAxis, string name = "0")
         {
             _webAxis = webAxis;
             _webNormal = null;
@@ -130,108 +120,7 @@ namespace HowickMaker
 
 
 
-        //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
-        //  ██╔══██╗██║   ██║██╔══██╗    ██╔════╝████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
-        //  ██████╔╝██║   ██║██████╔╝    ██║     ██╔██╗ ██║███████╗   ██║   ██████╔╝
-        //  ██╔═══╝ ██║   ██║██╔══██╗    ██║     ██║╚██╗██║╚════██║   ██║   ██╔══██╗
-        //  ██║     ╚██████╔╝██████╔╝    ╚██████╗██║ ╚████║███████║   ██║   ██║  ██║
-        //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
-        //          
-
-
-        /// <summary>
-        /// Creates an hMember with its web lying along the webAxis, facing webNormal
-        /// </summary>
-        /// <param name="webAxis"></param>
-        /// <param name="webNormal"></param>
-        /// <param name="name"></param>
-        /// <returns name="hMember"></returns>
-        public static hMember ByLineVector(Line webAxis, Triple webNormal, string name = "0")
-        {
-            hMember member = new hMember(webAxis, webNormal.Normalized(), name);
-            return member;
-        }
-
-
-
-
-
-        //  ██████╗ ██╗   ██╗██████╗  
-        //  ██╔══██╗██║   ██║██╔══██╗ 
-        //  ██████╔╝██║   ██║██████╔╝  
-        //  ██╔═══╝ ██║   ██║██╔══██╗  
-        //  ██║     ╚██████╔╝██████╔╝ 
-        //  ╚═╝      ╚═════╝ ╚═════╝  
-        //          
-
-        /// <summary>
-        /// Add or change the name of an hMember. This will be used as the label on the steel stud.
-        /// </summary>
-        /// <param name="member"></param>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public hMember AddName(hMember member, string name)
-        {
-            hMember newMember = new hMember(this);
-            newMember._name = name;
-            return newMember;
-        }
-
-        /// <summary>
-        /// Adds operations to the member by specifying the locations and the types of operations
-        /// </summary>
-        /// <param name="member"></param>
-        /// <param name="locations"></param>
-        /// <param name="types"></param>
-        /// <returns name="hMember"></returns>
-        public hMember AddOperationByLocationType(List<double> locations, List<string> types)
-        {
-            hMember newMember = new hMember(this);
-            for (int i = 0; i < locations.Count; i++)
-            {
-                hOperation op = new hOperation(locations[i], (Operation)System.Enum.Parse(typeof(Operation), types[i]));
-                newMember.AddOperation(op);
-            }
-            return newMember;
-        }
-
-
-        /// <summary>
-        /// Adds operations to a member by specifiying the operation types and the points along the axis of the member at which they occur
-        /// </summary>
-        /// <param name="member"></param>
-        /// <param name="points"></param>
-        /// <param name="types"></param>
-        /// <returns name="hMember">></returns>
-        public hMember AddOperationByPointType(List<Geo.Point> points, List<string> types)
-        {
-            hMember newMember = new hMember(this);
-            for (int i = 0; i < points.Count; i++)
-            {
-                newMember.AddOperationByPointType(points[i], types[i]);
-            }
-            return newMember;
-        }
-
-
-        /// <summary>
-        /// Gets the lines that run along the center of each flange of the member, parallel to the web axis
-        /// </summary>
-        /// <param name="member"></param>
-        /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        public List<Line> GetFlangeAxes()
-        {
-            Triple OP1 = _webAxis.StartPoint;
-            Triple OP2 = _webAxis.EndPoint;
-            Triple webAxisVec = OP2 - OP1;
-            Triple normal = _webNormal.Normalized().Scale(0.75); ;
-            Triple lateral = webAxisVec.Cross(normal).Normalized().Scale(1.75);
-            Line flangeLine1 = new Line(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
-            lateral = webAxisVec.Cross(normal).Normalized().Scale(-1.75);
-            Line flangeLine2 =  new Line(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
-            return new List<Line> { flangeLine1, flangeLine2 };
-        }
+        
 
 
 
@@ -250,7 +139,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="pt"></param>
         /// <param name="type"></param>
-        public void AddOperationByPointType(Geo.Point pt, string type)
+        public void AddOperationByPointType(Triple pt, string type)
         {
             double location = _webAxis.ParameterAtPoint(pt) * _webAxis.Length;
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
@@ -302,7 +191,7 @@ namespace HowickMaker
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)
             {
-                Geo.Point opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
+                Triple opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
                 double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
                 op._loc = newLoc;
             }
@@ -324,7 +213,7 @@ namespace HowickMaker
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)
             {
-                Geo.Point opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
+                Triple opPoint = _webAxis.PointAtParameter(op._loc / _webAxis.Length);
                 double newLoc = newAxis.ParameterAtPoint(opPoint) * newAxis.Length;
                 op._loc = newLoc;
             }
@@ -486,11 +375,11 @@ namespace HowickMaker
         [MultiReturn(new[] { "member", "operations" })]
         public static Dictionary<string, object> DrawAsMesh(hMember member)
         {
-            Geo.Point OP1 = member._webAxis.StartPoint;
-            Geo.Point OP2 = member._webAxis.EndPoint;
+            Geo.Point OP1 = member._webAxis.StartPoint.ToPoint();
+            Geo.Point OP2 = member._webAxis.EndPoint.ToPoint();
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = member._webNormal;
+            Geo.Vector normal = member._webNormal.ToVector();
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);
@@ -524,7 +413,7 @@ namespace HowickMaker
 
             foreach (hOperation op in member.operations)
             {
-                points.Add(member._webAxis.PointAtParameter(op._loc / member._webAxis.Length));
+                points.Add(member._webAxis.PointAtParameter(op._loc / member._webAxis.Length).ToPoint());
             }
 
             return new Dictionary<string, object>
@@ -545,11 +434,11 @@ namespace HowickMaker
         [MultiReturn(new[] { "member", "operations" })]
         public static Dictionary<string, object> DrawAsPolysurface(hMember member)
         {
-            Geo.Point OP1 = member._webAxis.StartPoint;
-            Geo.Point OP2 = member._webAxis.EndPoint;
+            Geo.Point OP1 = member._webAxis.StartPoint.ToPoint();
+            Geo.Point OP2 = member._webAxis.EndPoint.ToPoint();
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = member._webNormal;
+            Geo.Vector normal = member._webNormal.ToVector();
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);
@@ -640,11 +529,11 @@ namespace HowickMaker
         {
             package.RequiresPerVertexColoration = true;
 
-            Geo.Point OP1 = this._webAxis.StartPoint;
-            Geo.Point OP2 = this._webAxis.EndPoint;
+            Geo.Point OP1 = this._webAxis.StartPoint.ToPoint();
+            Geo.Point OP2 = this._webAxis.EndPoint.ToPoint();
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = _webNormal;
+            Geo.Vector normal = _webNormal.ToVector();
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);
@@ -654,7 +543,7 @@ namespace HowickMaker
             Geo.Vector webAxisR = Geo.Vector.ByCoordinates(webAxis.X * -1, webAxis.Y * -1, webAxis.Z * -1);
             Geo.Vector normalR = Geo.Vector.ByCoordinates(normal.X * -1, normal.Y * -1, normal.Z * -1);
 
-            Geo.Point opPoint = this._webAxis.PointAtParameter(op._loc / this._webAxis.Length);
+            Geo.Point opPoint = this._webAxis.PointAtParameter(op._loc / this._webAxis.Length).ToPoint();
             byte r = 255;
             byte g = 66;
             byte b = 57;
@@ -982,7 +871,7 @@ namespace HowickMaker
                 case Operation.END_TRUSS:
                     lateral = lateral.Normalized().Scale(1.76);
                     lateralR = lateralR.Normalized().Scale(1.76);
-                    if (opPoint.DistanceTo(this._webAxis.StartPoint) < opPoint.DistanceTo(this._webAxis.EndPoint))
+                    if (opPoint.DistanceTo(this._webAxis.StartPoint.ToPoint()) < opPoint.DistanceTo(this._webAxis.EndPoint.ToPoint()))
                     {
                         webAxis = webAxis.Normalized().Scale(0.5);
                     }
@@ -1070,15 +959,15 @@ namespace HowickMaker
 
             package.RequiresPerVertexColoration = true;
 
-            Geo.Point OP1 = this._webAxis.StartPoint;
-            Geo.Point OP2 = this._webAxis.EndPoint;
+            Geo.Point OP1 = this._webAxis.StartPoint.ToPoint();
+            Geo.Point OP2 = this._webAxis.EndPoint.ToPoint();
 
             /*var midPoint = this._webAxis.PointAtParameter(0.5);
             package.AddPointVertex(midPoint.X, midPoint.Y, midPoint.Z);
             package.Description = _label;*/
 
             Geo.Vector webAxis = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = _webNormal;
+            Geo.Vector normal = _webNormal.ToVector();
             Geo.Vector lateral = webAxis.Cross(normal);
             lateral = lateral.Normalized();
             lateral = lateral.Scale(1.75);

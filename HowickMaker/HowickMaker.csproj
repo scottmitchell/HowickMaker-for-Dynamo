@@ -118,13 +118,10 @@
     <Compile Include="hMember.cs" />
     <Compile Include="hMesh.cs" />
     <Compile Include="hOperation.cs" />
-    <Compile Include="hQuadFace.cs" />
     <Compile Include="hStructure.cs" />
-    <Compile Include="hTriangleStrategy.cs" />
     <Compile Include="hVertex.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="tAgent.cs" />
     <Compile Include="Triple.cs" />
     <Compile Include="Vertex.cs" />
   </ItemGroup>
