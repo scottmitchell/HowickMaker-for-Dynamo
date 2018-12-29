@@ -212,33 +212,7 @@ namespace HowickMaker
         //  ██████╔╝   ██║   ███████║
         //  ╚═════╝    ╚═╝   ╚══════╝
         //                                                 
-
-
-
-        /// <summary>
-        /// Generate an hStructure from a set of input lines and other parameters
-        /// </summary>
-        /// <param name="lines"></param>
-        /// <returns></returns>
-        internal static hStructure StructureFromLines(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool generateBraces,  bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
-        {
-            hStructure structure = new hStructure(lines, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
-
-            structure._g = graphFromLines(lines, structure._tolerance);
-
-            structure.BuildMembersAndConnectionsFromGraph();
-            if (generateBraces)
-            {
-                structure.GenerateBraces();
-            }
-            structure.ResolveFTFConnections();
-            structure.ResolveBRConnections();
-            structure.ResolveTConnections();
-            structure.ResolvePTConnections();
-
-            return structure;
-        }
-
+        
         /// <summary>
         /// Generate an hStructure from a set of input lines and other parameters
         /// </summary>
@@ -262,17 +236,20 @@ namespace HowickMaker
             structure._webNormalsDict = webNormalsDict;
             structure._priorityDict = priorityDict;
             structure._extensionDict = extensionDict;
-
             
 
             structure._g = graphFromLines(lines, structure._tolerance);
 
+            var startingNodes = structure._g.GetStartingNodes();
             for (int i = 0; i < lines.Count; i++)
             {
                 structure._members[i]._label = names[i];
             }
-
-            structure.BuildMembersAndConnectionsFromGraph();
+            foreach (int start in startingNodes)
+            {
+                structure.BuildMembersAndConnectionsFromGraph(start);
+            }
+            
             for (int i = 0; i < lines.Count; i++)
             {
                 structure._members[i]._label = names[i];
@@ -282,6 +259,7 @@ namespace HowickMaker
             {
                 structure.GenerateBraces();
             }
+
             structure.ResolveFTFConnections();
             structure.ResolveBRConnections();
             structure.ResolveTConnections();
@@ -336,15 +314,15 @@ namespace HowickMaker
             
             hMember currentMember = new hMember(_lines[current.name], current.name.ToString());
             Geo.Line currentLine = _lines[start];
-            Geo.Line nextLine = _lines[current.neighbors[start]];
+            Geo.Line nextLine = _lines[current.neighbors[0]];
             Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
             Geo.Vector normal = currentPlane.Normal;
 
             List<Geo.Vector> vectors = new List<Geo.Vector> { Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal), Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse() };
             Geo.Vector choice = vectors[0];
-            if (_webNormalsDict.ContainsKey(_members[0]._label))
+            if (_webNormalsDict.ContainsKey(_members[start]._label))
             {
-                var target = _webNormalsDict[_members[0]._label].Normalized();
+                var target = _webNormalsDict[_members[start]._label].Normalized();
                 var vects = vectors.OrderBy(x => -1 * x.Normalized().Dot(target)).ToList();
 
                 choice = vects[0];
@@ -362,7 +340,7 @@ namespace HowickMaker
                 normal.Dispose();
             }*/
 
-            Propogate(0);
+            Propogate(start);
         }
 
         
@@ -527,9 +505,9 @@ namespace HowickMaker
                 Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
 
                 Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
-                return new List<Geo.Vector> { webNormal1, webNormal1.Reverse() };
+                //return new List<Geo.Vector> { webNormal1, webNormal1.Reverse() };
 
-                //return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
+                return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
             }
 
             else if (connection.type == Connection.Invalid)
