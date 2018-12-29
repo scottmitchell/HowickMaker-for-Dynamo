@@ -82,3 +82,4 @@ C:\Users\t_mitcs\Repos\HowickMaker\HowickMaker\obj\Debug\HowickMaker.pdb
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMaker\bin\Debug\MeshToolkit.dll
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMaker\bin\Debug\DynAMT.Managed.dll
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMaker\bin\Debug\MeshToolkit.xml
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMaker\obj\Debug\HowickMaker.csprojResolveAssemblyReference.cache
