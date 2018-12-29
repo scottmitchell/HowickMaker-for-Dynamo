@@ -26,25 +26,25 @@ namespace HowickMaker
         /// The web axis of a member
         /// </summary>
         /// <returns name="webAxis">The web axis of the member</returns>
-        public Geo.Line WebAxis
+        public Line WebAxis
         {
             get { return _webAxis; }
         }
-        internal Geo.Line _webAxis;
+        internal Line _webAxis;
 
         /// <summary>
         /// The web normal of a member
         /// </summary>
-        public Geo.Vector WebNormal
+        public Triple WebNormal
         {
             get { return _webNormal; }
         }
-        internal Geo.Vector _webNormal;
+        internal Triple _webNormal;
 
         /// <summary>
         /// The flange axes of a member
         /// </summary>
-        public List<Geo.Line> FlangeAxes
+        public List<Line> FlangeAxes
         {
             get { return GetFlangeAxes(); }
         }
@@ -110,7 +110,7 @@ namespace HowickMaker
 
 
         [IsVisibleInDynamoLibrary(false)]
-        internal hMember(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
+        internal hMember(Line webAxis, Triple webNormal, string name = "0")
         {
             _webAxis = webAxis;
             _webNormal = webNormal;
@@ -119,7 +119,7 @@ namespace HowickMaker
         
 
         [IsVisibleInDynamoLibrary(false)]
-        internal hMember(Geo.Line webAxis, string name = "0")
+        internal hMember(Line webAxis, string name = "0")
         {
             _webAxis = webAxis;
             _webNormal = null;
@@ -146,7 +146,7 @@ namespace HowickMaker
         /// <param name="webNormal"></param>
         /// <param name="name"></param>
         /// <returns name="hMember"></returns>
-        public static hMember ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
+        public static hMember ByLineVector(Line webAxis, Triple webNormal, string name = "0")
         {
             hMember member = new hMember(webAxis, webNormal.Normalized(), name);
             return member;
@@ -213,16 +213,6 @@ namespace HowickMaker
             return newMember;
         }
 
-        /*
-        /// <summary>
-        /// Gets the web axis of the member
-        /// </summary>
-        /// <returns></returns>
-        public Geo.Line WebAxis()
-        {
-            return _webAxis;
-        }*/
-
 
         /// <summary>
         /// Gets the lines that run along the center of each flange of the member, parallel to the web axis
@@ -230,41 +220,17 @@ namespace HowickMaker
         /// <param name="member"></param>
         /// <returns></returns>
         [IsVisibleInDynamoLibrary(false)]
-        public List<Geo.Line> GetFlangeAxes()
+        public List<Line> GetFlangeAxes()
         {
-            Geo.Point OP1 = _webAxis.StartPoint;
-            Geo.Point OP2 = _webAxis.EndPoint;
-            Geo.Vector webAxisVec = Geo.Vector.ByTwoPoints(OP1, OP2);
-            Geo.Vector normal = _webNormal.Normalized().Scale(0.75); ;
-            Geo.Vector lateral = webAxisVec.Cross(normal).Normalized().Scale(1.75);
-            Geo.Line flangeLine1 = Geo.Line.ByStartPointEndPoint(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
+            Triple OP1 = _webAxis.StartPoint;
+            Triple OP2 = _webAxis.EndPoint;
+            Triple webAxisVec = OP2 - OP1;
+            Triple normal = _webNormal.Normalized().Scale(0.75); ;
+            Triple lateral = webAxisVec.Cross(normal).Normalized().Scale(1.75);
+            Line flangeLine1 = new Line(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
             lateral = webAxisVec.Cross(normal).Normalized().Scale(-1.75);
-            Geo.Line flangeLine2 = Geo.Line.ByStartPointEndPoint(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
-            return new List<Geo.Line> { flangeLine1, flangeLine2 };
-        }
-
-        public List<hMember> SplitAtLocation(hMember member, double loc)
-        {
-            var webAxes = member.WebAxis.SplitByParameter(loc / member.WebAxis.Length);
-            var mem1 = new hMember(Geo.Line.ByStartPointEndPoint(webAxes[0].StartPoint, webAxes[0].EndPoint), member.WebNormal, member.Name + "-1");
-            var mem2 = new hMember(Geo.Line.ByStartPointEndPoint(webAxes[1].StartPoint, webAxes[1].EndPoint), member.WebNormal, member.Name + "-2");
-            mem1._label = member.Name + "-1";
-            mem2._label = member.Name + "-2";
-
-            foreach (hOperation op in member.operations)
-            {
-                if (op._loc < loc)
-                {
-                    mem1.AddOperationByLocationType(op._loc, op._type.ToString());
-                }
-                else
-                {
-                    var newLoc = op._loc - loc;
-                    mem2.AddOperationByLocationType(newLoc, op._type.ToString());
-                }
-            }
-
-            return (new List<hMember> { mem1, mem2 });
+            Line flangeLine2 =  new Line(OP1.Add(normal.Add(lateral)), OP2.Add(normal.Add(lateral)));
+            return new List<Line> { flangeLine1, flangeLine2 };
         }
 
 
@@ -284,7 +250,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="pt"></param>
         /// <param name="type"></param>
-        internal void AddOperationByPointType(Geo.Point pt, string type)
+        public void AddOperationByPointType(Geo.Point pt, string type)
         {
             double location = _webAxis.ParameterAtPoint(pt) * _webAxis.Length;
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
@@ -297,7 +263,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="location"></param>
         /// <param name="type"></param>
-        internal void AddOperationByLocationType(double location, string type)
+        public void AddOperationByLocationType(double location, string type)
         {
             hOperation op = new hOperation(location, (Operation)System.Enum.Parse(typeof(Operation), type));
             AddOperation(op);
@@ -308,7 +274,7 @@ namespace HowickMaker
         /// Add an hOperation to the member's list of operations
         /// </summary>
         /// <param name="operation"></param>
-        internal void AddOperation(hOperation operation)
+        public void AddOperation(hOperation operation)
         {
             this.operations.Add(operation);
         }
@@ -318,7 +284,7 @@ namespace HowickMaker
         /// Add an hConnection to the member's list of connections
         /// </summary>
         /// <param name="connection"></param>
-        internal void AddConnection(hConnection connection)
+        public void AddConnection(hConnection connection)
         {
             this.connections.Add(connection);
         }
@@ -328,10 +294,10 @@ namespace HowickMaker
         /// Extend member by changing web axis start point. Adjust operations accordingly.
         /// </summary>
         /// <param name="newStartPoint"></param>
-        internal void SetWebAxisStartPoint(Geo.Point newStartPoint)
+        internal void SetWebAxisStartPoint(Triple newStartPoint)
         {
             // Create new axis
-            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(newStartPoint, _webAxis.EndPoint);
+            Line newAxis = new Line(newStartPoint, _webAxis.EndPoint);
 
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)
@@ -350,10 +316,10 @@ namespace HowickMaker
         /// Extend member by changing web axis end point. Adjust operations accordingly.
         /// </summary>
         /// <param name="newEndPoint"></param>
-        internal void SetWebAxisEndPoint(Geo.Point newEndPoint)
+        internal void SetWebAxisEndPoint(Triple newEndPoint)
         {
             // Create new axis
-            Geo.Line newAxis = Geo.Line.ByStartPointEndPoint(_webAxis.StartPoint, newEndPoint);
+            Line newAxis = new Line(_webAxis.StartPoint, newEndPoint);
 
             // Compute new locations for operations relative to new axis
             foreach (hOperation op in operations)

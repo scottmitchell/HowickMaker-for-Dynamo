@@ -29,7 +29,7 @@ namespace HowickMaker
     /// Represents a Howick operation, 
     /// including the type of operation and the location along a member where it occurs
     /// </summary>
-    internal class hOperation
+    public class hOperation
     {
         internal double _loc;
         internal Operation _type;

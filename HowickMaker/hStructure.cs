@@ -32,10 +32,10 @@ namespace HowickMaker
 
         List<string> _labels;
         
-        List<Geo.Line> _lines = new List<Geo.Line>();
+        List<Line> _lines = new List<Line>();
         List<hMember> _braceMembers = new List<hMember>();
 
-        Dictionary<string, Geo.Vector> _webNormalsDict;
+        Dictionary<string, Triple> _webNormalsDict;
         Dictionary<string, int> _priorityDict;
         Dictionary<string, int> _extensionDict;
 
@@ -43,7 +43,7 @@ namespace HowickMaker
 
 
         [IsVisibleInDynamoLibrary(false)]
-        internal hStructure(List<Geo.Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        internal hStructure(List<Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             _lines = lines;
             _tolerance = intersectionTolerance;
@@ -62,7 +62,7 @@ namespace HowickMaker
         }
 
         [IsVisibleInDynamoLibrary(false)]
-        internal hStructure(List<Geo.Line> lines, List<string> labels, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        internal hStructure(List<Line> lines, List<string> labels, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             _lines = lines;
             _tolerance = intersectionTolerance;
@@ -117,10 +117,25 @@ namespace HowickMaker
             if (extensionDict == null) { extensionDict = new Dictionary<string, int>(); }
             names = CompleteListOfNames(names, lines.Count);
 
+            // Convert Lines
+            var hLines = new List<Line>();
+            foreach (Geo.Line l in lines)
+            {
+                hLines.Add(new Line( new Triple(l.StartPoint.X, l.StartPoint.Y, l.StartPoint.Z), new Triple(l.EndPoint.X, l.EndPoint.Y, l.EndPoint.Z)));
+            }
+
+            // Convert webNormals
+            var hWebNormalsDict = new Dictionary<string, Triple>();
+            foreach (string vectorName in webNormalsDict.Keys)
+            {
+                var vector = webNormalsDict[vectorName];
+                hWebNormalsDict[vectorName] = new Triple(vector.X, vector.Y, vector.Z);
+            }
+
             hStructure structure = StructureFromLines_Advanced(
-                lines,
+                hLines,
                 names, 
-                webNormalsDict, 
+                hWebNormalsDict, 
                 priorityDict, 
                 extensionDict, 
                 intersectionTolerance, 
@@ -228,7 +243,20 @@ namespace HowickMaker
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines_Advanced(List<Geo.Line> lines, List<string> names, Dictionary<string, Geo.Vector> webNormalsDict, Dictionary<string, int> priorityDict, Dictionary<string, int> extensionDict, double intersectionTolerance, double planarityTolerance, bool generateBraces, bool threePieceBraces, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        internal static hStructure StructureFromLines_Advanced(
+            List<Line> lines, 
+            List<string> names, 
+            Dictionary<string, Triple> webNormalsDict, 
+            Dictionary<string, int> priorityDict, 
+            Dictionary<string, int> extensionDict, 
+            double intersectionTolerance, 
+            double planarityTolerance, 
+            bool generateBraces, 
+            bool threePieceBraces, 
+            double braceLength1, 
+            double braceLength2, 
+            bool firstConnectionIsFTF
+            )
         {
             hStructure structure = new hStructure(lines, names, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
             structure._advanced = true;
@@ -279,7 +307,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="lines"> The list of lines we want to create a graph from </param>
         /// <returns> A connectivity graph </returns>
-        internal static Graph graphFromLines(List<Geo.Line> lines, double tolerance)
+        internal static Graph graphFromLines(List<Line> lines, double tolerance)
         {
             // Create the connectivity graph
             Graph g = new Graph(lines.Count);
@@ -313,13 +341,13 @@ namespace HowickMaker
             Vertex current = _g.vertices[start];
             
             hMember currentMember = new hMember(_lines[current.name], current.name.ToString());
-            Geo.Line currentLine = _lines[start];
-            Geo.Line nextLine = _lines[current.neighbors[0]];
+            Line currentLine = _lines[start];
+            Line nextLine = _lines[current.neighbors[0]];
             Geo.Plane currentPlane = ByTwoLines(currentLine, nextLine);
-            Geo.Vector normal = currentPlane.Normal;
+            Triple normal = currentPlane.Normal;
 
-            List<Geo.Vector> vectors = new List<Geo.Vector> { Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal), Geo.Vector.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse() };
-            Geo.Vector choice = vectors[0];
+            var vectors = new List<Triple> { Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal), Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse() };
+            Triple choice = vectors[0];
             if (_webNormalsDict.ContainsKey(_members[start]._label))
             {
                 var target = _webNormalsDict[_members[start]._label].Normalized();
@@ -383,13 +411,13 @@ namespace HowickMaker
                     // If we have not been to this vertex yet
                     if (!_g.vertices[i].visited)
                     {
-                        List<Geo.Vector> vectors = GetValidNormalsForMember(i);
-                        Geo.Vector choice = vectors[0];
+                        List<Triple> vectors = GetValidNormalsForMember(i);
+                        Triple choice = vectors[0];
                         if (_webNormalsDict.ContainsKey(_members[i]._label))
                         {
                             var target = _webNormalsDict[_members[i]._label];
                             var dots = new List<double>();
-                            foreach (Geo.Vector v in vectors)
+                            foreach (Triple v in vectors)
                             {
                                 dots.Add(v.Normalized().Dot(target));
                             }
@@ -430,13 +458,13 @@ namespace HowickMaker
         /// <returns></returns>
         internal Connection GetConnectionType(int i, int j)
         {
-            Geo.Plane jointPlane = ByTwoLines(_lines[i], _lines[j]);
+            Triple jointPlaneNormal = _lines[i].ToTriple().Cross(_lines[j].ToTriple());
 
-            if (ParallelPlaneNormals(_members[i]._webNormal, jointPlane.Normal))
+            if (ParallelPlaneNormals(_members[i]._webNormal, jointPlaneNormal))
             {
                 return Connection.FTF;
             }
-            else if (PerpendicularPlaneNormals(_members[i]._webNormal, jointPlane.Normal))
+            else if (PerpendicularPlaneNormals(_members[i]._webNormal, jointPlaneNormal))
             {
                 if (_lines[i].StartPoint.DistanceTo(_lines[j]) < _tolerance || _lines[i].EndPoint.DistanceTo(_lines[j]) < _tolerance)
                 {
@@ -482,50 +510,45 @@ namespace HowickMaker
         /// <param name="connection"></param>
         /// <param name="memberIndex"></param>
         /// <returns></returns>
-        internal List<Geo.Vector> GetValidNormalsForMemberForConnection(hConnection connection, int memberIndex)
+        internal List<Triple> GetValidNormalsForMemberForConnection(hConnection connection, int memberIndex)
         {
             int otherMemberIndex = connection.GetOtherIndex(memberIndex);
             
             if (connection.type == Connection.FTF)
             {
-                Geo.Vector otherNormal = _members[otherMemberIndex]._webNormal;
-                Geo.Vector reverseOtherNormal = FlipVector(otherNormal);
+                Triple otherNormal = _members[otherMemberIndex]._webNormal;
+                Triple reverseOtherNormal = otherNormal.Reverse();
 
                 //Dispose
                 /*{
                     otherNormal.Dispose();
                 }*/
 
-                return new List<Geo.Vector> { reverseOtherNormal };
+                return new List<Triple> { reverseOtherNormal };
             }
 
             else if (connection.type == Connection.BR)
             {
-                Geo.Plane jointPlane = ByTwoLines(_members[memberIndex]._webAxis, _members[otherMemberIndex]._webAxis);
-                Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
+                Triple jointPlaneNormal = _members[memberIndex]._webAxis.ToTriple().Cross(_members[otherMemberIndex]._webAxis.ToTriple());
+                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
 
-                Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
-                //return new List<Geo.Vector> { webNormal1, webNormal1.Reverse() };
+                Triple webNormal1 = jointPlaneNormal.Cross(memberVector);
+                return new List<Triple> { webNormal1, webNormal1.Reverse() };
 
-                return new List<Geo.Vector> { GetBRNormal(connection, memberIndex) };
+                //return new List<Triple> { GetBRNormal(connection, memberIndex) };
             }
 
             else if (connection.type == Connection.Invalid)
             {
-                //Geo.Plane jointPlane = ByTwoLines(_members[memberIndex].webAxis, _members[otherMemberIndex].webAxis);
-                //Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex].webAxis.StartPoint, _members[memberIndex].webAxis.EndPoint);
-
-                //Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
-
-                return new List<Geo.Vector> { };
+                return new List<Triple> { };
             }
 
             else
             {
-                Geo.Plane jointPlane = ByTwoLines(_members[memberIndex]._webAxis, _members[otherMemberIndex]._webAxis);
-                Geo.Vector memberVector = Geo.Vector.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
+                Triple jointNormal = _members[memberIndex]._webAxis.ToTriple().Cross(_members[otherMemberIndex]._webAxis.ToTriple());
+                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
 
-                Geo.Vector webNormal1 = jointPlane.Normal.Cross(memberVector);
+                Triple webNormal1 = jointNormal.Cross(memberVector);
 
                 // Dispose
                 /*{
@@ -533,7 +556,7 @@ namespace HowickMaker
                     memberVector.Dispose();
                 }*/
 
-                return new List<Geo.Vector> { webNormal1, FlipVector(webNormal1) };
+                return new List<Triple> { webNormal1, webNormal1.Reverse() };
             }
 
         }
@@ -544,17 +567,17 @@ namespace HowickMaker
         /// </summary>
         /// <param name="memberIndex"></param>
         /// <returns></returns>
-        internal List<Geo.Vector> GetValidNormalsForMember(int memberIndex)
+        internal List<Triple> GetValidNormalsForMember(int memberIndex)
         {
-            List<Geo.Vector> potentialVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
+            List<Triple> potentialVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
             //List < Geo.Vector > allVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
             foreach (hConnection connection in _members[memberIndex].connections)
             {
-                List<Geo.Vector> checkVectors = GetValidNormalsForMemberForConnection(connection, memberIndex);
-                List<Geo.Vector> newVectors = new List<Geo.Vector>();
-                foreach (Geo.Vector pV in potentialVectors)
+                List<Triple> checkVectors = GetValidNormalsForMemberForConnection(connection, memberIndex);
+                List<Triple> newVectors = new List<Triple>();
+                foreach (Triple pV in potentialVectors)
                 {
-                    foreach (Geo.Vector cV in checkVectors)
+                    foreach (Triple cV in checkVectors)
                     {
                         //allVectors.Add(cV);
                         if (pV.Dot(cV) > 1 - _tolerance)
@@ -582,19 +605,19 @@ namespace HowickMaker
                 if (connection.type == Connection.BR)
                 {
                     // Get common and end points of lines
-                    Geo.Point common0;
-                    Geo.Point mem1End0;
-                    Geo.Point mem2End0;
-                    Geo.Point common1;
-                    Geo.Point mem1End1;
-                    Geo.Point mem2End1;
+                    Triple common0;
+                    Triple mem1End0;
+                    Triple mem2End0;
+                    Triple common1;
+                    Triple mem1End1;
+                    Triple mem2End1;
 
                     GetCommonAndEndPointsOfTwoLines(_members[connection.members[0]]._webAxis, _members[connection.members[1]]._webAxis, out common0, out mem1End0, out mem2End0);
                     GetCommonAndEndPointsOfTwoLines(_members[connection.members[1]]._webAxis, _members[connection.members[0]]._webAxis, out common1, out mem1End1, out mem2End1);
 
-                    List<Geo.Point> common = new List<Geo.Point> { common0, common1 };
-                    List<Geo.Point> mem1End = new List<Geo.Point> { mem1End0, mem1End1 };
-                    List<Geo.Point> mem2End = new List<Geo.Point> { mem2End0, mem2End1 };
+                    var common = new List<Triple> { common0, common1 };
+                    var mem1End = new List<Triple> { mem1End0, mem1End1 };
+                    var mem2End = new List<Triple> { mem2End0, mem2End1 };
 
                     for (int i = 0; i < 2; i++)
                     {
@@ -603,8 +626,8 @@ namespace HowickMaker
                         int index2 = connection.members[(i + 1) % 2];
 
                         // Web axes as vectors
-                        Geo.Vector vec1 = Geo.Vector.ByTwoPoints(common[i], mem1End[i]);
-                        Geo.Vector vec2 = Geo.Vector.ByTwoPoints(common[i], mem2End[i]);
+                        Triple vec1 = Triple.ByTwoPoints(common[i], mem1End[i]);
+                        Triple vec2 = Triple.ByTwoPoints(common[i], mem2End[i]);
 
                         // Get angle between members
                         double angle = vec1.AngleWithVector(vec2) * (Math.PI / 180);
@@ -614,7 +637,7 @@ namespace HowickMaker
 
                         // Compute extension to DIMPLE
                         double d = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
-                        Geo.Vector connectionPlaneNormal = vec1.Cross(vec2);
+                        Triple connectionPlaneNormal = vec1.Cross(vec2);
 
                         // Determine orientation of members to each other and adjust d accordingly
                         bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1]._webNormal)) > 0;
@@ -624,12 +647,12 @@ namespace HowickMaker
                         }
                         
                         // Compute translation vector for end point in question
-                        Geo.Vector moveVector = FlipVector(vec1);
+                        Triple moveVector = vec1.Reverse();
 
                         // Get new end point
                         moveVector = moveVector.Normalized();
                         moveVector = moveVector.Scale(d + 0.75);
-                        Geo.Point newEndPoint = common[i].Add(moveVector);
+                        Triple newEndPoint = common[i].Add(moveVector);
 
                         d = Math.Abs(d);
 
@@ -677,7 +700,7 @@ namespace HowickMaker
         /// <param name="common"></param>
         /// <param name="line1End"></param>
         /// <param name="line2End"></param>
-        internal void GetCommonAndEndPointsOfTwoLines(Geo.Line line1, Geo.Line line2, out Geo.Point common, out Geo.Point line1End, out Geo.Point line2End)
+        internal void GetCommonAndEndPointsOfTwoLines(Line line1, Line line2, out Triple common, out Triple line1End, out Triple line2End)
         {
             if (SamePoints(line1.StartPoint, line2.StartPoint))
             {
@@ -726,20 +749,20 @@ namespace HowickMaker
                     int mem2 = connection.members[1];
 
                     // Get common point and opposite end points
-                    Geo.Point common;
-                    Geo.Point mem1End;
-                    Geo.Point mem2End;
+                    Triple common;
+                    Triple mem1End;
+                    Triple mem2End;
                     GetCommonAndEndPointsOfTwoLines(_members[mem1]._webAxis, _members[mem2]._webAxis, out common, out mem1End, out mem2End);
 
 
-                    Geo.Vector v1 = Geo.Vector.ByTwoPoints(common, mem1End).Normalized();
-                    Geo.Vector v2 = Geo.Vector.ByTwoPoints(common, mem2End).Normalized();
-                    Geo.Vector bisector = v1.Add(v2);
+                    Triple v1 = Triple.ByTwoPoints(common, mem1End).Normalized();
+                    Triple v2 = Triple.ByTwoPoints(common, mem2End).Normalized();
+                    Triple bisector = v1.Add(v2);
                     bisector = bisector.Normalized();
 
 
                     // Determine orientation of members to each other
-                    Geo.Vector connectionPlaneNormal = v1.Cross(v2);
+                    Triple connectionPlaneNormal = v1.Cross(v2);
                     bool webOut = connectionPlaneNormal.Dot(v1.Cross(_members[mem1]._webNormal)) > 0;
 
                     double a = v1.AngleWithVector(v2) / 2.0 * (Math.PI / 180);
@@ -753,22 +776,22 @@ namespace HowickMaker
                     if (!_threePieceBrace)
                     {
                         double commonOffset = (webOut) ? 0 - d : 0 + d;
-                        Geo.Point elbowDimplePoint = common.Add(FlipVector(bisector.Normalized().Scale(commonOffset)));
+                        Triple elbowDimplePoint = common.Add( (bisector.Normalized().Scale(commonOffset)).Reverse() );
 
                         double armsOffset = (b2 / 2) / Math.Sin(a);
 
-                        Geo.Point dimplePoint1 = elbowDimplePoint.Add(v1.Normalized().Scale(armsOffset));
+                        Triple dimplePoint1 = elbowDimplePoint.Add(v1.Normalized().Scale(armsOffset));
                         _members[mem1].AddOperationByPointType(dimplePoint1, "DIMPLE");
                         _members[mem1].AddOperationByPointType(dimplePoint1, "SWAGE");
 
-                        Geo.Point dimplePoint2 = elbowDimplePoint.Add(v2.Normalized().Scale(armsOffset));
+                        Triple dimplePoint2 = elbowDimplePoint.Add(v2.Normalized().Scale(armsOffset));
                         _members[mem2].AddOperationByPointType(dimplePoint2, "DIMPLE");
                         _members[mem2].AddOperationByPointType(dimplePoint2, "SWAGE");
 
-                        Geo.Vector braceVector = Geo.Vector.ByTwoPoints(dimplePoint1, dimplePoint2);
-                        Geo.Point braceStart = dimplePoint1.Add(FlipVector(braceVector).Normalized().Scale(dOffset)).Add(bisector.Normalized().Scale(_StudHeight/2.0));
-                        Geo.Point braceEnd = dimplePoint2.Add(braceVector.Normalized().Scale(dOffset)).Add(bisector.Normalized().Scale(_StudHeight / 2.0));
-                        Geo.Line braceAxis = Geo.Line.ByStartPointEndPoint(braceStart, braceEnd);
+                        Triple braceVector = Triple.ByTwoPoints(dimplePoint1, dimplePoint2);
+                        Triple braceStart = dimplePoint1.Add(FlipVector(braceVector).Normalized().Scale(dOffset)).Add(bisector.Normalized().Scale(_StudHeight/2.0));
+                        Triple braceEnd = dimplePoint2.Add(braceVector.Normalized().Scale(dOffset)).Add(bisector.Normalized().Scale(_StudHeight / 2.0));
+                        Line braceAxis = new Line(braceStart, braceEnd);
                         hMember brace = new hMember(braceAxis, FlipVector(bisector), "BR");
                         brace.AddOperationByLocationType(0, "END_TRUSS");
                         brace.AddOperationByLocationType(dOffset, "DIMPLE");
@@ -1337,17 +1360,17 @@ namespace HowickMaker
         /// <param name="connection"></param>
         /// <param name="memberIndex"></param>
         /// <returns></returns>
-        internal Geo.Vector GetBRNormal(hConnection connection, int memberIndex)
+        /*internal Triple GetBRNormal(hConnection connection, int memberIndex)
         {
-            Geo.Line memberAxis = _members[memberIndex]._webAxis;
-            Geo.Line otherMemberAxis = _members[connection.GetOtherIndex(memberIndex)]._webAxis;
+            Line memberAxis = _members[memberIndex]._webAxis;
+            Line otherMemberAxis = _members[connection.GetOtherIndex(memberIndex)]._webAxis;
 
-            Geo.Vector memberVector = Geo.Vector.ByTwoPoints(memberAxis.StartPoint, memberAxis.EndPoint);
-            Geo.Vector otherMemberVector = null;
+            Triple memberVector = Triple.ByTwoPoints(memberAxis.StartPoint, memberAxis.EndPoint);
+            Triple otherMemberVector = null;
 
-            Geo.Vector otherMemberNormal = _members[connection.GetOtherIndex(memberIndex)]._webNormal;
+            Triple otherMemberNormal = _members[connection.GetOtherIndex(memberIndex)]._webNormal;
 
-            Geo.Point center = (Geo.Point)memberAxis.Intersect(otherMemberAxis)[0];
+            Triple center = (Geo.Point)memberAxis.Intersect(otherMemberAxis)[0];
             
             // Flip other member vector if needed
             if ( SamePoints(memberAxis.StartPoint, otherMemberAxis.StartPoint) || SamePoints(memberAxis.EndPoint, otherMemberAxis.EndPoint) )
@@ -1369,7 +1392,7 @@ namespace HowickMaker
             Geo.Vector normal = Geo.Vector.ByCoordinates(normalP.X, normalP.Y, normalP.Z);
 
             return normal;
-        }
+        }*/
 
 
         /// <summary>
@@ -1395,9 +1418,9 @@ namespace HowickMaker
         /// </summary>
         /// <param name="vec"></param>
         /// <returns>reversed vector</returns>
-        internal Geo.Vector FlipVector(Geo.Vector vec)
+        internal Triple FlipVector(Triple vec)
         {
-            return Geo.Vector.ByCoordinates(vec.X * -1, vec.Y * -1, vec.Z * -1);
+            return new Triple(vec.X * -1, vec.Y * -1, vec.Z * -1);
         }
 
 
@@ -1424,7 +1447,7 @@ namespace HowickMaker
         /// <param name="vec1"></param>
         /// <param name="vec2"></param>
         /// <returns></returns>
-        internal bool ParallelPlaneNormals(Geo.Vector vec1, Geo.Vector vec2)
+        internal bool ParallelPlaneNormals(Triple vec1, Triple vec2)
         {
             double similarity = vec1.Dot(vec2);
 
@@ -1438,7 +1461,7 @@ namespace HowickMaker
         /// <param name="vec1"></param>
         /// <param name="vec2"></param>
         /// <returns></returns>
-        internal bool PerpendicularPlaneNormals(Geo.Vector vec1, Geo.Vector vec2)
+        internal bool PerpendicularPlaneNormals(Triple vec1, Triple vec2)
         {
             double similarity = vec1.Dot(vec2);
 
@@ -1452,7 +1475,7 @@ namespace HowickMaker
         /// <param name="p1"></param>
         /// <param name="p2"></param>
         /// <returns></returns>
-        internal bool SamePoints(Geo.Point p1, Geo.Point p2)
+        internal bool SamePoints(Triple p1, Triple p2)
         {
             bool x = Math.Abs(p1.X - p2.X) < _tolerance;
             bool y = Math.Abs(p1.Y - p2.Y) < _tolerance;
