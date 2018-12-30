@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Geo = Autodesk.DesignScript.Geometry;
 
 namespace HowickMaker
 {
     public class Triple
     {
-        internal double X;
-        internal double Y;
-        internal double Z;
+        public double X;
+        public double Y;
+        public double Z;
 
         public Triple(double X, double Y, double Z)
         {
@@ -91,26 +90,6 @@ namespace HowickMaker
         public double DistanceTo(Line l)
         {
             return l.DistanceTo(this);
-        }
-
-        public Geo.Point ToPoint()
-        {
-            return Geo.Point.ByCoordinates(X, Y, Z);
-        }
-
-        public Geo.Vector ToVector()
-        {
-            return Geo.Vector.ByCoordinates(X, Y, Z);
-        }
-
-        public static Triple FromPoint(Geo.Point pt)
-        {
-            return new Triple(pt.X, pt.Y, pt.Z);
-        }
-
-        public static Triple FromVector(Geo.Vector v)
-        {
-            return new Triple(v.X, v.Y, v.Z);
         }
 
         public Triple Rotate(Triple axis, float angle, Triple origin = null)

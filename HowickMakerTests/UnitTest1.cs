@@ -51,43 +51,7 @@ namespace HowickMakerTests
         {
             Assert.AreEqual(0, 1);
         }
-
-
-        [TestMethod]
-        public void MinDistanceTest1()
-        {
-            Geo.Point p1 = Geo.Point.ByCoordinates(0, 0, 0);
-            Geo.Point p2 = Geo.Point.ByCoordinates(0, 1, 1);
-            Geo.Point p3 = Geo.Point.ByCoordinates(1, 0, -9);
-            Geo.Point p4 = Geo.Point.ByCoordinates(1, 1, 2);
-
-            Geo.Line l1 = Geo.Line.ByStartPointEndPoint(p1, p2);
-            Geo.Line l2 = Geo.Line.ByStartPointEndPoint(p3, p4);
-
-            double d = hStructure.MinDistanceBetweenLines(l1, l2);
-
-
-            Assert.AreEqual(d, 1);
-        }
-
-        [TestMethod]
-        public void MinDistanceTest2()
-        {
-            Geo.Point p1 = Geo.Point.ByCoordinates(0, 0, 0);
-            Geo.Point p2 = Geo.Point.ByCoordinates(1, 1, 1);
-            Geo.Point p3 = Geo.Point.ByCoordinates(-1, 0, 0);
-            Geo.Point p4 = Geo.Point.ByCoordinates(-2, -2, -2);
-
-            Geo.Line l1 = Geo.Line.ByStartPointEndPoint(p1, p2);
-            Geo.Line l2 = Geo.Line.ByStartPointEndPoint(p3, p4);
-
-            double d = hStructure.MinDistanceBetweenLines(l1, l2);
-
-
-            Assert.AreEqual(1, d);
-        }
-
-
+        
         [TestMethod]
         public void hConnectionEqualityTest()
         {

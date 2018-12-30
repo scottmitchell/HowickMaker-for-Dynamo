@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Geo = Autodesk.DesignScript.Geometry;
-using Autodesk.DesignScript.Interfaces;
-using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
@@ -33,7 +30,7 @@ namespace HowickMaker
         List<string> _labels;
         
         List<Line> _lines = new List<Line>();
-        List<hMember> _braceMembers = new List<hMember>();
+        public List<hMember> _braceMembers = new List<hMember>();
 
         Dictionary<string, Triple> _webNormalsDict;
         Dictionary<string, int> _priorityDict;
@@ -41,8 +38,7 @@ namespace HowickMaker
 
         List<List<double>> _dots = new List<List<double>>();
 
-
-        [IsVisibleInDynamoLibrary(false)]
+        
         internal hStructure(List<Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             _lines = lines;
@@ -61,7 +57,7 @@ namespace HowickMaker
             }
         }
 
-        [IsVisibleInDynamoLibrary(false)]
+
         internal hStructure(List<Line> lines, List<string> labels, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
         {
             _lines = lines;
@@ -77,109 +73,6 @@ namespace HowickMaker
             {
                 _members[i] = new hMember(lines[i], i.ToString());
                 _members[i]._label = labels[i];
-            }
-        }
-
-
-
-
-
-        //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
-        //  ██╔══██╗██║   ██║██╔══██╗    ██╔════╝████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
-        //  ██████╔╝██║   ██║██████╔╝    ██║     ██╔██╗ ██║███████╗   ██║   ██████╔╝
-        //  ██╔═══╝ ██║   ██║██╔══██╗    ██║     ██║╚██╗██║╚════██║   ██║   ██╔══██╗
-        //  ██║     ╚██████╔╝██████╔╝    ╚██████╗██║ ╚████║███████║   ██║   ██║  ██║
-        //  ╚═╝      ╚═════╝ ╚═════╝      ╚═════╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
-        //               
-
-        [MultiReturn(new[] { "members", "braces", "connections" })]
-        public static Dictionary<string, object> FromLines_Advanced(
-            List<Geo.Line> lines,
-            [DefaultArgument("[]")] List<string> names,
-            [DefaultArgument("{}")] Dictionary<string, Geo.Vector> webNormalsDict,
-            [DefaultArgument("{}")] Dictionary<string, int> priorityDict,
-            [DefaultArgument("{}")] Dictionary<string, int> extensionDict,
-            [DefaultArgument("null")] string options)
-        {
-            // Parse Options
-            string[] option = options.ToString().Split(',');
-            double intersectionTolerance = (options == "null") ? 0.001 : Double.Parse(option[0]);
-            double planarityTolerance = (options == "null") ? 0.001 : Double.Parse(option[1]);
-            bool generateBraces = (options == "null") ? false : bool.Parse(option[2]);
-            bool threePieceBrace = (options == "null") ? false : bool.Parse(option[3]);
-            double braceLength1 = (options == "null") ? 6 : Double.Parse(option[4]);
-            double braceLength2 = (options == "null") ? 3 : Double.Parse(option[5]);
-            bool firstConnectionIsFTF = (options == "null") ? false : bool.Parse(option[6]);
-
-            // Create empty dictionaries if unprovided
-            if (webNormalsDict == null) { webNormalsDict = new Dictionary<string, Geo.Vector>(); }
-            if (priorityDict == null) { priorityDict = new Dictionary<string, int>(); }
-            if (extensionDict == null) { extensionDict = new Dictionary<string, int>(); }
-            names = CompleteListOfNames(names, lines.Count);
-
-            // Convert Lines
-            var hLines = new List<Line>();
-            foreach (Geo.Line l in lines)
-            {
-                hLines.Add(new Line( new Triple(l.StartPoint.X, l.StartPoint.Y, l.StartPoint.Z), new Triple(l.EndPoint.X, l.EndPoint.Y, l.EndPoint.Z)));
-            }
-
-            // Convert webNormals
-            var hWebNormalsDict = new Dictionary<string, Triple>();
-            foreach (string vectorName in webNormalsDict.Keys)
-            {
-                var vector = webNormalsDict[vectorName];
-                hWebNormalsDict[vectorName] = new Triple(vector.X, vector.Y, vector.Z);
-            }
-
-            hStructure structure = StructureFromLines_Advanced(
-                hLines,
-                names, 
-                hWebNormalsDict, 
-                priorityDict, 
-                extensionDict, 
-                intersectionTolerance, 
-                planarityTolerance,
-                generateBraces, 
-                threePieceBrace, 
-                braceLength1, 
-                braceLength2, 
-                firstConnectionIsFTF);
-
-            return new Dictionary<string, object>
-            {
-                { "members", structure._members.ToList() },
-                { "braces", structure._braceMembers.ToList() },
-                { "connections", structure._connections }
-            };
-        }
-        
-
-        /// <summary>
-        /// Adds member names if any are missing
-        /// </summary>
-        /// <param name="names"></param>
-        /// <param name="numMembers"></param>
-        /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        internal static List<string> CompleteListOfNames(List<string> names, int numMembers)
-        {
-            if (names.Count > numMembers)
-            {
-                throw new System.ArgumentException("List of names cannot be longer than list of member lines.", "names");
-            }
-            else if (names.Count == numMembers)
-            {
-                return names;
-            }
-            else
-            {
-                var fillNum = numMembers - names.Count;
-                for (int i = 0; i < fillNum; i++)
-                {
-                    names.Add(i.ToString());
-                }
-                return names;
             }
         }
 
@@ -243,7 +136,7 @@ namespace HowickMaker
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns></returns>
-        internal static hStructure StructureFromLines_Advanced(
+        public static hStructure StructureFromLines_Advanced(
             List<Line> lines, 
             List<string> names, 
             Dictionary<string, Triple> webNormalsDict, 
@@ -1387,24 +1280,6 @@ namespace HowickMaker
 
 
         /// <summary>
-        /// Find the plane that best fits 2 lines
-        /// </summary>
-        /// <param name="line1"></param>
-        /// <param name="line2"></param>
-        /// <returns>plane of best fit</returns>
-        internal Geo.Plane ByTwoLines(Geo.Line line1, Geo.Line line2)
-        {
-            Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line1.StartPoint, line1.EndPoint);
-            Geo.Vector vec2 = Geo.Vector.ByTwoPoints(line2.StartPoint, line2.EndPoint);
-            Geo.Vector normal = vec1.Cross(vec2);
-
-            Geo.Plane p = Geo.Plane.ByOriginNormal(line1.StartPoint, normal);
-
-            return p;
-        }
-
-
-        /// <summary>
         /// Returns a new vector which is the input vector reversed
         /// </summary>
         /// <param name="vec"></param>
@@ -1412,23 +1287,6 @@ namespace HowickMaker
         internal Triple FlipVector(Triple vec)
         {
             return new Triple(vec.X * -1, vec.Y * -1, vec.Z * -1);
-        }
-
-
-        /// <summary>
-        /// Determines whether two planes are parallel
-        /// </summary>
-        /// <param name="plane1"></param>
-        /// <param name="plane2"></param>
-        /// <returns>true if planes are parallel; false if planes are not parallel</returns>
-        internal bool ParallelPlanes(Geo.Plane plane1, Geo.Plane plane2)
-        {
-            Geo.Vector vec1 = plane1.Normal;
-            Geo.Vector vec2 = plane2.Normal;
-
-            double similarity = vec1.Dot(vec2);
-
-            return (Math.Abs(similarity) > 1 - _tolerance);
         }
 
 
@@ -1478,61 +1336,6 @@ namespace HowickMaker
 
         #region Line Segment Distances
 
-        [MultiReturn(new[] { "f", "g", "h", "i", "j", "k" })]
-        [IsVisibleInDynamoLibrary(false)]
-        public static Dictionary<string, object> ClosestPointToOtherLineTest(Geo.Line line, Geo.Line other)
-        {
-            Geo.Point startPt1 = line.StartPoint;
-            Geo.Point startPt2 = other.StartPoint;
-
-            Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line.StartPoint, line.EndPoint);
-            Geo.Vector vec2 = Geo.Vector.ByTwoPoints(other.StartPoint, other.EndPoint);
-
-            double x1 = startPt1.X;
-            double y1 = startPt1.Y;
-            double z1 = startPt1.Z;
-            double x2 = startPt2.X;
-            double y2 = startPt2.Y;
-            double z2 = startPt2.Z;
-
-            double a1 = vec1.X;
-            double b1 = vec1.Y;
-            double c1 = vec1.Z;
-            double a2 = vec2.X;
-            double b2 = vec2.Y;
-            double c2 = vec2.Z;
-
-            double f = a1 * a2 + b1 * b2 + c1 * c2;
-            double g = -(a1 * a1 + b1 * b1 + c1 * c1);
-            double h = -(a1 * (x2 - x1) + b1 * (y2 - y1) + c1 * (z2 - z1));
-            double i = (a2 * a2 + b2 * b2 + c2 * c2);
-            double j = -1 * f;
-            double k = -(a2 * (x2 - x1) + b2 * (y2 - y1) + c2 * (z2 - z1));
-
-            double t = (k - (h * i / f)) / (j - (g * i / f));
-
-            double xp = x1 + (a1 * t);
-            double yp = y1 + (b1 * t);
-            double zp = z1 + (c1 * t);
-
-            return new Dictionary<string, object>
-            {
-                { "f", f },
-                { "g", g },
-                { "h", h },
-                { "i", i },
-                { "j", j },
-                { "k", k }
-
-
-            };
-
-            //return Geo.Point.ByCoordinates(xp, yp, zp);
-        }
-
-
-
-        [IsVisibleInDynamoLibrary(false)]
         public static Triple ClosestPointToOtherLine(Line line, Line other)
         {
             Triple startPt1 = line.StartPoint;
@@ -1582,16 +1385,15 @@ namespace HowickMaker
         /// <param name="line1"></param>
         /// <param name="line2"></param>
         /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        public static double LineToLineDistance(Geo.Line line1, Geo.Line line2)
+        public static double LineToLineDistance(Line line1, Line line2)
         {
-            Geo.Point pt1 = line1.StartPoint;
-            Geo.Point pt2 = line1.EndPoint;
-            Geo.Point pt3 = line2.StartPoint;
-            Geo.Point pt4 = line2.EndPoint;
+            var pt1 = line1.StartPoint;
+            var pt2 = line1.EndPoint;
+            var pt3 = line2.StartPoint;
+            var pt4 = line2.EndPoint;
 
-            Geo.Vector vec1 = Geo.Vector.ByTwoPoints(line1.StartPoint, line1.EndPoint);
-            Geo.Vector vec2 = Geo.Vector.ByTwoPoints(line2.StartPoint, line2.EndPoint);
+            var vec1 = Triple.ByTwoPoints(line1.StartPoint, line1.EndPoint);
+            var vec2 = Triple.ByTwoPoints(line2.StartPoint, line2.EndPoint);
 
             double x1 = pt1.X;
             double y1 = pt1.Y;
@@ -1646,11 +1448,10 @@ namespace HowickMaker
         /// <param name="point"></param>
         /// <param name="line"></param>
         /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        public static double PointToLineDistance(Geo.Point point, Geo.Line line)
+        public static double PointToLineDistance(Triple point, Line line)
         {
-            Geo.Point p = line.StartPoint;
-            Geo.Vector v = Geo.Vector.ByTwoPoints(line.StartPoint, line.EndPoint);
+            var p = line.StartPoint;
+            var v = Triple.ByTwoPoints(line.StartPoint, line.EndPoint);
 
             double xp = point.X;
             double yp = point.Y;
@@ -1687,15 +1488,14 @@ namespace HowickMaker
         /// <param name="line1"></param>
         /// <param name="line2"></param>
         /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        public static double MinDistanceBetweenLines(Geo.Line line1, Geo.Line line2)
+        public static double MinDistanceBetweenLines(Line line1, Line line2)
         {
             var distances = new List<double>();
 
-            Geo.Point pt1 = line1.StartPoint;
-            Geo.Point pt2 = line1.EndPoint;
-            Geo.Point pt3 = line2.StartPoint;
-            Geo.Point pt4 = line2.EndPoint;
+            var pt1 = line1.StartPoint;
+            var pt2 = line1.EndPoint;
+            var pt3 = line2.StartPoint;
+            var pt4 = line2.EndPoint;
 
             double d1 = PointToLineDistance(pt1, line2);
             if (d1 > 0) { distances.Add(d1); }
@@ -1726,20 +1526,7 @@ namespace HowickMaker
 
             return distances.Min();
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="line1"></param>
-        /// <param name="line2"></param>
-        /// <param name="tolerance"></param>
-        /// <returns></returns>
-        [IsVisibleInDynamoLibrary(false)]
-        public static bool LinesIntersectWithTolerance(Geo.Line line1, Geo.Line line2, double tolerance)
-        {
-            return MinDistanceBetweenLines(line1, line2) <= tolerance;
-        }
-
+        
         #endregion
     }
 }

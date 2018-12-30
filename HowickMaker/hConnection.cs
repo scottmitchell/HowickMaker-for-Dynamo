@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Geo = Autodesk.DesignScript.Geometry;
-using Autodesk.DesignScript.Interfaces;
-using Autodesk.DesignScript.Runtime;
 
 namespace HowickMaker
 {
@@ -13,7 +10,6 @@ namespace HowickMaker
     /// <summary>
     /// List of supported connection types
     /// </summary>
-    [IsVisibleInDynamoLibrary(false)]
     public enum Connection
     {
         FTF = 0,
@@ -26,7 +22,6 @@ namespace HowickMaker
     /// <summary>
     /// Represents a connection within an hStructure
     /// </summary>
-    [IsVisibleInDynamoLibrary(true)]
     public class hConnection
     {
         public Triple location;

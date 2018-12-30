@@ -8,14 +8,14 @@ namespace HowickMaker
 {
     public class Line
     {
-        internal Triple StartPoint;
-        internal Triple EndPoint;
+        public Triple StartPoint { get; set; }
+        public Triple EndPoint { get; set; }
 
         public Line(Triple start, Triple end)
-        {
-            this.StartPoint = start;
-            this.EndPoint = end;
-        }
+            {
+                this.StartPoint = start;
+                this.EndPoint = end;
+            }
         
         public double Length {
             get
