@@ -40,3 +40,4 @@ C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\Microsoft.Scripti
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\IronPython.xml
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\Microsoft.Dynamic.xml
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\Microsoft.Scripting.Metadata.xml
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerDynamo\bin\Debug\HowickMakerDynamo.xml

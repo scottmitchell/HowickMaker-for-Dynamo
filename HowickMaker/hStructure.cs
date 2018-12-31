@@ -1,61 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace HowickMaker
 {
+    //  ██╗  ██╗    ███████╗████████╗██████╗ ██╗   ██╗ ██████╗████████╗██╗   ██╗██████╗ ███████╗
+    //  ██║  ██║    ██╔════╝╚══██╔══╝██╔══██╗██║   ██║██╔════╝╚══██╔══╝██║   ██║██╔══██╗██╔════╝
+    //  ███████║    ███████╗   ██║   ██████╔╝██║   ██║██║        ██║   ██║   ██║██████╔╝█████╗  
+    //  ██╔══██║    ╚════██║   ██║   ██╔══██╗██║   ██║██║        ██║   ██║   ██║██╔══██╗██╔══╝  
+    //  ██║  ██║    ███████║   ██║   ██║  ██║╚██████╔╝╚██████╗   ██║   ╚██████╔╝██║  ██║███████╗
+    //  ╚═╝  ╚═╝    ╚══════╝   ╚═╝   ╚═╝  ╚═╝ ╚═════╝  ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝
+    //                                                                                          
+
     /// <summary>
-    /// A collection of connected hMembers, 
+    /// A collection of connected hMembers 
     /// with associated connections, braces, etc.
     /// </summary>
     public class hStructure
     {
-        public hMember[] _members;
-        public List<hConnection> _connections = new List<hConnection>();
-        internal Graph _g;
-        internal bool _advanced = false;
-        internal double _tolerance = 0.001;
-        internal double _planarityTolerance = 0.001;
-        internal bool _firstConnectionIsFTF = false;
-        internal bool _threePieceBrace;
-        internal double _braceLength1;
-        internal double _braceLength2;
-
-        internal double _WEBHoleSpacing = (15.0 / 16);
-        internal double _StudHeight = 1.5;
-        internal double _StudWdith = 3.5;
-
-        List<string> _labels;
+        public double _WEBHoleSpacing = (15.0 / 16);
+        public double _StudHeight = 1.5;
+        public double _StudWdith = 3.5;
         
-        List<Line> _lines = new List<Line>();
-        public List<hMember> _braceMembers = new List<hMember>();
+        private double _tolerance = 0.001;
+        private double _planarityTolerance = 0.001;
+        private bool _firstConnectionIsFTF = false;
+        private bool _threePieceBrace;
+        private double _braceLength1;
+        private double _braceLength2;
 
-        Dictionary<string, Triple> _webNormalsDict;
-        Dictionary<string, int> _priorityDict;
-        Dictionary<string, int> _extensionDict;
+        private List<Line> _lines = new List<Line>();
+        private Graph _g;
 
-        List<List<double>> _dots = new List<List<double>>();
-
-        
-        internal hStructure(List<Line> lines, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
+        public hMember[] Members
         {
-            _lines = lines;
-            _tolerance = intersectionTolerance;
-            _planarityTolerance = planarityTolerance;
-            _threePieceBrace = threePieceBrace;
-            _braceLength1 = braceLength1;
-            _braceLength2 = braceLength2;
-            _firstConnectionIsFTF = firstConnectionIsFTF;
-
-            _members = new hMember[lines.Count];
-            for (int i = 0; i < lines.Count; i++)
-            {
-                _members[i] = new hMember(lines[i], i.ToString());
-                _members[i]._label = i.ToString();
-            }
+            get { return _members; }
         }
+        private hMember[] _members;
+        
+        public List<hMember> BraceMembers
+        {
+            get { return _braceMembers; }
+        }
+        private List<hMember> _braceMembers = new List<hMember>();
+
+        public List<hConnection> Connections
+        {
+            get { return _connections; }
+        }
+        private List<hConnection> _connections = new List<hConnection>();
+        
+        private List<string> _labels;
+        private Dictionary<string, Triple> _webNormalsDict;
+        private Dictionary<string, int> _priorityDict;
+        private Dictionary<string, int> _extensionDict;
 
 
         internal hStructure(List<Line> lines, List<string> labels, double intersectionTolerance, double planarityTolerance, bool threePieceBrace, double braceLength1, double braceLength2, bool firstConnectionIsFTF)
@@ -136,60 +134,59 @@ namespace HowickMaker
         /// <param name="braceLength2"></param>
         /// <param name="firstConnectionIsFTF"></param>
         /// <returns></returns>
-        public static hStructure StructureFromLines_Advanced(
+        public static hStructure StructureFromLines(
             List<Line> lines, 
             List<string> names, 
-            Dictionary<string, Triple> webNormalsDict, 
-            Dictionary<string, int> priorityDict, 
-            Dictionary<string, int> extensionDict, 
-            double intersectionTolerance, 
-            double planarityTolerance, 
-            bool generateBraces, 
-            bool threePieceBraces, 
-            double braceLength1, 
-            double braceLength2, 
-            bool firstConnectionIsFTF
+            Dictionary<string, Triple> webNormalsDict = null, 
+            Dictionary<string, int> priorityDict = null, 
+            Dictionary<string, int> extensionDict = null, 
+            double intersectionTolerance = 0.001, 
+            double planarityTolerance = 0.001, 
+            bool generateBraces = false, 
+            bool threePieceBraces = false, 
+            double braceLength1 = 5, 
+            double braceLength2 = 6, 
+            bool firstConnectionIsFTF = false
             )
         {
             hStructure structure = new hStructure(lines, names, intersectionTolerance, planarityTolerance, threePieceBraces, braceLength1, braceLength2, firstConnectionIsFTF);
-            structure._advanced = true;
             structure._labels = names;
-            structure._webNormalsDict = webNormalsDict;
-            structure._priorityDict = priorityDict;
-            structure._extensionDict = extensionDict;
+            structure._webNormalsDict = webNormalsDict != null ? webNormalsDict : new Dictionary<string, Triple>();
+            structure._priorityDict = priorityDict != null ? priorityDict : new Dictionary<string, int>();
+            structure._extensionDict = extensionDict != null ? extensionDict : new Dictionary<string, int>();
             
-
+            // Build connectivity graph
             structure._g = graphFromLines(lines, structure._tolerance);
 
+            // Find a starting node for each subgraph
             var startingNodes = structure._g.GetStartingNodes();
-            for (int i = 0; i < lines.Count; i++)
-            {
-                structure._members[i]._label = names[i];
-            }
+
+            // Make sure labels are good
+            for (int i = 0; i < lines.Count; i++) { structure._members[i]._label = names[i]; }
+            
+            // Solve each subgraphs
             foreach (int start in startingNodes)
             {
                 structure.BuildMembersAndConnectionsFromGraph(start);
             }
             
-            for (int i = 0; i < lines.Count; i++)
-            {
-                structure._members[i]._label = names[i];
-            }
+            // Make sure labels are good
+            for (int i = 0; i < lines.Count; i++) { structure._members[i]._label = names[i]; }
 
+            // Generate Braces
             if (generateBraces)
             {
                 structure.GenerateBraces();
             }
 
+            // Resolve all connections
             structure.ResolveFTFConnections();
             structure.ResolveBRConnections();
             structure.ResolveTConnections();
             structure.ResolvePTConnections();
 
-            for (int i = 0; i < lines.Count; i++)
-            {
-                structure._members[i]._label = names[i];
-            }
+            // Make sure labels are good
+            for (int i = 0; i < lines.Count; i++) { structure._members[i]._label = names[i]; }
 
             return structure;
         }
@@ -248,7 +245,7 @@ namespace HowickMaker
                 choice = vects[0];
             }
 
-            currentMember._webNormal = (_firstConnectionIsFTF) ? normal : choice;
+            currentMember.WebNormal = (_firstConnectionIsFTF) ? normal : choice;
 
             _members[start] = currentMember;
 
@@ -279,7 +276,7 @@ namespace HowickMaker
                 //foreach (int i in _g.vertices[current].neighbors)
                 foreach (int i in indices)
                 {
-                    if (!(_g.vertices[i].neighbors.Count <= _members[i].connections.Count))
+                    if (!(_g.vertices[i].neighbors.Count <= _members[i].Connections.Count))
                     {
                         hConnection con = new hConnection(GetConnectionType(current, i), new List<int> { i, current });
 
@@ -288,7 +285,7 @@ namespace HowickMaker
                             _connections.Add(con);
                         }
                         
-                        _members[i].connections.Add(con);
+                        _members[i].Connections.Add(con);
                         //_members[current].connections.Add(con);
                     }
 
@@ -312,7 +309,7 @@ namespace HowickMaker
                         if (vectors.Count > 0)
                         {
                             //vectors = (List<Geo.Vector>)vectors.OrderBy(x => Math.Abs(x.Dot(Geo.Vector.ByTwoPoints(currentMember.WebAxis.StartPoint, currentMember.WebAxis.EndPoint))));
-                            _members[i]._webNormal = choice;
+                            _members[i].WebNormal = choice;
                             //_members[i]._webNormal = _webNormalsDict[_members[i]._label];
                         }
 
@@ -344,11 +341,12 @@ namespace HowickMaker
         {
             Triple jointPlaneNormal = _lines[i].ToTriple().Cross(_lines[j].ToTriple());
 
-            if (ParallelPlaneNormals(_members[i]._webNormal, jointPlaneNormal))
+            if (ParallelPlaneNormals(_members[i].WebNormal, jointPlaneNormal))
             {
                 return Connection.FTF;
             }
-            else if (PerpendicularPlaneNormals(_members[i]._webNormal, jointPlaneNormal))
+
+            else if (PerpendicularPlaneNormals(_members[i].WebNormal, jointPlaneNormal))
             {
                 if (_lines[i].StartPoint.DistanceTo(_lines[j]) < _tolerance || _lines[i].EndPoint.DistanceTo(_lines[j]) < _tolerance)
                 {
@@ -356,7 +354,7 @@ namespace HowickMaker
                     {
                         return Connection.BR;
                     }
-
+                
                     else
                     {
                         return Connection.T;
@@ -375,7 +373,6 @@ namespace HowickMaker
                         return Connection.T;
                     }
                 }
-
                 else
                 {
                     return Connection.PT;
@@ -400,7 +397,7 @@ namespace HowickMaker
             
             if (connection.type == Connection.FTF)
             {
-                Triple otherNormal = _members[otherMemberIndex]._webNormal;
+                Triple otherNormal = _members[otherMemberIndex].WebNormal;
                 Triple reverseOtherNormal = otherNormal.Reverse();
 
                 //Dispose
@@ -413,8 +410,8 @@ namespace HowickMaker
 
             else if (connection.type == Connection.BR)
             {
-                Triple jointPlaneNormal = _members[memberIndex]._webAxis.ToTriple().Cross(_members[otherMemberIndex]._webAxis.ToTriple());
-                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
+                Triple jointPlaneNormal = _members[memberIndex].WebAxis.ToTriple().Cross(_members[otherMemberIndex].WebAxis.ToTriple());
+                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex].WebAxis.StartPoint, _members[memberIndex].WebAxis.EndPoint);
 
                 Triple webNormal1 = jointPlaneNormal.Cross(memberVector);
                 return new List<Triple> { webNormal1, webNormal1.Reverse() };
@@ -429,8 +426,8 @@ namespace HowickMaker
 
             else
             {
-                Triple jointNormal = _members[memberIndex]._webAxis.ToTriple().Cross(_members[otherMemberIndex]._webAxis.ToTriple());
-                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex]._webAxis.StartPoint, _members[memberIndex]._webAxis.EndPoint);
+                Triple jointNormal = _members[memberIndex].WebAxis.ToTriple().Cross(_members[otherMemberIndex].WebAxis.ToTriple());
+                Triple memberVector = Triple.ByTwoPoints(_members[memberIndex].WebAxis.StartPoint, _members[memberIndex].WebAxis.EndPoint);
 
                 Triple webNormal1 = jointNormal.Cross(memberVector);
 
@@ -453,9 +450,9 @@ namespace HowickMaker
         /// <returns></returns>
         internal List<Triple> GetValidNormalsForMember(int memberIndex)
         {
-            List<Triple> potentialVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
+            List<Triple> potentialVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].Connections[0], memberIndex);
             //List < Geo.Vector > allVectors = GetValidNormalsForMemberForConnection(_members[memberIndex].connections[0], memberIndex);
-            foreach (hConnection connection in _members[memberIndex].connections)
+            foreach (hConnection connection in _members[memberIndex].Connections)
             {
                 List<Triple> checkVectors = GetValidNormalsForMemberForConnection(connection, memberIndex);
                 List<Triple> newVectors = new List<Triple>();
@@ -496,8 +493,8 @@ namespace HowickMaker
                     Triple mem1End1;
                     Triple mem2End1;
 
-                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[0]]._webAxis, _members[connection.members[1]]._webAxis, out common0, out mem1End0, out mem2End0);
-                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[1]]._webAxis, _members[connection.members[0]]._webAxis, out common1, out mem1End1, out mem2End1);
+                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[0]].WebAxis, _members[connection.members[1]].WebAxis, out common0, out mem1End0, out mem2End0);
+                    GetCommonAndEndPointsOfTwoLines(_members[connection.members[1]].WebAxis, _members[connection.members[0]].WebAxis, out common1, out mem1End1, out mem2End1);
 
                     var common = new List<Triple> { common0, common1 };
                     var mem1End = new List<Triple> { mem1End0, mem1End1 };
@@ -524,7 +521,7 @@ namespace HowickMaker
                         Triple connectionPlaneNormal = vec1.Cross(vec2);
 
                         // Determine orientation of members to each other and adjust d accordingly
-                        bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1]._webNormal)) > 0;
+                        bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1].WebNormal)) > 0;
                         if (webOut)
                         {
                             d *= -1;
@@ -541,14 +538,14 @@ namespace HowickMaker
                         d = Math.Abs(d);
 
                         // Determine if we are at the start or end of the member
-                        bool atMemberStart = SamePoints(common[i], _members[index1]._webAxis.StartPoint);
+                        bool atMemberStart = SamePoints(common[i], _members[index1].WebAxis.StartPoint);
                         
                         // Extend member
                         if (atMemberStart) { _members[index1].SetWebAxisStartPoint(newEndPoint); }
                         else { _members[index1].SetWebAxisEndPoint(newEndPoint); }
 
                         // Add connection dimple and end truss
-                        double l = _members[index1]._webAxis.Length;
+                        double l = _members[index1].WebAxis.Length;
                         _members[index1].AddOperationByLocationType((atMemberStart) ? 0.0 : l - 0.0, "END_TRUSS");
                         _members[index1].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, "DIMPLE");
 
@@ -636,7 +633,7 @@ namespace HowickMaker
                     Triple common;
                     Triple mem1End;
                     Triple mem2End;
-                    GetCommonAndEndPointsOfTwoLines(_members[mem1]._webAxis, _members[mem2]._webAxis, out common, out mem1End, out mem2End);
+                    GetCommonAndEndPointsOfTwoLines(_members[mem1].WebAxis, _members[mem2].WebAxis, out common, out mem1End, out mem2End);
 
 
                     Triple v1 = Triple.ByTwoPoints(common, mem1End).Normalized();
@@ -647,7 +644,7 @@ namespace HowickMaker
 
                     // Determine orientation of members to each other
                     Triple connectionPlaneNormal = v1.Cross(v2);
-                    bool webOut = connectionPlaneNormal.Dot(v1.Cross(_members[mem1]._webNormal)) > 0;
+                    bool webOut = connectionPlaneNormal.Dot(v1.Cross(_members[mem1].WebNormal)) > 0;
 
                     double a = v1.AngleWithVector(v2) / 2.0 * (Math.PI / 180);
 
@@ -789,8 +786,8 @@ namespace HowickMaker
                         int index2 = connection.members[(i + 1) % 2];
 
                         // Get involved web axes
-                        Line axis1 = _members[index1]._webAxis;
-                        Line axis2 = _members[index2]._webAxis;
+                        Line axis1 = _members[index1].WebAxis;
+                        Line axis2 = _members[index2].WebAxis;
 
                         // Get intersection point
                         Triple intersectionPoint = ClosestPointToOtherLine(axis1, axis2);
@@ -846,7 +843,7 @@ namespace HowickMaker
                         }
                         
                         // Compute intersection location and location of web holes for fasteners
-                        double intersectionLoc = _members[index1]._webAxis.ParameterAtPoint(intersectionPoint) * _members[index1]._webAxis.Length;
+                        double intersectionLoc = _members[index1].WebAxis.ParameterAtPoint(intersectionPoint) * _members[index1].WebAxis.Length;
                         double d1 = (angle % (Math.PI / 2) < _tolerance) ? ((_WEBHoleSpacing / Math.Cos(angle)) - _WEBHoleSpacing) / Math.Tan(angle) : ((_WEBHoleSpacing / Math.Cos(angle)) - _WEBHoleSpacing) / Math.Tan(angle);
                         double d2 = (angle % (Math.PI / 2) < _tolerance) ? (2 * _WEBHoleSpacing) / Math.Tan(angle) : (2 * _WEBHoleSpacing) / Math.Tan(angle);
 
@@ -854,7 +851,7 @@ namespace HowickMaker
                         List<double> webHoleLocations = new List<double> { intersectionLoc - (d1 + d2), intersectionLoc - (d1), intersectionLoc + (d1), intersectionLoc + (d1 + d2) };
                         foreach (double loc in webHoleLocations)
                         {
-                            if (loc >= 0 && loc <= _members[index1]._webAxis.Length)
+                            if (loc >= 0 && loc <= _members[index1].WebAxis.Length)
                             {
                                 _members[index1].AddOperationByLocationType(loc, "WEB");
                             }
@@ -904,8 +901,8 @@ namespace HowickMaker
                     // Compute extension to DIMPLE
                     double d1 = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
                     double d2 = ((c1 / Math.Cos(angle)) - c1) / (Math.Tan(angle));
-                    bool b1 = _members[iCross]._webNormal.Dot(_members[iTerminal]._webNormal) < 0;
-                    bool b2 = _members[iCross]._webNormal.Dot(vec1) > 0;
+                    bool b1 = _members[iCross].WebNormal.Dot(_members[iTerminal].WebNormal) < 0;
+                    bool b2 = _members[iCross].WebNormal.Dot(vec1) > 0;
                     double d = (b1) ? d1 : d2;
 
                     // Determine orientation of members to each other and adjust d accordingly
@@ -921,21 +918,21 @@ namespace HowickMaker
                     Triple newEndPoint = terminal.StartPoint.Add(moveVector);
                     
                     // Extend member
-                    bool atMemberStart = SamePoints(terminal.StartPoint, _members[iTerminal]._webAxis.StartPoint);
+                    bool atMemberStart = SamePoints(terminal.StartPoint, _members[iTerminal].WebAxis.StartPoint);
                     if (atMemberStart) { _members[iTerminal].SetWebAxisStartPoint(newEndPoint); }
                     else { _members[iTerminal].SetWebAxisEndPoint(newEndPoint); }
                     
                     // Add operations to terminal member of T joint
-                    double l = _members[iTerminal]._webAxis.Length;
+                    double l = _members[iTerminal].WebAxis.Length;
                     _members[iTerminal].AddOperationByLocationType((atMemberStart) ? 0.0 : l - 0.0, "END_TRUSS");
                     _members[iTerminal].AddOperationByLocationType((atMemberStart) ? 0.45 : l - 0.45, "DIMPLE");
                     _members[iTerminal].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, "SWAGE");
 
                     // Find the dimple point and its location on the cross member of the T joint
-                    Triple dimplePoint = _members[iTerminal]._webAxis.PointAtParameter(((atMemberStart) ? 0.45 : l - 0.45) / l);
-                    double crossIntLoc = _members[iCross]._webAxis.ParameterAtPoint(dimplePoint) * _members[iCross]._webAxis.Length;
-                    dimplePoint = dimplePoint.Add(_members[iTerminal]._webNormal.Normalized().Scale(0.75));
-                    double crossDimpleLoc = _members[iCross]._webAxis.ParameterAtPoint(dimplePoint) * _members[iCross]._webAxis.Length;
+                    Triple dimplePoint = _members[iTerminal].WebAxis.PointAtParameter(((atMemberStart) ? 0.45 : l - 0.45) / l);
+                    double crossIntLoc = _members[iCross].WebAxis.ParameterAtPoint(dimplePoint) * _members[iCross].WebAxis.Length;
+                    dimplePoint = dimplePoint.Add(_members[iTerminal].WebNormal.Normalized().Scale(0.75));
+                    double crossDimpleLoc = _members[iCross].WebAxis.ParameterAtPoint(dimplePoint) * _members[iCross].WebAxis.Length;
 
                     // Add Dimple to cross member
                     _members[iCross].AddOperationByLocationType(crossDimpleLoc, "DIMPLE");
@@ -949,7 +946,7 @@ namespace HowickMaker
 
                     // Compute range for insertion operation
                     double clearance = 0.25;
-                    bool pos = Triple.ByTwoPoints(_members[iCross]._webAxis.StartPoint, _members[iCross]._webAxis.EndPoint).Dot(vec1) > 0;
+                    bool pos = Triple.ByTwoPoints(_members[iCross].WebAxis.StartPoint, _members[iCross].WebAxis.EndPoint).Dot(vec1) > 0;
                     double start = (!pos) ? crossDimpleLoc + x1 + clearance: crossDimpleLoc - x1 - clearance;
                     double end = (pos) ? crossDimpleLoc + x2 + clearance : crossDimpleLoc - x2 - clearance;
                     var range = new List<double> { start, end };
@@ -991,8 +988,8 @@ namespace HowickMaker
             // Compute extension to DIMPLE
             double d1 = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
             double d2 = ((c1 / Math.Cos(angle)) - c1) / (Math.Tan(angle));
-            bool b1 = _members[iCross]._webNormal.Dot(brace._webNormal) < 0;
-            bool b2 = _members[iCross]._webNormal.Dot(vec1) > 0;
+            bool b1 = _members[iCross].WebNormal.Dot(brace.WebNormal) < 0;
+            bool b2 = _members[iCross].WebNormal.Dot(vec1) > 0;
             double d = (b1) ? d1 : d2;
 
             // Determine orientation of members to each other and adjust d accordingly
@@ -1009,9 +1006,9 @@ namespace HowickMaker
             
 
             // Find the dimple point and its location on the cross member of the T joint
-            double crossIntLoc = _members[iCross]._webAxis.ParameterAtPoint(dimplePoint) * _members[iCross]._webAxis.Length;
+            double crossIntLoc = _members[iCross].WebAxis.ParameterAtPoint(dimplePoint) * _members[iCross].WebAxis.Length;
             //dimplePoint = dimplePoint.Add(brace._webNormal.Normalized().Scale(0.75));
-            double crossDimpleLoc = _members[iCross]._webAxis.ParameterAtPoint(dimplePoint) * _members[iCross]._webAxis.Length;
+            double crossDimpleLoc = _members[iCross].WebAxis.ParameterAtPoint(dimplePoint) * _members[iCross].WebAxis.Length;
 
             // Add Dimple to cross member
             //_members[iCross].AddOperationByLocationType(crossDimpleLoc, "DIMPLE");
@@ -1025,7 +1022,7 @@ namespace HowickMaker
 
             // Compute range for insertion operation
             double clearance = 0.25;
-            bool pos = Triple.ByTwoPoints(_members[iCross]._webAxis.StartPoint, _members[iCross]._webAxis.EndPoint).Dot(vec1) > 0;
+            bool pos = Triple.ByTwoPoints(_members[iCross].WebAxis.StartPoint, _members[iCross].WebAxis.EndPoint).Dot(vec1) > 0;
             double start = (!pos) ? crossDimpleLoc + x1 + clearance : crossDimpleLoc - x1 - clearance;
             double end = (pos) ? crossDimpleLoc + x2 + clearance : crossDimpleLoc - x2 - clearance;
             var range = new List<double> { start, end };
@@ -1046,7 +1043,7 @@ namespace HowickMaker
             Triple extraOpPt = connectionDimple.Add(conToBraceDimple);
 
 
-            bool atMemberStart = SamePoints(terminal.StartPoint, brace._webAxis.StartPoint);
+            bool atMemberStart = SamePoints(terminal.StartPoint, brace.WebAxis.StartPoint);
             string extraOp = (webOut) ? "LIP_CUT" : "NOTCH";
             // double offset = (webOut) ? 1.25 : 0.75;
             // double location = (atMemberStart) ? offset : _members[memberIndex].WebAxis.Length - offset;
@@ -1074,14 +1071,14 @@ namespace HowickMaker
 
             foreach(int mem in con.members)
             {
-                var pts = new List<Triple> { _members[mem]._webAxis.StartPoint, _members[mem]._webAxis.EndPoint };
+                var pts = new List<Triple> { _members[mem].WebAxis.StartPoint, _members[mem].WebAxis.EndPoint };
 
                 for (int i = 0; i < 2; i++)
                 {
-                    if (pts[i].DistanceTo(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis) < _tolerance)
+                    if (pts[i].DistanceTo(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]].WebAxis) < _tolerance)
                     {
                         terminal = new Line(pts[i], pts[(i + 1) % 2]);
-                        cross = new Line(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis.StartPoint, _members[con.members[(con.members.IndexOf(mem) + 1) % 2]]._webAxis.EndPoint);
+                        cross = new Line(_members[con.members[(con.members.IndexOf(mem) + 1) % 2]].WebAxis.StartPoint, _members[con.members[(con.members.IndexOf(mem) + 1) % 2]].WebAxis.EndPoint);
                         iTerminal = mem;
                         iCross = con.members[(con.members.IndexOf(mem) + 1) % 2];
                         return;
@@ -1130,8 +1127,8 @@ namespace HowickMaker
                     double d2 = ((c1 / Math.Cos(angle)) - c1) / (Math.Tan(angle));
                     double x1 = (c1 / Math.Sin(angle)) - (c1 / Math.Tan(angle));
                     double x2 = (c1 / Math.Sin(angle)) + (c1 / Math.Tan(angle));
-                    bool b1 = _members[iOutisde]._webNormal.Dot(_members[iInside]._webNormal) < 0;
-                    bool b2 = _members[iOutisde]._webNormal.Dot(vec1) > 0;
+                    bool b1 = _members[iOutisde].WebNormal.Dot(_members[iInside].WebNormal) < 0;
+                    bool b2 = _members[iOutisde].WebNormal.Dot(vec1) > 0;
                     double d = (b1) ? x2 : x1;
 
                     // Determine orientation of members to each other and adjust d accordingly
@@ -1142,15 +1139,15 @@ namespace HowickMaker
                     intersectionPoint = intersectionPoint.Add(vec1.Normalized().Scale(d));
 
                     // Add operations to terminal member of T joint
-                    double l = _members[iInside]._webAxis.Length;
+                    double l = _members[iInside].WebAxis.Length;
                     _members[iInside].AddOperationByPointType(intersectionPoint, "DIMPLE");
                     _members[iInside].AddOperationByPointType(intersectionPoint, "SWAGE");
 
                     // Find the dimple point and its location on the cross member of the T joint
                     Triple dimplePoint = intersectionPoint;
-                    double crossIntLoc = _members[iOutisde]._webAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde]._webAxis.Length;
-                    dimplePoint = dimplePoint.Add(_members[iInside]._webNormal.Normalized().Scale(0.75));
-                    double crossDimpleLoc = _members[iOutisde]._webAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde]._webAxis.Length;
+                    double crossIntLoc = _members[iOutisde].WebAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde].WebAxis.Length;
+                    dimplePoint = dimplePoint.Add(_members[iInside].WebNormal.Normalized().Scale(0.75));
+                    double crossDimpleLoc = _members[iOutisde].WebAxis.ParameterAtPoint(dimplePoint) * _members[iOutisde].WebAxis.Length;
 
                     // Add Dimple to cross member
                     _members[iOutisde].AddOperationByLocationType(crossDimpleLoc, "DIMPLE");
@@ -1164,7 +1161,7 @@ namespace HowickMaker
 
                     // Compute range for insertion operation
                     double clearance = 0.25;
-                    bool pos = Triple.ByTwoPoints(_members[iOutisde]._webAxis.StartPoint, _members[iOutisde]._webAxis.EndPoint).Dot(vec1) > 0;
+                    bool pos = Triple.ByTwoPoints(_members[iOutisde].WebAxis.StartPoint, _members[iOutisde].WebAxis.EndPoint).Dot(vec1) > 0;
                     double start = (!pos) ? crossDimpleLoc + x1 + clearance : crossDimpleLoc - x1 - clearance;
                     double start2 = (pos) ? crossDimpleLoc + x1 + clearance : crossDimpleLoc - x1 - clearance;
                     double end = (pos) ? crossDimpleLoc + x2 + clearance : crossDimpleLoc - x2 - clearance;

@@ -22,7 +22,7 @@ namespace HowickMakerDynamo
         //               
 
         [MultiReturn(new[] { "members", "braces", "connections" })]
-        public static Dictionary<string, object> FromLines_Advanced(
+        public static Dictionary<string, object> FromLines(
             List<Geo.Line> lines,
             [DefaultArgument("[]")] List<string> names,
             [DefaultArgument("{}")] Dictionary<string, Geo.Vector> webNormalsDict,
@@ -61,7 +61,7 @@ namespace HowickMakerDynamo
                 hWebNormalsDict[vectorName] = new HM.Triple(vector.X, vector.Y, vector.Z);
             }
 
-            HM.hStructure structure = HM.hStructure.StructureFromLines_Advanced(
+            HM.hStructure structure = HM.hStructure.StructureFromLines(
                 hLines,
                 names,
                 hWebNormalsDict,
@@ -75,11 +75,17 @@ namespace HowickMakerDynamo
                 braceLength2,
                 firstConnectionIsFTF);
 
+            var mems = structure.Members.ToList();
+            var components = new List<Component>();
+            foreach (HM.hMember m in mems)
+            {
+                components.Add(new Component(m));
+            }
             return new Dictionary<string, object>
             {
-                { "members", structure._members.ToList() },
-                { "braces", structure._braceMembers.ToList() },
-                { "connections", structure._connections }
+                { "members", components },
+                { "braces", structure.BraceMembers.ToList() },
+                { "connections", structure.Connections }
             };
         }
 

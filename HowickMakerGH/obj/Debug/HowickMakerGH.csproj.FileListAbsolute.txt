@@ -1,0 +1,9 @@
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\bin\HowickMakerGH.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\bin\HowickMakerGH.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\obj\Debug\HowickMakerGH.csprojResolveAssemblyReference.cache
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\obj\Debug\HowickMakerGH.csproj.CoreCompileInputs.cache
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\obj\Debug\HowickMakerGH.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\obj\Debug\HowickMakerGH.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\bin\HowickMaker.dll
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\bin\HowickMaker.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerGH\bin\HowickMaker.xml

@@ -2,40 +2,51 @@
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 
 namespace HowickMaker
 {
+    //  ██╗  ██╗    ███╗   ███╗███████╗███╗   ███╗██████╗ ███████╗██████╗ 
+    //  ██║  ██║    ████╗ ████║██╔════╝████╗ ████║██╔══██╗██╔════╝██╔══██╗
+    //  ███████║    ██╔████╔██║█████╗  ██╔████╔██║██████╔╝█████╗  ██████╔╝
+    //  ██╔══██║    ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║██╔══██╗██╔══╝  ██╔══██╗
+    //  ██║  ██║    ██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║██████╔╝███████╗██║  ██║
+    //  ╚═╝  ╚═╝    ╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝
+    //                                                                    
+
     /// <summary>
     /// Represents a steel stud
     /// </summary>
     public class hMember
     {
+        //   ___   ___   ___   ___   ____  ___  _____  _   ____  __  
+        //  | |_) | |_) / / \ | |_) | |_  | |_)  | |  | | | |_  ( (` 
+        //  |_|   |_| \ \_\_/ |_|   |_|__ |_| \  |_|  |_| |_|__ _)_) 
+
+
+        /// <summary>
+        /// List of the connections between this member and its neighbors
+        /// </summary>
         public List<hConnection> Connections {
-            get
-            {
-                return connections;
-            }
+            get { return connections; }
         }
-        public List<hOperation> Operations
-        {
-            get
-            {
-                return operations;
-            }
+        private List<hConnection> connections = new List<hConnection>();
+
+        /// <summary>
+        /// List of the operations on this member
+        /// </summary>
+        public List<hOperation> Operations {
+            get { return operations; }
         }
+        private List<hOperation> operations = new List<hOperation>();
 
         /// <summary>
         /// The web axis of a member
         /// </summary>
         /// <returns name="webAxis">The web axis of the member</returns>
-        public Line WebAxis
-        {
+        public Line WebAxis {
             get { return _webAxis; }
         }
-        internal Line _webAxis;
+        private Line _webAxis;
 
         /// <summary>
         /// The web normal of a member
@@ -43,8 +54,9 @@ namespace HowickMaker
         public Triple WebNormal
         {
             get { return _webNormal; }
+            set { _webNormal = value; }
         }
-        internal Triple _webNormal;
+        private Triple _webNormal;
 
         /// <summary>
         /// The flange axes of a member
@@ -71,28 +83,17 @@ namespace HowickMaker
         {
             get { return WebAxis.Length; }
         }
-
         
-        public List<hConnection> connections = new List<hConnection>();
-        internal List<hOperation> operations = new List<hOperation>();
         internal string _label;
-        
 
 
 
+        //   __    ___   _      __  _____  ___   _     __   _____  ___   ___   __  
+        //  / /`  / / \ | |\ | ( (`  | |  | |_) | | | / /`   | |  / / \ | |_) ( (` 
+        //  \_\_, \_\_/ |_| \| _)_)  |_|  |_| \ \_\_/ \_\_,  |_|  \_\_/ |_| \ _)_)                                        
 
-        //   ██████╗ ██████╗ ███╗   ██╗███████╗████████╗██████╗ 
-        //  ██╔════╝██╔═══██╗████╗  ██║██╔════╝╚══██╔══╝██╔══██╗
-        //  ██║     ██║   ██║██╔██╗ ██║███████╗   ██║   ██████╔╝
-        //  ██║     ██║   ██║██║╚██╗██║╚════██║   ██║   ██╔══██╗
-        //  ╚██████╗╚██████╔╝██║ ╚████║███████║   ██║   ██║  ██║
-        //   ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝
-        //                                                      
-        
-        public hMember()
-        {
 
-        }
+        public hMember() { }
         
         public hMember(hMember member)
         {
@@ -123,17 +124,14 @@ namespace HowickMaker
             _webNormal = null;
             _name = name;
         }
-        
 
-        //  ██╗███╗   ██╗████████╗███████╗██████╗ ███╗   ██╗ █████╗ ██╗     
-        //  ██║████╗  ██║╚══██╔══╝██╔════╝██╔══██╗████╗  ██║██╔══██╗██║     
-        //  ██║██╔██╗ ██║   ██║   █████╗  ██████╔╝██╔██╗ ██║███████║██║     
-        //  ██║██║╚██╗██║   ██║   ██╔══╝  ██╔══██╗██║╚██╗██║██╔══██║██║     
-        //  ██║██║ ╚████║   ██║   ███████╗██║  ██║██║ ╚████║██║  ██║███████╗
-        //  ╚═╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚═╝  ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚══════╝
-        //                                                                  
 
-        
+
+        //   _      ____ _____  _     ___   ___   __  
+        //  | |\/| | |_   | |  | |_| / / \ | | \ ( (` 
+        //  |_|  | |_|__  |_|  |_| | \_\_/ |_|_/ _)_)                                                      
+
+
         /// <summary>
         /// Add an operation to the member by specifiying the type of operation and the point at which the operation should occur
         /// </summary>
@@ -252,16 +250,9 @@ namespace HowickMaker
 
 
 
-
-
-
-        //  ███████╗██╗  ██╗██████╗  ██████╗ ██████╗ ████████╗
-        //  ██╔════╝╚██╗██╔╝██╔══██╗██╔═══██╗██╔══██╗╚══██╔══╝
-        //  █████╗   ╚███╔╝ ██████╔╝██║   ██║██████╔╝   ██║   
-        //  ██╔══╝   ██╔██╗ ██╔═══╝ ██║   ██║██╔══██╗   ██║   
-        //  ███████╗██╔╝ ██╗██║     ╚██████╔╝██║  ██║   ██║   
-        //  ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝   
-        //                                   
+        //   ____  _     ___   ___   ___  _____ 
+        //  | |_  \ \_/ | |_) / / \ | |_)  | |  
+        //  |_|__ /_/ \ |_|   \_\_/ |_| \  |_|                   
 
 
         /// <summary>
@@ -305,24 +296,12 @@ namespace HowickMaker
 
 
         /// <summary>
-        /// Returns a string representing the hMember as a csv line to be produced on the Howick
+        /// Returns a string representing the hMember as a hmk line
         /// </summary>
         /// <param name="member"></param>
         /// <param name="normalLabel"></param>
         /// <returns></returns>
-        public static string AsCSVLine(hMember member, bool normalLabel = true)
-        {
-            return member.AsCSVLine(normalLabel);
-        }
-
-
-        /// <summary>
-        /// Returns a string representing the hMember as a hmk line to be produced on the Howick
-        /// </summary>
-        /// <param name="member"></param>
-        /// <param name="normalLabel"></param>
-        /// <returns></returns>
-        internal string AsHMKLine(bool normalLabel = true)
+        public string AsHMKLine(bool normalLabel = true)
         {
             string csv = "";
             var tempName = (_label == null) ? _name : _label;
@@ -359,7 +338,7 @@ namespace HowickMaker
         /// </summary>
         /// <param name="normalLabel"></param>
         /// <returns></returns>
-        internal string AsCSVLine(bool normalLabel = true)
+        public string AsCSVLine(bool normalLabel = true)
         {
             string csv = "";
             csv += "COMPONENT" + "," + _label + ",";
@@ -375,11 +354,5 @@ namespace HowickMaker
 
             return csv;
         }
-
-
-
-
-
-        
     }
 }

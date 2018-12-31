@@ -96,7 +96,7 @@ namespace HowickMaker
             distances.Add( this.EndPoint.DistanceTo(other.EndPoint) );
 
             double d9 = LineToLineDistance(other);
-            if (d9 > 0) { distances.Add(d9); }
+            if (d9 >= 0) { distances.Add(d9); }
 
             return distances.Min();
         }

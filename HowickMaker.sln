@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HowickMakerTests", "HowickM
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HowickMakerDynamo", "HowickMakerDynamo\HowickMakerDynamo.csproj", "{579AEC00-C21A-468B-9DA8-5955DE9BB066}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HowickMakerGH", "HowickMakerGH\HowickMakerGH.csproj", "{143C854F-3398-43F5-9D6F-BEADB1F72062}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{579AEC00-C21A-468B-9DA8-5955DE9BB066}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{579AEC00-C21A-468B-9DA8-5955DE9BB066}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{579AEC00-C21A-468B-9DA8-5955DE9BB066}.Release|Any CPU.Build.0 = Release|Any CPU
+		{143C854F-3398-43F5-9D6F-BEADB1F72062}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{143C854F-3398-43F5-9D6F-BEADB1F72062}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{143C854F-3398-43F5-9D6F-BEADB1F72062}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{143C854F-3398-43F5-9D6F-BEADB1F72062}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
