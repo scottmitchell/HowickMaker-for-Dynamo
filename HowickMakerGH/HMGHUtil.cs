@@ -17,6 +17,13 @@ namespace HowickMakerGH
             return new HM.Line(start, end);
         }
 
+        public static Line HMLineToGHLine(HM.Line l)
+        {
+            var start = TripleToPoint(l.StartPoint);
+            var end = TripleToPoint(l.EndPoint);
+            return new Line(start, end);
+        }
+
         public static HM.Triple PointToTriple(Point3d pt)
         {
             return new HM.Triple(pt.X, pt.Y, pt.Z);
@@ -30,6 +37,11 @@ namespace HowickMakerGH
         public static HM.Triple VectorToTriple(Vector3d v)
         {
             return new HM.Triple(v.X, v.Y, v.Z);
+        }
+
+        public static Vector3d TripleToVector(HM.Triple t)
+        {
+            return new Vector3d(t.X, t.Y, t.Z);
         }
     }
 }

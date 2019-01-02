@@ -22,6 +22,15 @@ namespace HowickMaker
         //  | |_) | |_) / / \ | |_) | |_  | |_)  | |  | | | |_  ( (` 
         //  |_|   |_| \ \_\_/ |_|   |_|__ |_| \  |_|  |_| |_|__ _)_) 
 
+        /// <summary>
+        /// Width of the web of this stud
+        /// </summary>
+        public double studWidth = 3.5;
+
+        /// <summary>
+        /// Width of the web of this stud
+        /// </summary>
+        public double studHeight = 1.5;
 
         /// <summary>
         /// List of the connections between this member and its neighbors
@@ -54,7 +63,7 @@ namespace HowickMaker
         public Triple WebNormal
         {
             get { return _webNormal; }
-            set { _webNormal = value; }
+            set { _webNormal = value.Normalized(); }
         }
         private Triple _webNormal;
 
@@ -246,6 +255,44 @@ namespace HowickMaker
         internal void SortOperations()
         {
             operations = operations.OrderBy(op => op._loc).ToList();
+        }
+
+        public List<Triple> GetOperationPunchCenterPoint(hOperation op)
+        {
+            // Get location along web axis where operation occurs
+            var locParam = op._loc / this.Length;
+            var webAxisLocation = this.WebAxis.PointAtParameter(locParam);
+
+            var lateralVecA = this.WebAxis.Direction.Cross(this.WebNormal).Normalized();
+            var lateralVecB = lateralVecA.Reverse();
+
+            switch (op._type)
+            {
+                case Operation.WEB:
+                    var webHoleA = webAxisLocation.Add(lateralVecA.Scale(15.0 / 16));
+                    var webHoleB = webAxisLocation.Add(lateralVecB.Scale(15.0 / 16));
+                    return new List<Triple> { webAxisLocation, webHoleA, webHoleB };
+
+                case Operation.DIMPLE:
+                case Operation.END_TRUSS:
+                    var centeredLocation = webAxisLocation.Add(this.WebNormal.Scale(studHeight / 2));
+                    var dimpleHoleA = centeredLocation.Add(lateralVecA.Scale(studWidth / 2));
+                    var dimpleHoleB = centeredLocation.Add(lateralVecB.Scale(studWidth / 2));
+                    return new List<Triple> { dimpleHoleA, dimpleHoleB };
+
+                case Operation.LIP_CUT:
+                    centeredLocation = webAxisLocation.Add(this.WebNormal.Scale(studHeight));
+                    var lipCutHoleA = centeredLocation.Add(lateralVecA.Scale(studWidth / 2 - 0.25));
+                    var lipCutHoleB = centeredLocation.Add(lateralVecB.Scale(studWidth / 2 - 0.25));
+                    return new List<Triple> { lipCutHoleA, lipCutHoleB };
+
+                case Operation.BOLT:
+                case Operation.SERVICE_HOLE:
+                case Operation.SWAGE:
+                case Operation.NOTCH:
+                default:
+                    return new List<Triple> { webAxisLocation };
+            }
         }
 
 

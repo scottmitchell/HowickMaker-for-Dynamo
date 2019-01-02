@@ -235,7 +235,22 @@ namespace HowickMaker
             Line nextLine = _lines[current.neighbors[0]];
             Triple normal = currentLine.Direction.Cross(nextLine.Direction);
 
-            var vectors = new List<Triple> { Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal), Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse() };
+            List<Triple> vectors;
+            if (_firstConnectionIsFTF)
+            {
+                vectors = new List<Triple> {
+                    normal,
+                    normal.Reverse()
+                };
+            }
+            else
+            {
+                vectors = new List<Triple> {
+                    Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal),
+                    Triple.ByTwoPoints(currentLine.StartPoint, currentLine.EndPoint).Cross(normal).Reverse()
+                };
+            }
+
             Triple choice = vectors[0];
             if (_webNormalsDict.ContainsKey(_members[start]._label))
             {
@@ -245,7 +260,7 @@ namespace HowickMaker
                 choice = vects[0];
             }
 
-            currentMember.WebNormal = (_firstConnectionIsFTF) ? normal : choice;
+            currentMember.WebNormal = choice;
 
             _members[start] = currentMember;
 
@@ -798,46 +813,50 @@ namespace HowickMaker
                         
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
-                        double minExtension = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + 1;
-                        double mE = minExtension;
-                        double extendToMaxCoverage = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
-                        double noExtra = (angle % (Math.PI / 2) == 0 || Math.Abs(angle - (Math.PI / 2)) < 0.01 || angle < 0.01) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
+                        double extendForAllWebHoles = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + .25;
+                        double fullOverlap = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
+                        double noOverhang = (angle % (Math.PI / 2) == 0 || Math.Abs(angle - (Math.PI / 2)) < 0.01 || angle < 0.01) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
+
                         int type = 0;
                         if (this._extensionDict.ContainsKey(_members[index1]._label))
                         {
                             type = _extensionDict[_members[index1]._label];
                         }
 
-                        minExtension = noExtra + 1.5;
-
-                        if (type == 1)
+                        double extension;
+                        switch (type)
                         {
-                            minExtension -= 1.5;
-                        }
-                        else
-                        {
-                            minExtension = mE - 0.25;
+                            case 3:
+                                extension = fullOverlap;
+                                break;
+                            case 2:
+                                extension = extendForAllWebHoles;
+                                break;
+                            case 1:
+                            default:
+                                extension = noOverhang;
+                                break;
                         }
 
 
                         // Check start point
-                        if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < minExtension)
+                        if (SamePoints(intersectionPoint, axis1.StartPoint) || intersectionPoint.DistanceTo(axis1.StartPoint) < extension)
                         {
                             // Extend
                             Triple moveVector = Triple.ByTwoPoints(axis1.EndPoint, axis1.StartPoint);
                             moveVector = moveVector.Normalized();
-                            moveVector = moveVector.Scale(minExtension);
+                            moveVector = moveVector.Scale(extension);
                             Triple newStartPoint = intersectionPoint.Add(moveVector);
                             _members[index1].SetWebAxisStartPoint(newStartPoint);
                         }
 
                         // Check end point
-                        if (SamePoints(intersectionPoint, axis1.EndPoint) || intersectionPoint.DistanceTo(axis1.EndPoint) < minExtension)
+                        if (SamePoints(intersectionPoint, axis1.EndPoint) || intersectionPoint.DistanceTo(axis1.EndPoint) < extension)
                         {
                             // Extend
                             Triple moveVector = Triple.ByTwoPoints(axis1.StartPoint, axis1.EndPoint);
                             moveVector = moveVector.Normalized();
-                            moveVector = moveVector.Scale(minExtension);
+                            moveVector = moveVector.Scale(extension);
                             Triple newEndPoint = intersectionPoint.Add(moveVector);
                             _members[index1].SetWebAxisEndPoint(newEndPoint);
                         }

@@ -99,3 +99,4 @@ C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerTests\obj\Debug\HowickMakerTests.c
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerTests\obj\Debug\HowickMakerTests.csproj.CoreCompileInputs.cache
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerTests\obj\Debug\HowickMakerTests.dll
 C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerTests\obj\Debug\HowickMakerTests.pdb
+C:\Users\t_mitcs\Repos\HowickMaker\HowickMakerTests\bin\Debug\LibG.Interface.dll

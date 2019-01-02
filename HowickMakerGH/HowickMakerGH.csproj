@@ -57,11 +57,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CreateExtensionDictionary_Component.cs" />
+    <Compile Include="CreatePriorityDictionary_Component.cs" />
+    <Compile Include="CreateWebNormalsDictionary_Component.cs" />
     <Compile Include="HMGHUtil.cs" />
     <Compile Include="Member.cs" />
     <Compile Include="MemberDisplay_Component.cs" />
     <Compile Include="MemberLV_Component.cs" />
     <Compile Include="HowickMakerGHInfo.cs" />
+    <Compile Include="MemberOperationDisplay_Component.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StructureFromLines_Component.cs" />
   </ItemGroup>
