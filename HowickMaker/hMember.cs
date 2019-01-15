@@ -165,7 +165,7 @@ namespace HowickMaker
             AddOperation(op);
         }
 
-
+        
         /// <summary>
         /// Add an hOperation to the member's list of operations
         /// </summary>
