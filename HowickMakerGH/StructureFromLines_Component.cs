@@ -35,6 +35,8 @@ namespace HowickMakerGH
             pManager[4].Optional = true;
             pManager.AddGenericParameter("Extension Dictionary", "E", "Dictionary<name, extensions(int)> -- Use 'CreateExtensionDictionary' component", GH_ParamAccess.item);
             pManager[5].Optional = true;
+            pManager.AddNumberParameter("Tolerance", "T", "tolerance for solver", GH_ParamAccess.item);
+            pManager[6].Optional = true;
         }
 
         /// <summary>
@@ -59,6 +61,7 @@ namespace HowickMakerGH
             Dictionary<string, HM.Triple> webNormalsDictionary = null;
             Dictionary<string, int> prioritiesDictionary = null;
             Dictionary<string, int> extensionDictionary = null;
+            double tolerance = 0.001;
 
             // Retrieve input data.
             if (!DA.GetDataList(0, inputLines)) { return; }
@@ -67,6 +70,7 @@ namespace HowickMakerGH
             if (!DA.GetData(3, ref webNormalsDictionary)) { webNormalsDictionary = null; }
             if (!DA.GetData(4, ref prioritiesDictionary)) { prioritiesDictionary = null; }
             if (!DA.GetData(5, ref extensionDictionary)) { extensionDictionary = null; }
+            if (!DA.GetData(6, ref tolerance)) { tolerance = 0.001; }
 
             // Convert GH lines to HM lines
             var HMLines = new List<HM.Line>();
@@ -83,7 +87,9 @@ namespace HowickMakerGH
                 webNormalsDict: webNormalsDictionary,
                 priorityDict: prioritiesDictionary,
                 extensionDict: extensionDictionary,
-                firstConnectionIsFTF: firstConnectionIsFTF);
+                firstConnectionIsFTF: firstConnectionIsFTF,
+                intersectionTolerance: tolerance,
+                planarityTolerance: tolerance);
 
             DA.SetDataList(0, structure.Members);
         }
