@@ -96,7 +96,7 @@ namespace HowickMaker
             if (_queue.Count > 0)
             {
                 var next = _queue.Dequeue();
-                numVisited += Visit(vertices[next], numVisited);
+                numVisited = Visit(vertices[next], numVisited);
             }
             return numVisited;
         }
