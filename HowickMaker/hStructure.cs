@@ -180,8 +180,9 @@ namespace HowickMaker
             }
 
             // Resolve all connections
-            structure.ResolveFTFConnections();
+
             structure.ResolveBRConnections();
+            structure.ResolveFTFConnections();
             structure.ResolveTConnections();
             structure.ResolvePTConnections();
 
@@ -476,7 +477,7 @@ namespace HowickMaker
                     foreach (Triple cV in checkVectors)
                     {
                         //allVectors.Add(cV);
-                        if (pV.Dot(cV) > 1 - _tolerance)
+                        if (pV.Normalized().Dot(cV.Normalized()) > 1 - _tolerance)
                         {
                             newVectors.Add(pV);
                         }
