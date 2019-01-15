@@ -102,6 +102,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Component.cs" />
+    <Compile Include="CurvedMember.cs" />
     <Compile Include="Frameset.cs" />
     <Compile Include="HMDynamoUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -116,4 +117,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y "$(SolutionDir)\HowickMakerDynamo\bin\Debug\HowickMakerDynamo.dll" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\2.2\packages\_HowickMaker\bin"
+copy /Y "$(SolutionDir)\HowickMakerDynamo\bin\Debug\HowickMakerDynamo.xml" "C:\Users\t_mitcs\AppData\Roaming\Dynamo\Dynamo Core\2.2\packages\_HowickMaker\bin"
+
+
+
+</PostBuildEvent>
+  </PropertyGroup>
 </Project>
