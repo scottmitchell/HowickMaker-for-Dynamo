@@ -139,12 +139,14 @@ namespace HowickMaker
             
             distances.Add( this.EndPoint.DistanceTo(other.EndPoint) );
 
-            double d9 = LineToLineDistance(other);
+            double d9 = Math.Abs(LineToLineDistance(other));
             var closestPoint = this.ClosestPointOnLine(other);
             var t = this.ParameterAtPoint(closestPoint);
             closestPoint = other.ClosestPointOnLine(this);
             var u = other.ParameterAtPoint(closestPoint);
-            if (t >= 0 && t <= 1 && u >= 0 && u <= 1 && d9 >= 0)
+            var dot = Math.Abs(this.Direction.Normalized().Dot(other.Direction.Normalized()));
+            var parallel = dot == 1;
+            if (!parallel && t >= 0 && t <= 1 && u >= 0 && u <= 1)
             {
                 distances.Add(d9);
             }
