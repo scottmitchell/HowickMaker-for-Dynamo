@@ -12,11 +12,11 @@ namespace HowickMakerDynamo
 {
     public class CurvedMember
     {
-        public static List<Component> CurvedMemberFromPolyline(List<Geo.Line> lines)
+        public static List<Member> CurvedMemberFromPolyline(List<Geo.Line> lines)
         {
             var HMLines = lines.Select(l => HMDynamoUtil.DSLineToHMLine(l));
             var curvedMember = new HM.hCurvedMember(HMLines.ToList());
-            return curvedMember.Segments.Select(m => new Component(m)).ToList();
+            return curvedMember.Segments.Select(m => new Member(m)).ToList();
         }
     }
 }
