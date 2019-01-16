@@ -10,13 +10,13 @@ using Autodesk.DesignScript.Runtime;
 
 namespace HowickMakerDynamo
 {
-    public class Component : HM.hMember, IGraphicItem
+    public class Member : HM.hMember, IGraphicItem
     {
-        private Component(HM.Line webAxis, HM.Triple webNormal, string name = "0") : base(webAxis, webNormal, name)
+        private Member(HM.Line webAxis, HM.Triple webNormal, string name = "0") : base(webAxis, webNormal, name)
         {
         }
 
-        public Component(HM.hMember member) : base(member)
+        public Member(HM.hMember member) : base(member)
         {
         }
 
@@ -32,13 +32,13 @@ namespace HowickMakerDynamo
         /// <param name="webNormal"></param>
         /// <param name="name"></param>
         /// <returns name="hMember"></returns>
-        public static Component ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
+        public static Member ByLineVector(Geo.Line webAxis, Geo.Vector webNormal, string name = "0")
         {
             // DS to HM conversions
             var hWebAxis = HMDynamoUtil.DSLineToHMLine(webAxis);
             var hWebNormal = HMDynamoUtil.VectorToTriple(webNormal);
 
-            var member = new Component(hWebAxis, hWebNormal.Normalized(), name);
+            var member = new Member(hWebAxis, hWebNormal.Normalized(), name);
             return member;
         }
 
@@ -55,9 +55,9 @@ namespace HowickMakerDynamo
         /// <param name="member"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Component AddName(Component member, string name)
+        public static Member AddName(Member member, string name)
         {
-            var newMember = new Component(member);
+            var newMember = new Member(member);
             newMember.Name = name;
             return newMember;
         }
@@ -69,9 +69,9 @@ namespace HowickMakerDynamo
         /// <param name="locations"></param>
         /// <param name="types"></param>
         /// <returns name="hMember"></returns>
-        public static Component AddOperationByLocationType(Component member, List<double> locations, List<string> types)
+        public static Member AddOperationByLocationType(Member member, List<double> locations, List<string> types)
         {
-            var newMember = new Component(member);
+            var newMember = new Member(member);
             for (int i = 0; i < locations.Count; i++)
             {
                 var op = new HM.hOperation(locations[i], (HM.Operation)System.Enum.Parse(typeof(HM.Operation), types[i]));
@@ -87,9 +87,9 @@ namespace HowickMakerDynamo
         /// <param name="points"></param>
         /// <param name="types"></param>
         /// <returns name="hMember">></returns>
-        public static Component AddOperationByPointType(Component member, List<Geo.Point> points, List<string> types)
+        public static Member AddOperationByPointType(Member member, List<Geo.Point> points, List<string> types)
         {
-            var newMember = new Component(member);
+            var newMember = new Member(member);
             for (int i = 0; i < points.Count; i++)
             {
                 newMember.AddOperationByPointType(HMDynamoUtil.PointToTriple(points[i]), types[i]);
@@ -110,7 +110,7 @@ namespace HowickMakerDynamo
         /// <param name="member"></param>
         /// <returns></returns>
         [IsVisibleInDynamoLibrary(true)]
-        public static List<Geo.Line> GetFlangeAxes(Component member)
+        public static List<Geo.Line> GetFlangeAxes(Member member)
         {
             var lines = member.FlangeAxes;
             return new List<Geo.Line> { HMDynamoUtil.HMLineToDSLine(lines[0]), HMDynamoUtil.HMLineToDSLine(lines[1]) };
@@ -125,7 +125,7 @@ namespace HowickMakerDynamo
 
         [IsVisibleInDynamoLibrary(true)]
         [MultiReturn(new[] { "member", "operations" })]
-        public static Dictionary<string, object> DrawAsMesh(Component member)
+        public static Dictionary<string, object> DrawAsMesh(Member member)
         {
             var DSWebAxis = HMDynamoUtil.HMLineToDSLine(member.WebAxis);
             var DSWebNormal = HMDynamoUtil.TripleToVector(member.WebNormal);
@@ -187,7 +187,7 @@ namespace HowickMakerDynamo
         /// <returns></returns>
         [IsVisibleInDynamoLibrary(true)]
         [MultiReturn(new[] { "member", "operations" })]
-        public static Dictionary<string, object> DrawAsPolysurface(Component member)
+        public static Dictionary<string, object> DrawAsPolysurface(Member member)
         {
             var DSWebAxis = HMDynamoUtil.HMLineToDSLine(member.WebAxis);
             var DSWebNormal = HMDynamoUtil.TripleToVector(member.WebNormal);

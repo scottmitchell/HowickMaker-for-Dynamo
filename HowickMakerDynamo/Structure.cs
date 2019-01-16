@@ -10,7 +10,7 @@ using Autodesk.DesignScript.Runtime;
 
 namespace HowickMakerDynamo
 {
-    public class Frameset
+    public class Structure
     {
 
         //  ██████╗ ██╗   ██╗██████╗      ██████╗███╗   ██╗███████╗████████╗██████╗ 
@@ -76,10 +76,10 @@ namespace HowickMakerDynamo
                 firstConnectionIsFTF);
 
             var mems = structure.Members.ToList();
-            var components = new List<Component>();
+            var components = new List<Member>();
             foreach (HM.hMember m in mems)
             {
-                components.Add(new Component(m));
+                components.Add(new Member(m));
             }
             return new Dictionary<string, object>
             {
