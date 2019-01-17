@@ -497,6 +497,8 @@ namespace HowickMaker
         /// </summary>
         internal void ResolveBRConnections()
         {
+            var extensionLength = 0.6;
+
             foreach (hConnection connection in _connections)
             {
                 if (connection.type == Connection.BR)
@@ -533,22 +535,39 @@ namespace HowickMaker
                         double c1 = _StudHeight / 2.0;
 
                         // Compute extension to DIMPLE
-                        double d = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
+                        double d1 = ((c1 / Math.Cos(angle)) + c1) / (Math.Tan(angle));
+                        double d2 = ((c1 / Math.Cos(angle)) - c1) / (Math.Tan(angle));
                         Triple connectionPlaneNormal = vec1.Cross(vec2);
 
                         // Determine orientation of members to each other and adjust d accordingly
+                        bool b1 = _members[index1].WebNormal.Dot(_members[index2].WebNormal) < 0; // They are (both facing in) || (both facing out)
+                        bool b2 = _members[index2].WebNormal.Dot(vec1) > 0; // Other member is facing this member
                         bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1].WebNormal)) > 0;
-                        if (webOut)
+
+                        double d = (b1) ? d1 : d2;
+
+                        if (b1)
                         {
-                            d *= -1;
+                            if (webOut)
+                            {
+                                d *= -1;
+                            }
                         }
+                        else
+                        {
+                            if (b2)
+                            {
+                                d *= -1;
+                            }
+                        }
+                        
                         
                         // Compute translation vector for end point in question
                         Triple moveVector = vec1.Reverse();
 
                         // Get new end point
                         moveVector = moveVector.Normalized();
-                        moveVector = moveVector.Scale(d + 0.75);
+                        moveVector = moveVector.Scale(d + extensionLength);
                         Triple newEndPoint = common[i].Add(moveVector);
 
                         d = Math.Abs(d);
@@ -563,25 +582,25 @@ namespace HowickMaker
                         // Add connection dimple and end truss
                         double l = _members[index1].WebAxis.Length;
                         _members[index1].AddOperationByLocationType((atMemberStart) ? 0.0 : l - 0.0, "END_TRUSS");
-                        _members[index1].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, "DIMPLE");
+                        _members[index1].AddOperationByLocationType((atMemberStart) ? extensionLength : l - extensionLength, "DIMPLE");
 
                         // Determine interior and exterior operations for pass through of other member
                         string interiorOp = (webOut) ? "LIP_CUT" : "NOTCH";
                         string exteriorOp = (webOut) ? "NOTCH" : "LIP_CUT";
 
                         // Add exterior operation
-                        _members[index1].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, exteriorOp);
+                        //_members[index1].AddOperationByLocationType((atMemberStart) ? 0.75 : l - 0.75, exteriorOp);
 
                         // Add interior operations
                         double iLoc = 0.75;
-                        while (iLoc < (Math.Abs(d) + 0.25))
+                        while (iLoc < (Math.Abs(d1) + 0.25))
                         {
                             _members[index1].AddOperationByLocationType((atMemberStart) ? iLoc : l - iLoc, interiorOp);
                             iLoc += 1.25;
                         }
 
                         // Add final interior operation
-                        _members[index1].AddOperationByLocationType((atMemberStart) ? (0.5 + Math.Abs(d)) : l - (0.5 + Math.Abs(d)), interiorOp);
+                        _members[index1].AddOperationByLocationType((atMemberStart) ? (0.5 + Math.Abs(d1)) : l - (0.5 + Math.Abs(d1)), interiorOp);
                         
                     }
                 }
