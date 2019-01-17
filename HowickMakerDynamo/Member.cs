@@ -641,13 +641,15 @@ namespace HowickMakerDynamo
                         webAxis = webAxisR.Normalized().Scale(0.5);
                     }
 
-                    normal = normal.Normalized().Scale(1.50);
+                    normal = normal.Normalized().Scale(1.51);
                     Geo.Vector normal2 = normal.Normalized().Scale(1.0);
                     Geo.Vector normal3 = normal.Normalized().Scale(0.5);
                     normalR = normalR.Normalized().Scale(0.01);
+
                     lateral2 = lateral.Normalized().Scale(1.25);
                     lateral2R = lateralR.Normalized().Scale(1.25);
 
+                    // Outside
                     Geo.Point[] endTrussPts = { opPoint.Add(lateral).Add(normal2), opPoint.Add(lateral).Add(normal).Add(webAxis), opPoint.Add(lateral).Add(normal) };
                     package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
                     package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
@@ -700,6 +702,241 @@ namespace HowickMakerDynamo
                     package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
                     package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
                     package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal), opPoint.Add(lateralR).Add(webAxis).Add(normal), opPoint.Add(lateral2R).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(webAxis).Add(normal), opPoint.Add(lateral2R).Add(normal), opPoint.Add(lateral2R).Add(normal).Add(webAxis) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    // Inside
+                    lateral = lateral.Normalized().Scale(1.74);
+                    lateralR = lateralR.Normalized().Scale(1.74);
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normal2), opPoint.Add(lateral).Add(normal).Add(webAxis), opPoint.Add(lateral).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normal3), opPoint.Add(lateral).Add(webAxis), opPoint.Add(lateral) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexNormal(lateral.X, lateral.Y, lateral.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal2), opPoint.Add(lateralR).Add(normal).Add(webAxis), opPoint.Add(lateralR).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal3), opPoint.Add(lateralR).Add(webAxis), opPoint.Add(lateralR) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexNormal(lateralR.X, lateralR.Y, lateralR.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(normal), opPoint.Add(lateralR).Add(webAxis).Add(normal), opPoint.Add(lateral2R).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateralR).Add(webAxis).Add(normal), opPoint.Add(lateral2R).Add(normal), opPoint.Add(lateral2R).Add(normal).Add(webAxis) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    // LIP R
+                    lateral = lateral.Normalized().Scale(1.76);
+                    lateralR = lateralR.Normalized().Scale(1.76);
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normal), opPoint.Add(lateral).Add(webAxis).Add(normal), opPoint.Add(lateral2).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(webAxis).Add(normal), opPoint.Add(lateral2).Add(normal), opPoint.Add(lateral2).Add(normal).Add(webAxis) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    // LIP
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normal), opPoint.Add(lateral).Add(webAxis).Add(normal), opPoint.Add(lateral2).Add(normal) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    
+                    
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(webAxis).Add(normal), opPoint.Add(lateral2).Add(normal), opPoint.Add(lateral2).Add(normal).Add(webAxis) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    // Notch
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normalR), opPoint.Add(lateral).Add(webAxis).Add(normalR), opPoint.Add(lateralR).Add(webAxis).Add(normalR) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normalR), opPoint.Add(lateralR).Add(normalR), opPoint.Add(lateralR).Add(webAxis).Add(normalR) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    // Notch 2
+                    normalR = normalR.Reverse();
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normalR), opPoint.Add(lateral).Add(webAxis).Add(normalR), opPoint.Add(lateralR).Add(webAxis).Add(normalR) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+                    package.AddTriangleVertexUV(0, 0);
+
+                    endTrussPts = new Geo.Point[] { opPoint.Add(lateral).Add(normalR), opPoint.Add(lateralR).Add(normalR), opPoint.Add(lateralR).Add(webAxis).Add(normalR) };
+                    package.AddTriangleVertex(endTrussPts[0].X, endTrussPts[0].Y, endTrussPts[0].Z);
+                    package.AddTriangleVertex(endTrussPts[1].X, endTrussPts[1].Y, endTrussPts[1].Z);
+                    package.AddTriangleVertex(endTrussPts[2].X, endTrussPts[2].Y, endTrussPts[2].Z);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexColor(r, g, b, a);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
+                    package.AddTriangleVertexNormal(normal.X, normal.Y, normal.Z);
                     package.AddTriangleVertexUV(0, 0);
                     package.AddTriangleVertexUV(0, 0);
                     package.AddTriangleVertexUV(0, 0);
