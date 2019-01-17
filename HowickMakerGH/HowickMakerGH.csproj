@@ -57,9 +57,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AddOperationAtPoint_Component.cs" />
     <Compile Include="CreateExtensionDictionary_Component.cs" />
     <Compile Include="CreatePriorityDictionary_Component.cs" />
     <Compile Include="CreateWebNormalsDictionary_Component.cs" />
+    <Compile Include="ExportToFile_Component.cs" />
     <Compile Include="HMGHUtil.cs" />
     <Compile Include="Member.cs" />
     <Compile Include="MemberDisplay_Component.cs" />
