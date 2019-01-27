@@ -542,11 +542,13 @@ namespace HowickMaker
                         // Determine orientation of members to each other and adjust d accordingly
                         bool b1 = _members[index1].WebNormal.Dot(_members[index2].WebNormal) < 0; // They are (both facing in) || (both facing out)
                         bool b2 = _members[index2].WebNormal.Dot(vec1) > 0; // Other member is facing this member
+                        bool b3 = vec1.Dot(vec2) < 0; // Angle is obtuse
+                        bool b4 = ((b1 && !b3) || (!b1 && b3));
                         bool webOut = connectionPlaneNormal.Dot(vec1.Cross(_members[index1].WebNormal)) > 0;
 
-                        double d = (b1) ? d1 : d2;
+                        double d = (b4) ? d1 : d2;
 
-                        if (b1)
+                        if (b4)
                         {
                             if (webOut)
                             {
@@ -851,6 +853,9 @@ namespace HowickMaker
                                 break;
                             case 2:
                                 extension = extendForAllWebHoles;
+                                break;
+                            case 0:
+                                extension = 0;
                                 break;
                             case 1:
                             default:
