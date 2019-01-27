@@ -101,11 +101,13 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="hTriangleStrategy.cs" />
     <Compile Include="Member.cs" />
     <Compile Include="CurvedMember.cs" />
     <Compile Include="Structure.cs" />
     <Compile Include="HMDynamoUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="tAgent.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HowickMaker\HowickMaker.csproj">
