@@ -8,8 +8,10 @@ using Autodesk.DesignScript.Interfaces;
 using Autodesk.DesignScript.Runtime;
 using Mesh = Autodesk.Dynamo.MeshToolkit.Mesh;
 
+using HM = HowickMaker;
 
-namespace Strategies
+
+namespace HowickMakerDynamo
 {
     internal class tAgent
     {
@@ -123,7 +125,11 @@ namespace Strategies
             int closerAgentIndex = -1;
             GetFurtherIntersectionAtParameter(parameter, _faceIndexA, agents, out Geo.Point furtherIntersect, out Geo.Point closerIntersect, out furtherAgentIndex, out closerAgentIndex);
 
-            Geo.Point edgeIntersectionA = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[0]);
+            Geo.Point edgeIntersectionA = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                HMDynamoUtil.DSLineToHMLine(agents[furtherAgentIndex]._edge),
+                HMDynamoUtil.DSLineToHMLine(GetLinesAtParameter(agents, parameter)[0])
+                ));
+
             double value1 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
             double outOfBounds = 0;
 
@@ -139,7 +145,11 @@ namespace Strategies
             {
                 GetFurtherIntersectionAtParameter(parameter, _faceIndexB, agents, out furtherIntersect, out closerIntersect, out furtherAgentIndex, out closerAgentIndex);
 
-                Geo.Point edgeIntersectionB = HowickMaker.hStructure.ClosestPointToOtherLine(agents[furtherAgentIndex]._edge, GetLinesAtParameter(agents, parameter)[1]);
+                Geo.Point edgeIntersectionB = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(agents[furtherAgentIndex]._edge),
+                    HMDynamoUtil.DSLineToHMLine(GetLinesAtParameter(agents, parameter)[1])
+                    ));
+
                 value2 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
 
                 double outOfBoundsB1 = furtherIntersect.DistanceTo(_faceSurfaceB);
@@ -240,13 +250,25 @@ namespace Strategies
             Geo.Point p2;
             if (faceIndex == _faceIndexA)
             {
-                p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineA, agents[_neighborsA[0]].GetLine(_faceIndexA));
-                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(_lineA, agents[_neighborsA[1]].GetLine(_faceIndexA));
+                p = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(_lineA),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsA[0]].GetLine(_faceIndexA))
+                    ));
+                p2 = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(_lineA),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsA[1]].GetLine(_faceIndexA))
+                    ));
             }
             else if (faceIndex == _faceIndexB)
             {
-                p = HowickMaker.hStructure.ClosestPointToOtherLine(_lineB, agents[_neighborsB[0]].GetLine(_faceIndexB));
-                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(_lineB, agents[_neighborsB[1]].GetLine(_faceIndexB));
+                p = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(_lineB),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsB[0]].GetLine(_faceIndexB))
+                    ));
+                p2 = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(_lineB),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsB[1]].GetLine(_faceIndexB))
+                    ));
             }
             else
             {
@@ -271,13 +293,25 @@ namespace Strategies
             Geo.Point p2;
             if (faceIndex == _faceIndexA)
             {
-                p = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[0], agents[_neighborsA[0]].GetLine(_faceIndexA));
-                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[0], agents[_neighborsA[1]].GetLine(_faceIndexA));
+                p = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(linesAtParameter[0]),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsA[0]].GetLine(_faceIndexA))
+                    ));
+                p2 = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(linesAtParameter[0]),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsA[1]].GetLine(_faceIndexA))
+                    ));
             }
             else if (faceIndex == _faceIndexB)
             {
-                p = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[1], agents[_neighborsB[0]].GetLine(_faceIndexB));
-                p2 = HowickMaker.hStructure.ClosestPointToOtherLine(linesAtParameter[1], agents[_neighborsB[1]].GetLine(_faceIndexB));
+                p = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(linesAtParameter[1]),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsB[0]].GetLine(_faceIndexB))
+                    ));
+                p2 = HMDynamoUtil.TripleToPoint(HowickMaker.hStructure.ClosestPointToOtherLine(
+                    HMDynamoUtil.DSLineToHMLine(linesAtParameter[1]),
+                    HMDynamoUtil.DSLineToHMLine(agents[_neighborsB[1]].GetLine(_faceIndexB))
+                    ));
             }
             else
             {

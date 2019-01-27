@@ -8,7 +8,7 @@ using Autodesk.DesignScript.Interfaces;
 using Autodesk.DesignScript.Runtime;
 using Mesh = Autodesk.Dynamo.MeshToolkit.Mesh;
 
-namespace Strategies
+namespace HowickMakerDynamo
 {
     public class hTriangleStrategy
     {
