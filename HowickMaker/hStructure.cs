@@ -31,6 +31,8 @@ namespace HowickMaker
 
         private List<Line> _lines = new List<Line>();
         private Graph _g;
+        public List<int> _solveOrder = new List<int>();
+        public int[] _solvedBy;
 
         public hMember[] Members
         {
@@ -67,6 +69,7 @@ namespace HowickMaker
             _firstConnectionIsFTF = firstConnectionIsFTF;
 
             _members = new hMember[lines.Count];
+            _solvedBy = new int[lines.Count];
             for (int i = 0; i < lines.Count; i++)
             {
                 _members[i] = new hMember(lines[i], i.ToString());
@@ -277,6 +280,7 @@ namespace HowickMaker
         /// <param name="lines"></param>
         internal void Propogate(int current)
         {
+            _solveOrder.Add(current);
             hMember currentMember = _members[current];
             if (_g.vertices[current].neighbors.Count > 0)
             {
@@ -339,7 +343,7 @@ namespace HowickMaker
                                 v.Dispose();
                             }
                         }*/
-
+                        _solvedBy[i] = current;
                         Propogate(i);
                     }
                 }

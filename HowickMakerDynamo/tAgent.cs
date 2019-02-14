@@ -119,7 +119,7 @@ namespace HowickMakerDynamo
         /// <param name="desiredOffset"></param>
         /// <param name="agents"></param>
         /// <returns></returns>
-        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 6.0)
+        internal double GetStateValue(tAgent[] agents, double parameter, double desiredOffset = 14.0)
         {
             int furtherAgentIndex = -1;
             int closerAgentIndex = -1;
@@ -130,7 +130,7 @@ namespace HowickMakerDynamo
                 HMDynamoUtil.DSLineToHMLine(GetLinesAtParameter(agents, parameter)[0])
                 ));
 
-            double value1 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
+            double value1 = 1 * Math.Abs(desiredOffset - Math.Abs(furtherIntersect.DistanceTo(closerIntersect)));
             double outOfBounds = 0;
 
             double outOfBoundsA1 = furtherIntersect.DistanceTo(_faceSurfaceA);
@@ -150,7 +150,7 @@ namespace HowickMakerDynamo
                     HMDynamoUtil.DSLineToHMLine(GetLinesAtParameter(agents, parameter)[1])
                     ));
 
-                value2 = -1 * Math.Abs(furtherIntersect.DistanceTo(closerIntersect));
+                value2 = 1 * Math.Abs(desiredOffset - Math.Abs(furtherIntersect.DistanceTo(closerIntersect)));
 
                 double outOfBoundsB1 = furtherIntersect.DistanceTo(_faceSurfaceB);
                 double outOfBoundsB2 = closerIntersect.DistanceTo(_faceSurfaceB);

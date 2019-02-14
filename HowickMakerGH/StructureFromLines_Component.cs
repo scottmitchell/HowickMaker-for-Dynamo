@@ -45,6 +45,8 @@ namespace HowickMakerGH
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             pManager.AddGenericParameter("Members", "M", "members", GH_ParamAccess.list);
+            pManager.AddNumberParameter("Order", "O", "solve order", GH_ParamAccess.list);
+            pManager.AddNumberParameter("SolvedBy", "S", "solved by", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -92,6 +94,8 @@ namespace HowickMakerGH
                 planarityTolerance: tolerance);
 
             DA.SetDataList(0, structure.Members);
+            DA.SetDataList(1, structure._solveOrder);
+            DA.SetDataList(2, structure._solvedBy);
         }
 
         /// <summary>
