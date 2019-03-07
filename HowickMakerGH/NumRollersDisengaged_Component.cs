@@ -7,15 +7,15 @@ using HM = HowickMaker;
 
 namespace HowickMakerGH
 {
-    public class AddOperationAtPoint_Component : GH_Component
+    public class NumDisengagedRollers_Component : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the AddOperationAtPoint_Component class.
+        /// Initializes a new instance of the NumDisengagedRollers_Component class.
         /// </summary>
-        public AddOperationAtPoint_Component()
-          : base("Add Operations At Points", "AddOps",
-              "Add operations to the member at the specified points.",
-              "HowickMaker", "Member")
+        public NumDisengagedRollers_Component()
+          : base("Number Of Disengaged Rollers", "Rollers",
+              "Find out the maximum number of rollers that would be disengaged during the run of these members on the Howick machine. 4 or more means trouble.",
+              "HowickMaker", "Utility")
         {
         }
 
@@ -24,9 +24,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
-            pManager.AddPointParameter("Points", "P", "list of operation points", GH_ParamAccess.list);
-            pManager.AddTextParameter("Types", "T", "list of operation types", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Members", "M", "List of members to check.", GH_ParamAccess.list);
         }
 
         /// <summary>
@@ -34,7 +32,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
+            pManager.AddNumberParameter("Number Disengaged", "D", "Maximum number of rollers disengaged.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -43,26 +41,13 @@ namespace HowickMakerGH
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
-            HM.hMember member = null;
-            List<Point3d> points = new List<Point3d>();
-            List<string> types = new List<string>();
+            List<HM.hMember> members = new List<HM.hMember>();
 
-            if (!DA.GetData(0, ref member)) { return; }
-            if (!DA.GetDataList(1, points)) { return; }
-            if (!DA.GetDataList(2, types)) { return; }
+            if (!DA.GetDataList(0, members)) { return; }
 
-            if (points.Count != types.Count)
-            {
-                return;
-            }
+            var maxNumDisengaged = HM.hUtility.CheckMaxNumRollersDisengaged(members);
 
-            var newMember = new HM.hMember(member);
-            for (int i = 0; i < points.Count; i++)
-            {
-                newMember.AddOperationByPointType(HMGHUtil.PointToTriple(points[i]), types[i]);
-            }
-
-            DA.SetData(0, newMember);
+            DA.SetData(0, maxNumDisengaged);
         }
 
         /// <summary>
@@ -83,7 +68,7 @@ namespace HowickMakerGH
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("0d4e4406-5a28-4ccc-bb8b-6305a6a3a4e7"); }
+            get { return new Guid("93dd7b84-326d-4277-bd9f-7e5021d039b9"); }
         }
     }
 }

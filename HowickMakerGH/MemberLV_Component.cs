@@ -23,8 +23,8 @@ namespace HowickMakerGH
         /// new tabs/panels will automatically be created.
         /// </summary>
         public MemberLV_Component()
-          : base("Member Line Vector", "MemberLV",
-              "Create a member from a line and vector",
+          : base("Create Member", "Create",
+              "Create a member from a line and a vector.",
               "HowickMaker", "Member")
         {
         }
@@ -34,8 +34,8 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddLineParameter("Line", "L", "webAxis", GH_ParamAccess.item);
-            pManager.AddVectorParameter("Vector", "V", "webNormal", GH_ParamAccess.item);
+            pManager.AddLineParameter("Line", "L", "The line representing the web axis of the member.", GH_ParamAccess.item);
+            pManager.AddVectorParameter("Vector", "V", "The vector representing the web normal of the member.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace HowickMakerGH
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
             //pManager.AddParameter(new ParamMember());
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Member", "M", "Steel stud member.", GH_ParamAccess.item);
         }
 
         /// <summary>

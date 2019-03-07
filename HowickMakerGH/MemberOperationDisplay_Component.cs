@@ -14,8 +14,8 @@ namespace HowickMakerGH
         /// Initializes a new instance of the MemberOperationDisplay_Component class.
         /// </summary>
         public MemberOperationDisplay_Component()
-          : base("Operation Curves", "OpCrvs",
-              "Get curves represetning member operations",
+          : base("Display Operations", "Ops",
+              "Get the set of curves representing this member's operations.",
               "HowickMaker", "Member")
         {
         }
@@ -25,7 +25,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Member", "M", "Member from which to get operations.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddCurveParameter("Curve", "C", "Operations as Curves", GH_ParamAccess.list);
+            pManager.AddCurveParameter("Curves", "C", "Operations as Curves.", GH_ParamAccess.list);
         }
 
         /// <summary>

@@ -13,9 +13,9 @@ namespace HowickMakerGH
         /// Initializes a new instance of the ExportToFile_Component class.
         /// </summary>
         public ExportToFile_Component()
-          : base("ExportToFile", "Export",
-              "Export members to a csv file",
-              "HowickMaker", "Member")
+          : base("Export To File", "Export",
+              "Export members to a csv file for fabrication on the machine.",
+              "HowickMaker", "Utility")
         {
         }
 
@@ -24,8 +24,10 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Members", "M", "members", GH_ParamAccess.list);
-            pManager.AddTextParameter("Filepath", "F", "filepath", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Members", "M", "Members to export", GH_ParamAccess.list);
+            pManager.AddTextParameter("Filepath", "F", "Filepath where the csv file will be saved", GH_ParamAccess.item);
+            pManager.AddTextParameter("Title", "T", "Frameset title", GH_ParamAccess.item);
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -43,11 +45,13 @@ namespace HowickMakerGH
         {
             List<HM.hMember> members = new List<HM.hMember>();
             string path = null;
+            string title = null;
 
             if (!DA.GetDataList(0, members)) { return; }
             if (!DA.GetData(1, ref path)) { return; }
+            if (!DA.GetData(2, ref title)) { title = "<title>"; }
 
-            HM.hMember.ExportToFile(path, members);
+            HM.hUtility.ExportToFile(path, members, title);
         }
 
         /// <summary>

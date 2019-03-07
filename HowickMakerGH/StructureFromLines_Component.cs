@@ -67,12 +67,26 @@ namespace HowickMakerGH
 
             // Retrieve input data.
             if (!DA.GetDataList(0, inputLines)) { return; }
-            if (!DA.GetDataList(1, names)) { return; }
+            if (!DA.GetDataList(1, names)) { names = null; }
             if (!DA.GetData(2, ref firstConnectionIsFTF)) { firstConnectionIsFTF = false; }
             if (!DA.GetData(3, ref webNormalsDictionary)) { webNormalsDictionary = null; }
             if (!DA.GetData(4, ref prioritiesDictionary)) { prioritiesDictionary = null; }
             if (!DA.GetData(5, ref extensionDictionary)) { extensionDictionary = null; }
             if (!DA.GetData(6, ref tolerance)) { tolerance = 0.001; }
+
+            if (names == null)
+            {
+                names = new List<string>();
+                for (int j = 0; j < inputLines.Count; j++)
+                {
+                    names.Add(j.ToString());
+                }
+            }
+
+            if(names.Count < inputLines.Count)
+            {
+                throw new Exception("You must provide a name for every member.");
+            }
 
             // Convert GH lines to HM lines
             var HMLines = new List<HM.Line>();

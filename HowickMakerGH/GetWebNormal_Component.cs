@@ -3,18 +3,19 @@ using System.Collections.Generic;
 
 using Grasshopper.Kernel;
 using Rhino.Geometry;
+
 using HM = HowickMaker;
 
 namespace HowickMakerGH
 {
-    public class AddOperationAtPoint_Component : GH_Component
+    public class GetWebNormal_Component : GH_Component
     {
         /// <summary>
-        /// Initializes a new instance of the AddOperationAtPoint_Component class.
+        /// Initializes a new instance of the GetWebNormal_Component class.
         /// </summary>
-        public AddOperationAtPoint_Component()
-          : base("Add Operations At Points", "AddOps",
-              "Add operations to the member at the specified points.",
+        public GetWebNormal_Component()
+          : base("Get Web Normal", "Normal",
+              "Get the vector that is normal to the web of the given member.",
               "HowickMaker", "Member")
         {
         }
@@ -24,9 +25,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
-            pManager.AddPointParameter("Points", "P", "list of operation points", GH_ParamAccess.list);
-            pManager.AddTextParameter("Types", "T", "list of operation types", GH_ParamAccess.list);
+            pManager.AddGenericParameter("Member", "M", "Member from which to get normal.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -34,7 +33,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
+            pManager.AddVectorParameter("Normal", "N", "Member web normal.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -43,26 +42,16 @@ namespace HowickMakerGH
         /// <param name="DA">The DA object is used to retrieve from inputs and store in outputs.</param>
         protected override void SolveInstance(IGH_DataAccess DA)
         {
+            // 1. Declare placeholder variables and assign initial invalid data.
+            //    This way, if the input parameters fail to supply valid data, we know when to abort.
             HM.hMember member = null;
-            List<Point3d> points = new List<Point3d>();
-            List<string> types = new List<string>();
 
+            // 2. Retrieve input data.
             if (!DA.GetData(0, ref member)) { return; }
-            if (!DA.GetDataList(1, points)) { return; }
-            if (!DA.GetDataList(2, types)) { return; }
 
-            if (points.Count != types.Count)
-            {
-                return;
-            }
+            var webNormal = member.WebNormal;
 
-            var newMember = new HM.hMember(member);
-            for (int i = 0; i < points.Count; i++)
-            {
-                newMember.AddOperationByPointType(HMGHUtil.PointToTriple(points[i]), types[i]);
-            }
-
-            DA.SetData(0, newMember);
+            DA.SetData(0, HMGHUtil.TripleToVector(webNormal));
         }
 
         /// <summary>
@@ -83,7 +72,7 @@ namespace HowickMakerGH
         /// </summary>
         public override Guid ComponentGuid
         {
-            get { return new Guid("0d4e4406-5a28-4ccc-bb8b-6305a6a3a4e7"); }
+            get { return new Guid("c488eec2-dcdc-4803-a5e7-c1b9fffb3dd0"); }
         }
     }
 }

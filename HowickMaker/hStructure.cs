@@ -234,7 +234,7 @@ namespace HowickMaker
         {
             Vertex current = _g.vertices[start];
             
-            hMember currentMember = new hMember(_lines[current.name], current.name.ToString());
+            hMember currentMember = _members[start];
             Line currentLine = _lines[start];
             Line nextLine = _lines[current.neighbors[0]];
             Triple normal = currentLine.Direction.Cross(nextLine.Direction);
@@ -313,6 +313,10 @@ namespace HowickMaker
                     if (!_g.vertices[i].visited)
                     {
                         List<Triple> vectors = GetValidNormalsForMember(i);
+                        if (vectors.Count < 1)
+                        {
+                            throw new Exception(String.Format("Lines {0} and {1} are overconstrained.", _members[current]._label, _members[i]._label));
+                        }
                         Triple choice = vectors[0];
                         if (_webNormalsDict.ContainsKey(_members[i]._label))
                         {
@@ -359,7 +363,7 @@ namespace HowickMaker
         /// <returns></returns>
         internal Connection GetConnectionType(int i, int j)
         {
-            Triple jointPlaneNormal = _lines[i].ToTriple().Cross(_lines[j].ToTriple());
+            Triple jointPlaneNormal = _lines[i].ToTriple().Normalized().Cross(_lines[j].ToTriple().Normalized());
 
             if (ParallelPlaneNormals(_members[i].WebNormal, jointPlaneNormal))
             {

@@ -72,6 +72,7 @@
     <Compile Include="hMember.cs" />
     <Compile Include="hOperation.cs" />
     <Compile Include="hStructure.cs" />
+    <Compile Include="hUtility.cs" />
     <Compile Include="IComponent.cs" />
     <Compile Include="Line.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

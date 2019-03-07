@@ -13,8 +13,8 @@ namespace HowickMakerGH
         /// Initializes a new instance of the MemberDisplay_Component class.
         /// </summary>
         public MemberDisplay_Component()
-          : base("Member Display", "MemDisplay",
-              "Get a member as a brep",
+          : base("Display Member", "MemGeo",
+              "Get a member as a brep.",
               "HowickMaker", "Member")
         {
         }
@@ -24,7 +24,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterInputParams(GH_Component.GH_InputParamManager pManager)
         {
-            pManager.AddGenericParameter("Member", "M", "member", GH_ParamAccess.item);
+            pManager.AddGenericParameter("Member", "M", "Member to get as brep.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            pManager.AddSurfaceParameter("Brep", "B", "member", GH_ParamAccess.list);
+            pManager.AddBrepParameter("Brep", "B", "Member brep.", GH_ParamAccess.item);
         }
 
         /// <summary>
@@ -90,14 +90,10 @@ namespace HowickMakerGH
             var lip1 = NurbsSurface.CreateFromCorners(p0, p1, p11, p10 );
             var lip2 = NurbsSurface.CreateFromCorners(p6, p7, p9, p8 );
 
-            var memGeo = new Surface[] { flange1, flange2, web, lip1, lip2 };
-            /*memGeo.AddSurface(flange1);
-            memGeo.AddSurface(flange2);
-            memGeo.AddSurface(web);
-            memGeo.AddSurface(lip1);
-            memGeo.AddSurface(lip2);*/
+            var memGeo = new List<Brep>() { Brep.CreateFromSurface(flange1), Brep.CreateFromSurface(flange2), Brep.CreateFromSurface(web), Brep.CreateFromSurface(lip1), Brep.CreateFromSurface(lip2) };
+            var brep = Brep.JoinBreps(memGeo, 0.001)[0];
 
-            DA.SetDataList(0, memGeo);
+            DA.SetData(0, brep);
         }
 
         /// <summary>
