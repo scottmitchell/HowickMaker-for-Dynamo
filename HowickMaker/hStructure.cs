@@ -363,7 +363,7 @@ namespace HowickMaker
         /// <returns></returns>
         internal Connection GetConnectionType(int i, int j)
         {
-            Triple jointPlaneNormal = _lines[i].ToTriple().Normalized().Cross(_lines[j].ToTriple().Normalized());
+            Triple jointPlaneNormal = _lines[i].ToTriple().Normalized().Cross(_lines[j].ToTriple().Normalized()).Normalized();
 
             if (ParallelPlaneNormals(_members[i].WebNormal, jointPlaneNormal))
             {
@@ -840,14 +840,14 @@ namespace HowickMaker
                         // Get angle between members
                         double angle = (Math.PI/180) * Triple.ByTwoPoints(axis1.StartPoint, axis1.EndPoint).AngleWithVector(Triple.ByTwoPoints(axis2.StartPoint, axis2.EndPoint));
                         angle = (angle < (Math.PI/2)) ? angle : Math.PI - angle;
-                        
+
                         // Get distance from centerline of other member to edge of other member, along axis of current member (fun sentence)
                         double subtract = (angle % (Math.PI / 2) == 0) ? 0 : _WEBHoleSpacing / Math.Tan(angle);
                         double extendForAllWebHoles = _WEBHoleSpacing / Math.Sin(angle) - subtract + ((2 * _WEBHoleSpacing) / Math.Tan(angle)) + .25;
-                        double fullOverlap = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith/2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
+                        double fullOverlap = (angle % (Math.PI / 2) == 0) ? 0 : (_StudWdith / 2) / Math.Tan(angle) + (_StudWdith / 2) / Math.Sin(angle);
                         double noOverhang = (angle % (Math.PI / 2) == 0 || Math.Abs(angle - (Math.PI / 2)) < 0.01 || angle < 0.01) ? (_StudWdith / 2) : (_StudWdith / 2) / Math.Sin(angle) - (_StudWdith / 2) / Math.Tan(angle);
 
-                        int type = 0;
+                        int type = -1;
                         if (this._extensionDict.ContainsKey(_members[index1]._label))
                         {
                             type = _extensionDict[_members[index1]._label];

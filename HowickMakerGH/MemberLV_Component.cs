@@ -36,6 +36,8 @@ namespace HowickMakerGH
         {
             pManager.AddLineParameter("Line", "L", "The line representing the web axis of the member.", GH_ParamAccess.item);
             pManager.AddVectorParameter("Vector", "V", "The vector representing the web normal of the member.", GH_ParamAccess.item);
+            pManager.AddTextParameter("Name", "N", "The name of the member.", GH_ParamAccess.item);
+            pManager[2].Optional = true;
         }
 
         /// <summary>
@@ -43,7 +45,6 @@ namespace HowickMakerGH
         /// </summary>
         protected override void RegisterOutputParams(GH_Component.GH_OutputParamManager pManager)
         {
-            //pManager.AddParameter(new ParamMember());
             pManager.AddGenericParameter("Member", "M", "Steel stud member.", GH_ParamAccess.item);
         }
 
@@ -58,10 +59,12 @@ namespace HowickMakerGH
             //    This way, if the input parameters fail to supply valid data, we know when to abort.
             Line line = Line.Unset;
             Vector3d vector = Vector3d.Unset;
+            string name = string.Empty;
 
             // 2. Retrieve input data.
             if (!DA.GetData(0, ref line)) { return; }
             if (!DA.GetData(1, ref vector)) { return; }
+            if (!DA.GetData(2, ref name)) { name = "<name>"; }
 
             // 3. Abort on invalid inputs.
             if (!line.IsValid) { return; }
@@ -69,6 +72,7 @@ namespace HowickMakerGH
 
             // 4. Build hMember.
             var mem = new HM.hMember(HMGHUtil.GHLineToHMLine(line), HMGHUtil.VectorToTriple(vector));
+            mem.Name = name;
 
             // 9. Assign output.
             DA.SetData(0, mem);
